@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>know your guitar neck</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="deskT.png" />
+</head>
+<body>
+
+
+  <header>
+    <nav>
+      <img class= "logo" src="logo.png" alt="לוגו" />
+    </nav>
+  </header>
+
+  <main>
+    <div class="main-content">
+
+      <div class="guitar-wrapper">
+        <img src="greed.png" alt="guitar" class="guitar-img" />
+        <svg id="fret-svg" class="fret-svg" viewBox="0 0 761 1904" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <section class="buttons-section">
+        <button class="main-btn">SINGLE NOTES</button>
+        <button class="main-btn">TREE NOTES CHORDS</button>
+        <button class="main-btn">FOUR NOTES CHORDS</button>
+        <button class="main-btn">SCALES</button>
+      </section>
+
+      <section class="buttons-row">
+        <button class="small-btn"><img src="bassHead.png" alt="bass" style="width:40px;height:40px;object-fit:contain;margin-bottom:-8px;"></button>
+        <button class="small-btn" style="padding:6px 8px;"><img src="sheir.png" style="width:26px;height:26px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px);"></button>
+        <button class="small-btn"><img src="book.png" style="width:36px;height:36px;object-fit:contain;margin-bottom:4px;"></button>
+        <button class="small-btn"><img src="settings.png" alt="settings" style="width:26px;height:26px;object-fit:contain;margin-bottom:5px;"></button>
+      </section>
+      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;padding-left:4px;margin-top:-6px;width:130%;margin-left:0;font-family:system-ui,sans-serif;">Etzion Brenard Vitali Goel ©</p>
+      <div class="bottom-bar">
+        <div class="mute-wrapper">
+          <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
+          <span class="mute-label">Home</span>
+        </div>
+        <div class="mute-wrapper">
+          <button class="mute-btn"><img src="note.png" class="note-icon" alt="mute" /></button>
+          <span class="mute-label">Mute</span>
+        </div>
+        <div class="mute-wrapper">
+          <button class="next-btn"><img src="next.png" class="next-icon" alt="next" /></button>
+          <span class="mute-label">Next</span>
+        </div>
+      </div>
+
+      <section class ="noteNameDisplay" >
+      <p class="score-inline"><span class="score-label-sm">Score</span> <span class="score-number">0</span></p>
+      <p class = 'headLine'>SINGLE NOTES</p>
+      <p class = "Instrac">Find (all)<br>Displayed notes</p>
+      <p class="rootDisplay">Root: G / 6th Str</p>
+      <div class="scale-selector">
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Major Modes<span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Ionian">Ionian</button>
+            <button class="scale-btn" data-scale="Dorian">Dorian</button>
+            <button class="scale-btn" data-scale="Phrygian">Phrygian</button>
+            <button class="scale-btn" data-scale="Lydian">Lydian</button>
+            <button class="scale-btn" data-scale="Mixolydian">Mixolydian</button>
+            <button class="scale-btn" data-scale="Aeolian">Aeolian</button>
+            <button class="scale-btn" data-scale="Locrian">Locrian</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Blues <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Minor Blues 1">Minor Blues 1</button>
+            <button class="scale-btn" data-scale="Minor Blues 2">Minor Blues 2</button>
+            <button class="scale-btn" data-scale="Minor Blues 3">Minor Blues 3</button>
+            <button class="scale-btn" data-scale="Minor Blues 4">Minor Blues 4</button>
+            <button class="scale-btn" data-scale="Minor Blues 5">Minor Blues 5</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Melodic m <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Melodic Minor">Melodic Minor</button>
+            <button class="scale-btn" data-scale="Dorian ♭2">Dorian ♭2</button>
+            <button class="scale-btn" data-scale="Lydian Aug">Lydian Aug</button>
+            <button class="scale-btn" data-scale="Lydian Dom">Lydian Dom</button>
+            <button class="scale-btn" data-scale="Mixolydian ♭6">Mixolydian ♭6</button>
+            <button class="scale-btn" data-scale="Locrian ♮2">Locrian ♮2</button>
+            <button class="scale-btn" data-scale="Altered Scale">Altered Scale</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Harmonic m <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Aeolian ♯7">Aeolian ♯7</button>
+            <button class="scale-btn" data-scale="Locrian ♮6">Locrian ♮6</button>
+            <button class="scale-btn scale-btn-disabled" disabled>Ionian ♯5</button>
+            <button class="scale-btn" data-scale="Dorian ♯4">Dorian ♯4</button>
+            <button class="scale-btn" data-scale="Phrygian ♮3">Phrygian ♮3</button>
+            <button class="scale-btn scale-btn-disabled" disabled>Lydian ♯2</button>
+            <button class="scale-btn scale-btn-disabled" disabled>Ultralocrian</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Diminished <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Diminished">Diminished</button>
+            <button class="scale-btn" data-scale="Dim b9">Dim b9</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Whole Tone <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Whole Tone">Whole Tone</button>
+          </div>
+        </div>
+
+        <button class="scale-btn scale-btn-free" data-scale="Free Playing">Free Playing</button>
+
+      </div>
+      <p class = "noteD"></p>
+      <button class="ext-btn">Add tensions</button>
+      <p class="feedback"></p>
+      <div class="string-lock-section">
+        <span class="string-lock-label">Open/Lock<br>Strings</span>
+        <div class="string-lock-row">
+          <button class="str-btn" data-string="6">E</button>
+          <button class="str-btn" data-string="5">A</button>
+          <button class="str-btn" data-string="4">D</button>
+          <button class="str-btn" data-string="3">G</button>
+          <button class="str-btn" data-string="2">B</button>
+          <button class="str-btn" data-string="1">E</button>
+        </div>
+      </div>
+      <img src="cup.png" class="cup-img" alt="cup" />
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
