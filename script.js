@@ -415,7 +415,7 @@ extBtn.addEventListener('click', () => {
   extBtn.classList.toggle('active');
   if (extBtn.classList.contains('active')) {
     extBtn.textContent = 'Tensions';
-    headLineEl.innerHTML = 'Extended<br>Chords';
+    headLineEl.innerHTML = 'EXTENDED<br>CHORDS';
   } else {
     extBtn.textContent = 'Add tensions';
     headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTED<br>CHORDS' : 'TREE NOTES<br>CHORDS';

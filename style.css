@@ -446,10 +446,10 @@ header nav img {
 
 .feedback {
   font-size: 15px;
-  min-height: 1.2em;
+  height: 1.2em;
   opacity: 0;
   transition: opacity 0.4s ease;
-  position: absolute;
+  overflow: hidden;
 }
 
 .feedback.correct {
