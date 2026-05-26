@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+*.apk
+android/app/build/
+
+# macOS
+.DS_Store
+
+# Design files
+*.psd
+
+# Installers
+*.dmg
+*.pkg
+*.zip
+
+# Claude memory
+.claude/

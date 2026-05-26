@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale Editor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background: #0f0f1a;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    header h1 { font-size: 18px; color: #7ec8e3; }
+    .selected-label {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+    }
+    .selected-label span {
+      color: #4a9eff;
+      font-weight: bold;
+    }
+    .layout {
+      display: flex;
+      flex: 1;
+      gap: 0;
+    }
+
+    /* ── Scale panel ── */
+    .scale-panel {
+      width: 180px;
+      min-width: 180px;
+      background: #0f0f1a;
+      padding: 12px 10px;
+      overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scale-group { display: flex; flex-direction: column; }
+    .scale-cat {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.8);
+      font-size: 12px;
+      border-radius: 5px;
+      padding: 5px 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    .scale-cat:hover { background: rgba(255,255,255,0.14); }
+    .scale-cat .arrow { font-size: 10px; transition: transform 0.15s; }
+    .scale-group.open .scale-cat { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .scale-group.open .arrow { transform: rotate(180deg); }
+    .scale-list {
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 0 2px 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-top: none;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+    }
+    .scale-group.open .scale-list { display: flex; }
+    .scale-item {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.75);
+      font-size: 12px;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+    }
+    .scale-item:hover { background: rgba(255,255,255,0.08); }
+    .scale-item.active {
+      border-color: #4a9eff;
+      color: #4a9eff;
+      background: rgba(74,158,255,0.1);
+    }
+    .scale-item .dot-count {
+      float: right;
+      font-size: 10px;
+      opacity: 0.5;
+      margin-left: 4px;
+    }
+
+    /* ── Guitar area ── */
+    .guitar-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .guitar-wrapper {
+      position: relative;
+      width: 320px;
+    }
+    .guitar-wrapper img {
+      width: 100%;
+      display: block;
+    }
+    .fret-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* ── Right panel ── */
+    .right-panel {
+      width: 220px;
+      min-width: 220px;
+      background: #0f0f1a;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .right-panel h3 { font-size: 13px; color: rgba(255,255,255,0.5); }
+    .btn-export {
+      background: #4a9eff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-export:hover { background: #3a8eef; }
+    .btn-clear {
+      background: transparent;
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-clear:hover { background: rgba(255,107,107,0.1); }
+    .btn-save-local {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-save-local:hover { background: rgba(255,255,255,0.14); }
+    .export-box {
+      background: #0a0a14;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 10px;
+      font-family: monospace;
+      color: #7ec8e3;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+    .status-msg {
+      font-size: 11px;
+      color: #4aff9e;
+      min-height: 16px;
+    }
+    .instructions {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+    }
+    .instructions b { color: rgba(255,255,255,0.7); }
+    .paint-mode-row { display: flex; gap: 6px; }
+    .paint-btn {
+      flex: 1;
+      border-radius: 6px;
+      padding: 8px 4px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      font-weight: bold;
+      transition: background 0.15s;
+    }
+    .paint-btn.note {
+      background: rgba(160,80,220,0.15);
+      color: #c080ff;
+      border-color: rgba(160,80,220,0.35);
+    }
+    .paint-btn.root {
+      background: rgba(255,80,80,0.15);
+      color: #ff8080;
+      border-color: rgba(255,80,80,0.35);
+    }
+    .paint-btn.note.active {
+      background: rgba(160,80,220,0.45);
+      border-color: #c080ff;
+    }
+    .paint-btn.root.active {
+      background: rgba(255,80,80,0.45);
+      border-color: #ff8080;
+    }
+    .paint-btn.blues {
+      background: rgba(20,60,160,0.2);
+      color: #5588ff;
+      border-color: rgba(20,60,160,0.5);
+    }
+    .paint-btn.blues.active {
+      background: rgba(20,60,160,0.55);
+      border-color: #5588ff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Scale Editor</h1>
+  <div class="selected-label">Scale: <span id="activeScaleLabel">— none —</span></div>
+</header>
+
+<div class="layout">
+
+  <!-- Left: scale list -->
+  <div class="scale-panel" id="scalePanel"></div>
+
+  <!-- Center: guitar neck -->
+  <div class="guitar-area">
+    <div class="guitar-wrapper">
+      <img src="greed.png" alt="guitar" />
+      <svg id="fret-svg" class="fret-svg" viewBox="0 0 761 1904" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div class="right-panel">
+    <h3>Paint mode</h3>
+    <div class="paint-mode-row">
+      <button class="paint-btn note active" id="btnNote" onclick="setPaintMode('note')">● Scale note</button>
+      <button class="paint-btn root" id="btnRoot" onclick="setPaintMode('root')">● Root</button>
+      <button class="paint-btn blues" id="btnBlues" onclick="setPaintMode('blues')">● Blues</button>
+    </div>
+    <div class="instructions">
+      <b>1.</b> Select a scale on the left<br>
+      <b>2.</b> Choose paint mode above<br>
+      <b>3.</b> Tap fret buttons to mark<br>
+      <b>4.</b> Export when done
+    </div>
+    <button class="btn-save-local" onclick="saveToLocal()">💾 Save to browser</button>
+    <button class="btn-clear" onclick="clearCurrentScale()">✕ Clear this scale</button>
+    <button class="btn-export" onclick="exportData()">Export JSON</button>
+    <div class="status-msg" id="statusMsg"></div>
+    <div class="export-box" id="exportBox"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Data from main app ──
+const fretBoundaries = [0, 72, 198, 378, 502, 597, 699, 807, 900, 1000, 1105, 1193, 1286, 1387];
+
+const stringPositions = [
+  [222, 274, 327, 386, 446, 502],
+  [220, 274, 327, 386, 447, 503],
+  [217, 272, 327, 386, 447, 505],
+  [215, 270, 326, 386, 448, 507],
+  [212, 259, 326, 386, 447, 496],
+  [212, 268, 326, 386, 448, 509],
+  [210, 267, 326, 386, 449, 510],
+  [196, 259, 324, 382, 437, 500],
+  [207, 266, 325, 386, 449, 513],
+  [205, 264, 325, 386, 450, 514],
+  [191, 260, 323, 385, 444, 508],
+  [202, 261, 324, 386, 451, 516],
+  [200, 260, 324, 386, 451, 517],
+];
+
+const cellOffsets = {
+  "btn1-string-6":  { dx: -9, dy: 21  }, "btn1-string-5":  { dx: 6,  dy: 21  },
+  "btn1-string-4":  { dx: 9,  dy: 21  }, "btn1-string-3":  { dx: 6,  dy: 21  },
+  "btn1-string-2":  { dx: 6,  dy: 21  }, "btn1-string-1":  { dx: 3,  dy: 21  },
+  "btn2-string-6":  { dx: -6, dy: 71  }, "btn2-string-5":  { dx: 6,  dy: 72  },
+  "btn2-string-4":  { dx: 9,  dy: 71  }, "btn2-string-3":  { dx: 6,  dy: 71  },
+  "btn2-string-2":  { dx: 3,  dy: 71  }, "btn2-string-1":  { dx: 3,  dy: 71  },
+  "btn3-string-6":  { dx: -3, dy: 105 }, "btn3-string-5":  { dx: 6,  dy: 105 },
+  "btn3-string-4":  { dx: 6,  dy: 102 }, "btn3-string-3":  { dx: 6,  dy: 105 },
+  "btn3-string-2":  { dx: 3,  dy: 108 }, "btn3-string-1":  { dx: 3,  dy: 105 },
+  "btn4-string-6":  { dx: -3, dy: 114 }, "btn4-string-5":  { dx: 6,  dy: 114 },
+  "btn4-string-4":  { dx: 6,  dy: 111 }, "btn4-string-3":  { dx: 6,  dy: 114 },
+  "btn4-string-2":  { dx: 3,  dy: 114 }, "btn4-string-1":  { dx: 3,  dy: 114 },
+  "btn5-string-6":  { dx: 3,  dy: 157 }, "btn5-string-5":  { dx: 15, dy: 157 },
+  "btn5-string-4":  { dx: 6,  dy: 157 }, "btn5-string-3":  { dx: 6,  dy: 157 },
+  "btn5-string-2":  { dx: 9,  dy: 157 }, "btn5-string-1":  { dx: 18, dy: 157 },
+  "btn6-string-6":  { dx: -3, dy: 211 }, "btn6-string-5":  { dx: 6,  dy: 211 },
+  "btn6-string-4":  { dx: 6,  dy: 211 }, "btn6-string-3":  { dx: 6,  dy: 211 },
+  "btn6-string-2":  { dx: 6,  dy: 211 }, "btn6-string-1":  { dx: 6,  dy: 211 },
+  "btn7-string-6":  { dx: 3,  dy: 254 }, "btn7-string-5":  { dx: 3,  dy: 254 },
+  "btn7-string-4":  { dx: 6,  dy: 254 }, "btn7-string-3":  { dx: 6,  dy: 254 },
+  "btn7-string-2":  { dx: 6,  dy: 251 }, "btn7-string-1":  { dx: 6,  dy: 251 },
+  "btn8-string-6":  { dx: 15, dy: 300 }, "btn8-string-5":  { dx: 12, dy: 300 },
+  "btn8-string-4":  { dx: 9,  dy: 300 }, "btn8-string-3":  { dx: 12, dy: 300 },
+  "btn8-string-2":  { dx: 18, dy: 300 }, "btn8-string-1":  { dx: 18, dy: 300 },
+  "btn9-string-6":  { dx: 3,  dy: 343 }, "btn9-string-5":  { dx: 3,  dy: 343 },
+  "btn9-string-4":  { dx: 6,  dy: 343 }, "btn9-string-3":  { dx: 6,  dy: 343 },
+  "btn9-string-2":  { dx: 6,  dy: 343 }, "btn9-string-1":  { dx: 6,  dy: 343 },
+  "btn10-string-6": { dx: 6,  dy: 380 }, "btn10-string-5": { dx: 3,  dy: 380 },
+  "btn10-string-4": { dx: 6,  dy: 380 }, "btn10-string-3": { dx: 6,  dy: 377 },
+  "btn10-string-2": { dx: 6,  dy: 380 }, "btn10-string-1": { dx: 9,  dy: 383 },
+  "btn11-string-6": { dx: 15, dy: 414 }, "btn11-string-5": { dx: 6,  dy: 414 },
+  "btn11-string-4": { dx: 6,  dy: 414 }, "btn11-string-3": { dx: 9,  dy: 414 },
+  "btn11-string-2": { dx: 12, dy: 414 }, "btn11-string-1": { dx: 15, dy: 414 },
+  "btn12-string-6": { dx: 6,  dy: 458 }, "btn12-string-5": { dx: 3,  dy: 458 },
+  "btn12-string-4": { dx: 6,  dy: 458 }, "btn12-string-3": { dx: 6,  dy: 458 },
+  "btn12-string-2": { dx: 6,  dy: 458 }, "btn12-string-1": { dx: 9,  dy: 458 },
+  "btn13-string-6": { dx: 6,  dy: 480 }, "btn13-string-5": { dx: 3,  dy: 480 },
+  "btn13-string-4": { dx: 3,  dy: 480 }, "btn13-string-3": { dx: 6,  dy: 480 },
+  "btn13-string-2": { dx: 6,  dy: 480 }, "btn13-string-1": { dx: 9,  dy: 480 },
+};
+
+// ── Scale categories ──
+const scaleCategories = [
+  { label: 'Major Modes', scales: ['Ionian','Dorian','Phrygian','Lydian','Mixolydian','Aeolian','Locrian'] },
+  { label: 'Harmonic m',    scales: ['Aeolian ♯7','Locrian ♮6','Dorian ♯4','Phrygian ♮3'] },
+  { label: 'Melodic m',     scales: ['Melodic Minor','Dorian ♭2','Lydian Aug','Lydian Dom','Mixolydian ♭6','Locrian ♮2','Altered Scale'] },
+  { label: 'Blues',         scales: ['Minor Blues 1','Minor Blues 2','Minor Blues 3','Minor Blues 4','Minor Blues 5'] },
+  { label: 'Diminished',    scales: ['Diminished','Dim b9'] },
+  { label: 'Whole Tone',    scales: ['Whole Tone'] },
+];
+
+// ── State ──
+let activeScale = null;
+let paintMode = 'note'; // 'note' | 'root'
+let scaleData = {};     // { scaleName: { notes: [], roots: [] } }
+const svgCells = {};
+
+// Load from localStorage
+const saved = localStorage.getItem('scaleData');
+if (saved) scaleData = JSON.parse(saved);
+
+function getScaleData(name) {
+  if (!scaleData[name]) scaleData[name] = { notes: [], roots: [], blues: [] };
+  if (!scaleData[name].blues) scaleData[name].blues = [];
+  return scaleData[name];
+}
+
+// ── Paint mode ──
+function setPaintMode(mode) {
+  paintMode = mode;
+  document.getElementById('btnNote').classList.toggle('active', mode === 'note');
+  document.getElementById('btnRoot').classList.toggle('active', mode === 'root');
+  document.getElementById('btnBlues').classList.toggle('active', mode === 'blues');
+}
+
+// ── Build scale panel ──
+function buildScalePanel() {
+  const panel = document.getElementById('scalePanel');
+  scaleCategories.forEach(cat => {
+    const group = document.createElement('div');
+    group.className = 'scale-group';
+
+    const catBtn = document.createElement('button');
+    catBtn.className = 'scale-cat';
+    catBtn.innerHTML = `${cat.label} <span class="arrow">▾</span>`;
+    catBtn.addEventListener('click', () => group.classList.toggle('open'));
+    group.appendChild(catBtn);
+
+    const list = document.createElement('div');
+    list.className = 'scale-list';
+
+    cat.scales.forEach(scaleName => {
+      const item = document.createElement('button');
+      item.className = 'scale-item';
+      item.dataset.scale = scaleName;
+      const d = scaleData[scaleName];
+      const count = d ? (d.notes.length + d.roots.length) : 0;
+      item.innerHTML = `${scaleName} <span class="dot-count">${count > 0 ? count : ''}</span>`;
+      item.addEventListener('click', () => selectScale(scaleName));
+      list.appendChild(item);
+    });
+
+    group.appendChild(list);
+    panel.appendChild(group);
+  });
+}
+
+function selectScale(name) {
+  activeScale = name;
+  document.getElementById('activeScaleLabel').textContent = name;
+  document.querySelectorAll('.scale-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.scale === name);
+  });
+  refreshGrid();
+}
+
+// ── SVG grid ──
+function initSvgGrid() {
+  const svg = document.getElementById('fret-svg');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  for (let fi = 0; fi < 13; fi++) {
+    const y0 = fretBoundaries[fi], y1 = fretBoundaries[fi + 1], yCtr = (y0 + y1) / 2;
+    for (let si = 0; si < 6; si++) {
+      const strNum = 6 - si;
+      const off = cellOffsets[`btn${fi + 1}-string-${strNum}`] || { dx: 0, dy: 0 };
+      const xCtr = stringPositions[fi][si] + off.dx;
+      const yCtr2 = yCtr + off.dy;
+      const key = `btn${fi + 1}-string-${strNum}`;
+
+      const xStep = si < 5
+        ? stringPositions[fi][si + 1] - stringPositions[fi][si]
+        : stringPositions[fi][si] - stringPositions[fi][si - 1];
+      const rectH = y1 - y0;
+
+      const rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', xCtr - xStep / 2);
+      rect.setAttribute('y', yCtr2 - rectH / 2);
+      rect.setAttribute('width', xStep);
+      rect.setAttribute('height', rectH);
+      rect.setAttribute('fill', 'transparent');
+      rect.style.cursor = 'pointer';
+      rect.dataset.key = key;
+      rect.addEventListener('click', () => toggleCell(key));
+
+      // ghost
+      const ghost = document.createElementNS(NS, 'circle');
+      ghost.setAttribute('cx', xCtr); ghost.setAttribute('cy', yCtr2);
+      ghost.setAttribute('r', '28');
+      ghost.setAttribute('fill', 'transparent');
+      ghost.setAttribute('stroke', 'transparent');
+      ghost.setAttribute('stroke-width', '0');
+      ghost.setAttribute('pointer-events', 'none');
+
+      // purple — scale note
+      const noteCircle = document.createElementNS(NS, 'circle');
+      noteCircle.setAttribute('cx', xCtr); noteCircle.setAttribute('cy', yCtr2);
+      noteCircle.setAttribute('r', '28');
+      noteCircle.setAttribute('fill', 'rgba(130,40,210,0.92)');
+      noteCircle.setAttribute('opacity', '0');
+      noteCircle.setAttribute('pointer-events', 'none');
+
+      // red — root
+      const rootCircle = document.createElementNS(NS, 'circle');
+      rootCircle.setAttribute('cx', xCtr); rootCircle.setAttribute('cy', yCtr2);
+      rootCircle.setAttribute('r', '28');
+      rootCircle.setAttribute('fill', 'rgba(220,50,50,0.75)');
+      rootCircle.setAttribute('opacity', '0');
+      rootCircle.setAttribute('pointer-events', 'none');
+
+      // dark blue — blues
+      const bluesCircle = document.createElementNS(NS, 'circle');
+      bluesCircle.setAttribute('cx', xCtr); bluesCircle.setAttribute('cy', yCtr2);
+      bluesCircle.setAttribute('r', '28');
+      bluesCircle.setAttribute('fill', 'rgba(15,45,140,0.88)');
+      bluesCircle.setAttribute('opacity', '0');
+      bluesCircle.setAttribute('pointer-events', 'none');
+
+      svg.appendChild(ghost);
+      svg.appendChild(noteCircle);
+      svg.appendChild(rootCircle);
+      svg.appendChild(bluesCircle);
+      svg.appendChild(rect);
+      svgCells[key] = { noteCircle, rootCircle, bluesCircle };
+    }
+  }
+}
+
+function refreshGrid() {
+  const d = activeScale ? getScaleData(activeScale) : { notes: [], roots: [], blues: [] };
+  const noteSet = new Set(d.notes);
+  const rootSet = new Set(d.roots);
+  const bluesSet = new Set(d.blues || []);
+  Object.entries(svgCells).forEach(([key, { noteCircle, rootCircle, bluesCircle }]) => {
+    noteCircle.setAttribute('opacity', noteSet.has(key) ? '1' : '0');
+    rootCircle.setAttribute('opacity', rootSet.has(key) ? '1' : '0');
+    bluesCircle.setAttribute('opacity', bluesSet.has(key) ? '1' : '0');
+  });
+  updateDotCounts();
+}
+
+function toggleCell(key) {
+  if (!activeScale) { showStatus('Select a scale first!', '#ff6b6b'); return; }
+  const d = getScaleData(activeScale);
+  const arr = paintMode === 'root' ? d.roots : paintMode === 'blues' ? d.blues : d.notes;
+  const others = [d.notes, d.roots, d.blues].filter(a => a !== arr);
+  // remove from other lists
+  others.forEach(a => { const i = a.indexOf(key); if (i !== -1) a.splice(i, 1); });
+  // toggle in current list
+  const idx = arr.indexOf(key);
+  if (idx === -1) arr.push(key);
+  else arr.splice(idx, 1);
+  refreshGrid();
+}
+
+function updateDotCounts() {
+  document.querySelectorAll('.scale-item').forEach(el => {
+    const d = scaleData[el.dataset.scale];
+    const count = d ? (d.notes.length + d.roots.length) : 0;
+    el.querySelector('.dot-count').textContent = count > 0 ? count : '';
+  });
+}
+
+function clearCurrentScale() {
+  if (!activeScale) return;
+  scaleData[activeScale] = { notes: [], roots: [], blues: [] };
+  refreshGrid();
+  showStatus(`Cleared ${activeScale}`);
+}
+
+function saveToLocal() {
+  localStorage.setItem('scaleData', JSON.stringify(scaleData));
+  showStatus('Saved!', '#4aff9e');
+}
+
+function exportData() {
+  const box = document.getElementById('exportBox');
+  const out = JSON.stringify(scaleData, null, 2);
+  box.textContent = out;
+  box.style.display = 'block';
+  navigator.clipboard.writeText(`const scaleData = ${out};`).then(() => {
+    showStatus('Copied to clipboard!', '#4aff9e');
+  }).catch(() => {
+    showStatus('See box below — copy manually');
+  });
+}
+
+function showStatus(msg, color = 'white') {
+  const el = document.getElementById('statusMsg');
+  el.style.color = color;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+buildScalePanel();
+initSvgGrid();
+refreshGrid();
+</script>
+</body>
+</html>
