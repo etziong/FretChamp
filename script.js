@@ -413,9 +413,16 @@ nextBtn.addEventListener('click', () => {
 const extBtn = document.querySelector('.ext-btn');
 extBtn.addEventListener('click', () => {
   extBtn.classList.toggle('active');
-  extBtn.textContent = extBtn.classList.contains('active') ? 'Tensions' : 'Add tensions';
+  if (extBtn.classList.contains('active')) {
+    extBtn.textContent = 'Tensions';
+    headLineEl.innerHTML = 'Extended<br>Chords';
+  } else {
+    extBtn.textContent = 'Add tensions';
+    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTED<br>CHORDS' : 'TREE NOTES<br>CHORDS';
+  }
 });
 const headLineEl = document.querySelector('.headLine');
+const rootDisplayEl = document.querySelector('.rootDisplay');
 const noteNameDisplay = document.querySelector('.noteNameDisplay');
 const scoreNumberEl = document.querySelector('.score-number');
 const instracEl = document.querySelector('.Instrac');
@@ -825,6 +832,9 @@ const tensionChords = {
   "Caug7":["C","E","G#","Bb"],  "Daug7":["D","F#","A#","C"],  "Eaug7":["E","G#","C","D"],
   "Faug7":["F","A","C#","Eb"], "Gaug7":["G","B","D#","F"],   "Aaug7":["A","C#","F","G"],  "Baug7":["B","D#","G","A"],
 
+  "C13":["C","E","G","Bb","A"], "D13":["D","F#","A","C","B"], "E13":["E","G#","B","D","C#"],
+  "F13":["F","A","C","Eb","D"], "G13":["G","B","D","F","E"],  "A13":["A","C#","E","G","F#"], "B13":["B","D#","F#","A","G#"],
+
   "C7b5":["C","E","Gb","Bb"],  "D7b5":["D","F#","Ab","C"], "E7b5":["E","G#","Bb","D"],
   "F7b5":["F","A","B","Eb"],   "G7b5":["G","B","Db","F"],  "A7b5":["A","C#","Eb","G"], "B7b5":["B","D#","F","A"],
 };
@@ -908,7 +918,8 @@ function startFourChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'FOUR NOTED<br>CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
-  instracEl.textContent = `Find chord notes`;
+  instracEl.textContent = `Find chord tones`;
+  rootDisplayEl.innerHTML = 'Full chord tones<br>(including the 5th)';
   highlightChordNotes(chordNotes);
 }
 
