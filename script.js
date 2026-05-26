@@ -253,7 +253,7 @@ function initSvgGrid() {
       rootHlText.textContent = 'R';
 
       const bluesHlText = document.createElementNS(NS, 'text');
-      bluesHlText.setAttribute('x', xCtr); bluesHlText.setAttribute('y', yCtr2 + 13);
+      bluesHlText.setAttribute('x', xCtr); bluesHlText.setAttribute('y', yCtr2 + 12);
       bluesHlText.setAttribute('text-anchor', 'middle'); bluesHlText.setAttribute('fill', 'white');
       bluesHlText.setAttribute('font-size', '32'); bluesHlText.setAttribute('font-weight', 'bold');
       bluesHlText.setAttribute('font-family', 'system-ui, sans-serif');
