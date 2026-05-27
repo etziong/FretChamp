@@ -129,7 +129,6 @@ header nav img {
   height: auto;
   display: block;
   margin: auto;
-  margin-top: 25px;
 }
 
 .main-content {
@@ -147,12 +146,12 @@ header nav img {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-top: 55px;
+  margin-top: 35px;
 }
 
 .main-btn {
   width: 100%;
-  padding: 18px 16px;
+  padding: 17px 16px;
   font-size: 16px;
   border-radius: 9px;
   background: linear-gradient(135deg, #1a6fdb, #0a3a8a);
@@ -308,15 +307,44 @@ header nav img {
   width: 145px;
 }
 
+.slash-instrac {
+  display: none;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+  font-family: system-ui, sans-serif;
+  font-weight: normal;
+  margin-top: -4px;
+}
+
+.slash-chord-mode .slash-instrac {
+  display: block;
+}
+
+.no5th-note {
+  display: none;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+  font-family: system-ui, sans-serif;
+  font-weight: normal;
+  margin-top: -6px;
+}
+
 .rootDisplay {
+  display: none;
   font-size: 13px;
   color: rgba(255,255,255,0.65);
   font-style: normal;
   margin-top: -4px;
 }
 
+.scales-mode .rootDisplay {
+  display: block;
+}
+
 .noteD {
-  font-size: 55px;
+  font-size: 50px;
   color: darkorange;
   text-align: left;
   margin-left: 0px;
@@ -324,6 +352,19 @@ header nav img {
 
 .note-suffix {
   font-size: 0.38em;
+  vertical-align: baseline;
+}
+
+.slash-sep {
+  font-size: 58px;
+  font-weight: normal;
+  font-style: italic;
+  vertical-align: baseline;
+  margin-left: 4px;
+}
+
+.slash-bass {
+  font-size: 50px;
   vertical-align: baseline;
 }
 
@@ -673,7 +714,7 @@ header nav img {
   margin-bottom: -4px;
   margin-top: -53px;
   position: relative;
-  top: 43px;
+  top: 28px;
 }
 
 .scale-btn-free {

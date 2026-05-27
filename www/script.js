@@ -253,7 +253,7 @@ function initSvgGrid() {
       rootHlText.textContent = 'R';
 
       const bluesHlText = document.createElementNS(NS, 'text');
-      bluesHlText.setAttribute('x', xCtr); bluesHlText.setAttribute('y', yCtr2 + 13);
+      bluesHlText.setAttribute('x', xCtr); bluesHlText.setAttribute('y', yCtr2 + 12);
       bluesHlText.setAttribute('text-anchor', 'middle'); bluesHlText.setAttribute('fill', 'white');
       bluesHlText.setAttribute('font-size', '32'); bluesHlText.setAttribute('font-weight', 'bold');
       bluesHlText.setAttribute('font-family', 'system-ui, sans-serif');
@@ -371,7 +371,7 @@ function handleFretClick(e) {
 }
 
 homeBtn.addEventListener('click', () => {
-  document.body.classList.remove('greed-mode', 'free-play-mode', 'scales-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode');
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
   clearScaleHighlights();
@@ -419,10 +419,12 @@ extBtn.addEventListener('click', () => {
   } else {
     extBtn.textContent = 'Add tensions';
     headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTED<br>CHORDS' : 'TREE NOTES<br>CHORDS';
+    no5thNote.style.display = 'none';
   }
 });
 const headLineEl = document.querySelector('.headLine');
 const rootDisplayEl = document.querySelector('.rootDisplay');
+const no5thNote = document.querySelector('.no5th-note');
 const noteNameDisplay = document.querySelector('.noteNameDisplay');
 const scoreNumberEl = document.querySelector('.score-number');
 const instracEl = document.querySelector('.Instrac');
@@ -526,22 +528,21 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode');
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
+    no5thNote.style.display = 'none';
     if (index === 1) {
       gameMode = 'chord';
       chordMode = 'triads';
-      document.body.classList.remove('four-chord-mode', 'free-play-mode');
       startChordRound();
     } else if (index === 2) {
       gameMode = 'chord';
       chordMode = 'sevenths';
       document.body.classList.add('four-chord-mode');
-      document.body.classList.remove('free-play-mode');
       startFourChordRound();
     } else if (index === 3) {
       gameMode = 'freeplay';
-      document.body.classList.remove('four-chord-mode');
       document.body.classList.add('free-play-mode', 'scales-mode');
       lockedStrings.clear();
       document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
@@ -553,9 +554,13 @@ mainButtons.forEach((btn, index) => {
         cell.circle.setAttribute('opacity', '0');
         cell.text.setAttribute('opacity', '0');
       });
+    } else if (index === 4) {
+      gameMode = 'chord';
+      chordMode = 'slash';
+      document.body.classList.add('slash-chord-mode');
+      startSlashChordRound();
     } else {
       gameMode = 'single';
-      document.body.classList.remove('four-chord-mode', 'free-play-mode');
       headLineEl.innerHTML = 'SINGLE NOTES';
       instracEl.innerHTML = 'Find (all)<br>Displayed notes';
       note = randomNote();
@@ -709,6 +714,20 @@ const noteFrequencies = {
 const openStrings = { 1:329.63, 2:246.94, 3:196.00, 4:146.83, 5:110.00, 6:82.41 };
 
 function formatNoteName(name) {
+  if (name.includes('/')) {
+    const slashIdx = name.indexOf('/');
+    const chord = name.slice(0, slashIdx);
+    const bass = name.slice(slashIdx + 1);
+    const chordMatch = chord.match(/^([A-G])(.*)$/);
+    const chordFormatted = chordMatch && chordMatch[2]
+      ? `${chordMatch[1]}<span class="note-suffix">${chordMatch[2]}</span>`
+      : (chordMatch ? chordMatch[1] : chord);
+    const bassMatch = bass.match(/^([A-G])(.*)$/);
+    const bassFormatted = bassMatch && bassMatch[2]
+      ? `<span class="slash-bass">${bassMatch[1]}</span><span class="note-suffix">${bassMatch[2]}</span>`
+      : `<span class="slash-bass">${bass}</span>`;
+    return `${chordFormatted}<span class="slash-sep">/</span>${bassFormatted}`;
+  }
   const match = name.match(/^([A-G])(.+)$/);
   if (!match) return name;
   return `${match[1]}<span class="note-suffix">${match[2]}</span>`;
@@ -808,8 +827,8 @@ const tensionChords = {
   "CminM7":["C","Eb","G","B"],    "DminM7":["D","F","A","C#"],   "EminM7":["E","G","B","D#"],
   "FminM7":["F","Ab","C","E"],    "GminM7":["G","Bb","D","F#"],  "AminM7":["A","C","E","G#"],  "BminM7":["B","D","F#","A#"],
 
-  "Cmaj9":["C","E","G","B","D"],  "Dmaj9":["D","F#","A","C#","E"], "Emaj9":["E","G#","B","D#","F#"],
-  "Fmaj9":["F","A","C","E","G"],  "Gmaj9":["G","B","D","F#","A"],  "Amaj9":["A","C#","E","G#","B"], "Bmaj9":["B","D#","F#","A#","C#"],
+  "Cmaj9":["C","E","B","D"],  "Dmaj9":["D","F#","C#","E"], "Emaj9":["E","G#","D#","F#"],
+  "Fmaj9":["F","A","E","G"],  "Gmaj9":["G","B","F#","A"],  "Amaj9":["A","C#","G#","B"], "Bmaj9":["B","D#","A#","C#"],
 
   "Cm6":["C","Eb","G","A"],  "Dm6":["D","F","A","B"],   "Em6":["E","G","B","C#"],
   "Fm6":["F","Ab","C","D"],  "Gm6":["G","Bb","D","E"],  "Am6":["A","C","E","F#"],  "Bm6":["B","D","F#","G#"],
@@ -817,14 +836,14 @@ const tensionChords = {
   "C6":["C","E","G","A"],  "D6":["D","F#","A","B"],   "E6":["E","G#","B","C#"],
   "F6":["F","A","C","D"],  "G6":["G","B","D","E"],    "A6":["A","C#","E","F#"],  "B6":["B","D#","F#","G#"],
 
-  "C7b9":["C","E","G","Bb","Db"], "D7b9":["D","F#","A","C","Eb"], "E7b9":["E","G#","B","D","F"],
-  "F7b9":["F","A","C","Eb","Gb"], "G7b9":["G","B","D","F","Ab"],  "A7b9":["A","C#","E","G","Bb"], "B7b9":["B","D#","F#","A","C"],
+  "C7b9":["C","E","Bb","Db"], "D7b9":["D","F#","C","Eb"], "E7b9":["E","G#","D","F"],
+  "F7b9":["F","A","Eb","Gb"], "G7b9":["G","B","F","Ab"],  "A7b9":["A","C#","G","Bb"], "B7b9":["B","D#","A","C"],
 
-  "C7#9":["C","E","G","Bb","D#"], "D7#9":["D","F#","A","C","F"],  "E7#9":["E","G#","B","D","G"],
-  "F7#9":["F","A","C","Eb","G#"], "G7#9":["G","B","D","F","A#"],  "A7#9":["A","C#","E","G","C"], "B7#9":["B","D#","F#","A","D"],
+  "C7#9":["C","E","Bb","D#"], "D7#9":["D","F#","C","F"],  "E7#9":["E","G#","D","G"],
+  "F7#9":["F","A","Eb","G#"], "G7#9":["G","B","F","A#"],  "A7#9":["A","C#","G","C"], "B7#9":["B","D#","A","D"],
 
-  "C#11":["C","E","G","Bb","F#"], "D#11":["D","F#","A","C","G#"], "E#11":["E","G#","B","D","A#"],
-  "F#11":["F","A","C","Eb","B"],  "G#11":["G","B","D","F","C#"],  "A#11":["A","C#","E","G","D#"], "B#11":["B","D#","F#","A","F"],
+  "C#11":["C","E","Bb","F#"], "D#11":["D","F#","C","G#"], "E#11":["E","G#","D","A#"],
+  "F#11":["F","A","Eb","B"],  "G#11":["G","B","F","C#"],  "A#11":["A","C#","G","D#"], "B#11":["B","D#","A","F"],
 
   "Cdim7":["C","Eb","Gb","A"],  "Ddim7":["D","F","Ab","B"],   "Edim7":["E","G","Bb","C#"],
   "Fdim7":["F","Ab","B","D"],   "Gdim7":["G","Bb","Db","E"],  "Adim7":["A","C","Eb","F#"], "Bdim7":["B","D","F","Ab"],
@@ -832,11 +851,68 @@ const tensionChords = {
   "Caug7":["C","E","G#","Bb"],  "Daug7":["D","F#","A#","C"],  "Eaug7":["E","G#","C","D"],
   "Faug7":["F","A","C#","Eb"], "Gaug7":["G","B","D#","F"],   "Aaug7":["A","C#","F","G"],  "Baug7":["B","D#","G","A"],
 
-  "C13":["C","E","G","Bb","A"], "D13":["D","F#","A","C","B"], "E13":["E","G#","B","D","C#"],
-  "F13":["F","A","C","Eb","D"], "G13":["G","B","D","F","E"],  "A13":["A","C#","E","G","F#"], "B13":["B","D#","F#","A","G#"],
+  "C13":["C","E","Bb","A"], "D13":["D","F#","C","B"], "E13":["E","G#","D","C#"],
+  "F13":["F","A","Eb","D"], "G13":["G","B","F","E"],  "A13":["A","C#","G","F#"], "B13":["B","D#","A","G#"],
+
+  "Cb13":["C","E","Bb","Ab"], "Db13":["D","F#","C","Bb"], "Eb13":["E","G#","D","C"],
+  "Fb13":["F","A","Eb","Db"], "Gb13":["G","B","F","Eb"],  "Ab13":["A","C#","G","F"], "Bb13":["B","D#","A","G"],
+
+  "Cm9":["C","Eb","Bb","D"], "Dm9":["D","F","C","E"], "Em9":["E","G","D","F#"],
+  "Fm9":["F","Ab","Eb","G"], "Gm9":["G","Bb","F","A"], "Am9":["A","C","G","B"], "Bm9":["B","D","A","C#"],
+
+  "C11":["C","E","Bb","F"], "D11":["D","F#","C","G"], "E11":["E","G#","D","A"],
+  "F11":["F","A","Eb","Bb"], "G11":["G","B","F","C"], "A11":["A","C#","G","D"], "B11":["B","D#","A","E"],
+
+  "C7sus4":["C","F","G","Bb"], "D7sus4":["D","G","A","C"], "E7sus4":["E","A","B","D"],
+  "F7sus4":["F","Bb","C","Eb"], "G7sus4":["G","C","D","F"], "A7sus4":["A","D","E","G"], "B7sus4":["B","E","F#","A"],
+
+  "C7sus2":["C","D","G","Bb"], "D7sus2":["D","E","A","C"], "E7sus2":["E","F#","B","D"],
+  "F7sus2":["F","G","C","Eb"], "G7sus2":["G","A","D","F"], "A7sus2":["A","B","E","G"], "B7sus2":["B","C#","F#","A"],
 
   "C7b5":["C","E","Gb","Bb"],  "D7b5":["D","F#","Ab","C"], "E7b5":["E","G#","Bb","D"],
   "F7b5":["F","A","B","Eb"],   "G7b5":["G","B","Db","F"],  "A7b5":["A","C#","Eb","G"], "B7b5":["B","D#","F","A"],
+};
+
+const slashChords = {
+  // UST bVII/I (Bb/C type)
+  "Bb/C":["C","Bb","D","F"],  "C/D":["D","C","E","G"],   "D/E":["E","D","F#","A"],
+  "Eb/F":["F","Eb","G","Bb"], "F/G":["G","F","A","C"],   "G/A":["A","G","B","D"],  "A/B":["B","A","C#","E"],
+
+  // UST II/I (D/C type)
+  "D/C":["C","D","F#","A"],   "E/D":["D","E","G#","B"],  "F#/E":["E","F#","A#","C#"],
+  "G/F":["F","G","B","D"],    "A/G":["G","A","C#","E"],  "B/A":["A","B","D#","F#"], "C#/B":["B","C#","F","G#"],
+
+  // UST bII/I (Db/C type)
+  "Db/C":["C","Db","F","Ab"], "Eb/D":["D","Eb","G","Bb"], "F/E":["E","F","A","C"],
+  "Gb/F":["F","Gb","Bb","Db"],"Ab/G":["G","Ab","C","Eb"], "Bb/A":["A","Bb","D","F"], "C/B":["B","C","E","G"],
+
+  // UST III/I (E/C type)
+  "E/C":["C","E","G#","B"],   "F#/D":["D","F#","A#","C#"], "G#/E":["E","G#","C","D#"],
+  "A/F":["F","A","C#","E"],   "B/G":["G","B","D#","F#"],  "C#/A":["A","C#","F","G#"], "D#/B":["B","D#","G","A#"],
+
+  // Major 1st inversion (C/E type)
+  "C/E":["C","E","G"],   "D/F#":["D","F#","A"],  "E/G#":["E","G#","B"],
+  "F/A":["F","A","C"],   "G/B":["G","B","D"],    "A/C#":["A","C#","E"],  "B/D#":["B","D#","F#"],
+
+  // Major 2nd inversion (C/G type)
+  "C/G":["C","E","G"],   "D/A":["D","F#","A"],   "E/B":["E","G#","B"],
+  "F/C":["F","A","C"],   "G/D":["G","B","D"],    "A/E":["A","C#","E"],   "B/F#":["B","D#","F#"],
+
+  // Minor 1st inversion (Cm/Eb type)
+  "Cm/Eb":["C","Eb","G"], "Dm/F":["D","F","A"],  "Em/G":["E","G","B"],
+  "Fm/Ab":["F","Ab","C"], "Gm/Bb":["G","Bb","D"],"Am/C":["A","C","E"],   "Bm/D":["B","D","F#"],
+
+  // Minor 2nd inversion (Cm/G type)
+  "Cm/G":["C","Eb","G"],  "Dm/A":["D","F","A"],  "Em/B":["E","G","B"],
+  "Fm/C":["F","Ab","C"],  "Gm/D":["G","Bb","D"], "Am/E":["A","C","E"],   "Bm/F#":["B","D","F#"],
+
+  // Hybrid: minor triad over M2-below bass (Am/G type)
+  "Cm/Bb":["Bb","C","Eb","G"], "Dm/C":["C","D","F","A"],  "Em/D":["D","E","G","B"],
+  "Fm/Eb":["Eb","F","Ab","C"], "Gm/F":["F","G","Bb","D"], "Am/G":["G","A","C","E"],  "Bm/A":["A","B","D","F#"],
+
+  // Hybrid: major triad over m3-below bass (G/E type)
+  "C/A":["A","C","E","G"],    "D/B":["B","D","F#","A"],  "E/C#":["C#","E","G#","B"],
+  "F/D":["D","F","A","C"],    "G/E":["E","G","B","D"],   "A/F#":["F#","A","C#","E"], "B/G#":["G#","B","D#","F#"],
 };
 
 let gameMode = 'single';
@@ -897,6 +973,7 @@ function highlightChordNotes(notes) {
 let foundChordNotes = new Set();
 let nextRoundTimeout = null;
 let lastChordName = null;
+let lastSlashChordName = null;
 
 function startFourChordRound() {
   let chordName;
@@ -919,7 +996,23 @@ function startFourChordRound() {
   headLineEl.innerHTML = 'FOUR NOTED<br>CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = `Find chord tones`;
-  rootDisplayEl.innerHTML = 'Full chord tones<br>(including the 5th)';
+  const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9'];
+  const isNo5th = extBtn.classList.contains('active') && no5thSuffixes.some(s => chordName.endsWith(s));
+  no5thNote.style.display = isNo5th ? 'block' : 'none';
+  highlightChordNotes(chordNotes);
+}
+
+function startSlashChordRound() {
+  const keys = Object.keys(slashChords);
+  let chordName;
+  do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastSlashChordName && keys.length > 1);
+  lastSlashChordName = chordName;
+  chordNotes = slashChords[chordName];
+  foundChordNotes = new Set();
+  headLineEl.innerHTML = 'SLASH<br>CHORDS';
+  notesDisplay.innerHTML = formatNoteName(chordName);
+  instracEl.textContent = 'Find chord tones';
+  no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
 }
 
@@ -1235,6 +1328,7 @@ function nextRound() {
   feedbackEl.textContent = '';
   if (gameMode === 'chord') {
     if (chordMode === 'sevenths') startFourChordRound();
+    else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
   } else {
     headLineEl.textContent = 'SINGLE NOTES';
