@@ -265,6 +265,35 @@ function initSvgGrid() {
       svg.appendChild(rect); svg.appendChild(circle); svg.appendChild(text);
       svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, rootHlText, bluesHlText };
       rect.addEventListener('click', handleFretClick);
+      rect.addEventListener('pointerdown', () => {
+        if (!document.body.classList.contains('scales-mode')) return;
+        const cell = svgCells[key];
+        const dotMap = [
+          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+        ];
+        for (const { el } of dotMap) {
+          if (el.getAttribute('opacity') === '1') {
+            el.setAttribute('fill', 'darkorange');
+            el._origFill = dotMap.find(d => d.el === el).orig;
+          }
+        }
+      });
+      const restoreScaleDot = () => {
+        if (!document.body.classList.contains('scales-mode')) return;
+        const cell = svgCells[key];
+        const dotMap = [
+          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+        ];
+        for (const { el, orig } of dotMap) {
+          if (el.getAttribute('opacity') === '1') el.setAttribute('fill', orig);
+        }
+      };
+      rect.addEventListener('pointerup', restoreScaleDot);
+      rect.addEventListener('pointercancel', restoreScaleDot);
     }
   }
 }
@@ -542,6 +571,11 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('four-chord-mode');
       startFourChordRound();
     } else if (index === 3) {
+      gameMode = 'chord';
+      chordMode = 'slash';
+      document.body.classList.add('slash-chord-mode');
+      startSlashChordRound();
+    } else if (index === 4) {
       gameMode = 'freeplay';
       document.body.classList.add('free-play-mode', 'scales-mode');
       lockedStrings.clear();
@@ -554,11 +588,6 @@ mainButtons.forEach((btn, index) => {
         cell.circle.setAttribute('opacity', '0');
         cell.text.setAttribute('opacity', '0');
       });
-    } else if (index === 4) {
-      gameMode = 'chord';
-      chordMode = 'slash';
-      document.body.classList.add('slash-chord-mode');
-      startSlashChordRound();
     } else {
       gameMode = 'single';
       headLineEl.innerHTML = 'SINGLE NOTES';
