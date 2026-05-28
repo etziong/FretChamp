@@ -56,6 +56,7 @@ body {
   position: relative;
 }
 
+
 /* ── Make inner content scroll, not the whole app ── */
 .screen {
   flex: 1;           /* fills remaining space between header and tab bar */
@@ -83,7 +84,7 @@ html {
     min-height: 100vh;
     padding: 24px 0;
   }
- 
+fi
   .app {
     height: auto;
     min-height: 80vh;
@@ -146,13 +147,9 @@ header nav img {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 10px;
   margin-top: 35px;
-}
-
-.main-btn:first-child,
-.main-btn:last-child {
-  grid-column: 1 / -1;
+  direction: ltr;
 }
 
 .bass-mode .buttons-section {
@@ -161,6 +158,10 @@ header nav img {
 
 .bass-mode .basic-chords-btn {
   display: none;
+}
+
+.basic-chords-btn {
+  order: -1;
 }
 
 .basic-chord-selector {
@@ -211,8 +212,9 @@ header nav img {
 
 .main-btn {
   width: 100%;
-  padding: 17px 16px;
-  font-size: 16px;
+  height: 85px;
+  padding: 0 12px;
+  font-size: 13px;
   border-radius: 9px;
   background: linear-gradient(135deg, #1a6fdb, #0a3a8a);
   color: #ffffff;
@@ -220,10 +222,19 @@ header nav img {
   font-weight: bold;
   letter-spacing: 0.5px;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.bass-mode .main-btn {
+  height: 52px;
 }
 
 .main-btn:active {
-  background-color: #37afdf;
+  background: #37afdf;
+  background-image: none;
 }
 
 .small-btn {
@@ -246,7 +257,7 @@ header nav img {
 }
 
 
-.small-btn:active,.main-btn:active {
+.small-btn:active {
   background: #37afdf;
 }
 

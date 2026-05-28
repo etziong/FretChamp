@@ -56,6 +56,7 @@ body {
   position: relative;
 }
 
+
 /* ── Make inner content scroll, not the whole app ── */
 .screen {
   flex: 1;           /* fills remaining space between header and tab bar */
@@ -83,7 +84,7 @@ html {
     min-height: 100vh;
     padding: 24px 0;
   }
- 
+
   .app {
     height: auto;
     min-height: 80vh;
@@ -127,7 +128,7 @@ header nav {
 }
 
 header nav img {
-  width: 288px;
+  width: 295px;
   height: auto;
   display: block;
   margin: auto;
@@ -146,13 +147,9 @@ header nav img {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 10px;
   margin-top: 35px;
-}
-
-.main-btn:first-child,
-.main-btn:last-child {
-  grid-column: 1 / -1;
+  direction: ltr;
 }
 
 .bass-mode .buttons-section {
@@ -163,12 +160,21 @@ header nav img {
   display: none;
 }
 
+.basic-chords-btn {
+  order: -1;
+  grid-column: 1 / -1;
+}
+
+.scales-btn {
+  grid-column: 1 / -1;
+}
+
 .basic-chord-selector {
   display: none;
   flex-direction: column;
   gap: 6px;
   margin-top: 4px;
-  width: 140px;
+  width: 95px;
 }
 
 .basic-chord-mode .basic-chord-selector {
@@ -179,12 +185,13 @@ header nav img {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.35);
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-family: system-ui, sans-serif;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 5px 8px;
   cursor: pointer;
   text-align: left;
+  white-space: nowrap;
 }
 
 .basic-chord-cat-btn.active {
@@ -194,15 +201,67 @@ header nav img {
 
 .basic-chord-countdown {
   display: none;
-  font-size: 64px;
-  color: #22c55e;
+  font-size: 100px;
+  color: #4a90d9;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: bold;
-  font-style: normal;
+  font-style: italic;
   line-height: 1;
+  position: absolute;
+  bottom: 75px;
+  left: 20px;
 }
 
 .basic-study-phase .basic-chord-countdown {
   display: block;
+}
+
+.timer-selector {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+.basic-chord-mode .timer-selector {
+  display: flex;
+}
+.timer-toggle-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  font-size: 12px;
+  font-family: system-ui, sans-serif;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+  width: 95px;
+  white-space: nowrap;
+}
+.timer-options {
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+}
+.timer-selector.open .timer-options {
+  display: flex;
+}
+.timer-opt-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  font-family: system-ui, sans-serif;
+  padding: 4px 8px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 4px;
+}
+.timer-opt-btn.active {
+  color: darkorange;
+}
+.timer-opt-btn:hover {
+  color: white;
 }
 
 .basic-chord-mode .string-lock-section {
@@ -211,8 +270,9 @@ header nav img {
 
 .main-btn {
   width: 100%;
-  padding: 17px 16px;
-  font-size: 16px;
+  height: 65px;
+  padding: 0 12px;
+  font-size: 13px;
   border-radius: 9px;
   background: linear-gradient(135deg, #1a6fdb, #0a3a8a);
   color: #ffffff;
@@ -220,11 +280,21 @@ header nav img {
   font-weight: bold;
   letter-spacing: 0.5px;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  outline: none;
+  will-change: opacity;
+  transition: opacity 0.15s ease;
 }
+.main-btn:active { opacity: 0.65; transform: translateY(0); }
 
-.main-btn:active {
-  background-color: #37afdf;
-}
+.bass-mode .main-btn { height: 50px; }
 
 .small-btn {
   flex: 1 1 0;
@@ -243,12 +313,11 @@ header nav img {
   justify-content: center;
   position: relative;
   top: -7px;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
+.small-btn:active { opacity: 0.65; transform: translateY(0); }
 
-
-.small-btn:active,.main-btn:active {
-  background: #37afdf;
-}
 
 .buttons-row {
   width: 100%;
@@ -326,7 +395,7 @@ header nav img {
   transition: opacity 0.3s ease;
 }
 
-.greed-mode #mode-label { display: none; }
+.greed-mode #mode-label { visibility: hidden; }
 
 .greed-mode .fret-svg {
   opacity: 1;
@@ -367,6 +436,17 @@ header nav img {
   font-size: 15px;
   color: rgb(255, 255, 255);
   width: 145px;
+}
+
+.basic-chord-hint {
+  display: none;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-style: normal;
+  line-height: 1.5;
+}
+.basic-chord-mode .basic-chord-hint {
+  display: block;
 }
 
 .slash-instrac {
@@ -410,6 +490,7 @@ header nav img {
   color: darkorange;
   text-align: left;
   margin-left: 0px;
+  min-height: 60px;
 }
 
 .note-suffix {
