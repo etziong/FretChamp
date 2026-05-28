@@ -41,7 +41,7 @@
         <button class="small-btn" id="bass-btn"><img id="bass-btn-img" src="bassHead.png" alt="bass" style="width:50px;height:50px;object-fit:contain;margin-bottom:-8px;"></button>
         <button class="small-btn" id="feedback-btn" style="padding:6px 8px;"><img src="feadBack.png" style="width:45px;height:43px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px) translateY(4px);"></button>
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
-        <button class="small-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
+        <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
       </section>
       <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Brenard Vitali Goel ©</p>
       <div class="bottom-bar">
@@ -182,6 +182,14 @@
 
   <script src="script.js"></script>
   <script type="module" src="firebase-feedback.js"></script>
+
+  <div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1a1a2e;border-radius:14px;padding:28px 24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
+      <h3 style="margin:0 0 12px;text-align:center;font-size:18px;letter-spacing:1px;">Settings</h3>
+      <p style="margin:0 0 24px;text-align:center;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">This app is still in beta.</p>
+      <button id="settings-close" style="width:100%;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Close</button>
+    </div>
+  </div>
 
   <div id="feedback-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
