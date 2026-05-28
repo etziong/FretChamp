@@ -1071,6 +1071,22 @@ let basicCountdownTimer = null;
 let basicStudyKeys = [];
 const countdownEl = document.querySelector('.basic-chord-countdown');
 
+let basicTimerSeconds = 5;
+const timerSelector = document.querySelector('.timer-selector');
+const timerToggleBtn = document.querySelector('.timer-toggle-btn');
+timerToggleBtn.addEventListener('click', () => {
+  timerSelector.classList.toggle('open');
+});
+document.querySelectorAll('.timer-opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    basicTimerSeconds = parseInt(btn.dataset.seconds);
+    document.querySelectorAll('.timer-opt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    timerToggleBtn.textContent = basicTimerSeconds === 0 ? 'Timer Off' : `Timer ${basicTimerSeconds}s`;
+    timerSelector.classList.remove('open');
+  });
+});
+
 function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
@@ -1083,12 +1099,17 @@ function showBasicChordStudy(chord) {
   });
   chord.keys.forEach(key => {
     if (svgCells[key]) {
-      svgCells[key].circle.setAttribute('fill', '#22c55e');
+      svgCells[key].circle.setAttribute('fill', 'darkorange');
       svgCells[key].circle.setAttribute('opacity', '1');
     }
   });
   document.body.classList.add('basic-study-phase');
-  let count = 5;
+  if (basicTimerSeconds === 0) {
+    countdownEl.textContent = '';
+    clearInterval(basicCountdownTimer);
+    return;
+  }
+  let count = basicTimerSeconds;
   countdownEl.textContent = count;
   clearInterval(basicCountdownTimer);
   basicCountdownTimer = setInterval(() => {
