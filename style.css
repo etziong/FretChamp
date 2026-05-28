@@ -183,6 +183,8 @@ header nav img {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  position: relative;
+  top: -7px;
 }
 
 
@@ -728,4 +730,9 @@ header nav img {
 
 .scale-btn-free.active {
   color: darkorange !important;
+}
+
+.credit-text {
+  position: relative;
+  top: -9px;
 }
