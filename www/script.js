@@ -90,82 +90,84 @@ const liveOffsets = {};
 const baseCellPositions = {};
 
 const bassOffsets = {
-  "btn1-string-6": { dx: 15, dy: 0 },
-  "btn1-string-5": { dx: 46, dy: 0 },
-  "btn1-string-4": { dx: 81, dy: 0 },
+  "btn1-string-6": { dx: 18, dy: 0 },
+  "btn1-string-5": { dx: 49, dy: 0 },
+  "btn1-string-4": { dx: 84, dy: 0 },
   "btn1-string-3": { dx: 103, dy: 0 },
+  "btn1-string-2": { dx: 47, dy: 0 },
+  "btn1-string-1": { dx: -2, dy: 0 },
   "btn2-string-6": { dx: 20, dy: 60 },
   "btn2-string-5": { dx: 46, dy: 60 },
-  "btn2-string-4": { dx: 81, dy: 60 },
+  "btn2-string-4": { dx: 84, dy: 60 },
   "btn2-string-3": { dx: 106, dy: 60 },
-  "btn2-string-2": { dx: 0, dy: 60 },
-  "btn2-string-1": { dx: 0, dy: 60 },
+  "btn2-string-2": { dx: 46, dy: 60 },
+  "btn2-string-1": { dx: -3, dy: 60 },
   "btn3-string-6": { dx: 17, dy: 100 },
   "btn3-string-5": { dx: 48, dy: 100 },
   "btn3-string-4": { dx: 84, dy: 100 },
   "btn3-string-3": { dx: 106, dy: 100 },
-  "btn3-string-2": { dx: 0, dy: 100 },
-  "btn3-string-1": { dx: 0, dy: 100 },
+  "btn3-string-2": { dx: 46, dy: 100 },
+  "btn3-string-1": { dx: -5, dy: 100 },
   "btn4-string-6": { dx: 16, dy: 118 },
-  "btn4-string-5": { dx: 47, dy: 118 },
+  "btn4-string-5": { dx: 53, dy: 118 },
   "btn4-string-4": { dx: 85, dy: 118 },
   "btn4-string-3": { dx: 109, dy: 118 },
-  "btn4-string-2": { dx: 0, dy: 118 },
-  "btn4-string-1": { dx: 0, dy: 118 },
+  "btn4-string-2": { dx: 51, dy: 118 },
+  "btn4-string-1": { dx: -7, dy: 118 },
   "btn5-string-6": { dx: 16, dy: 160 },
-  "btn5-string-5": { dx: 58, dy: 160 },
+  "btn5-string-5": { dx: 64, dy: 160 },
   "btn5-string-4": { dx: 85, dy: 160 },
   "btn5-string-3": { dx: 111, dy: 160 },
-  "btn5-string-2": { dx: 0, dy: 160 },
-  "btn5-string-1": { dx: 0, dy: 160 },
+  "btn5-string-2": { dx: 49, dy: 160 },
+  "btn5-string-1": { dx: 4, dy: 160 },
   "btn6-string-6": { dx: 16, dy: 217 },
-  "btn6-string-5": { dx: 49, dy: 217 },
-  "btn6-string-4": { dx: 85, dy: 217 },
+  "btn6-string-5": { dx: 52, dy: 217 },
+  "btn6-string-4": { dx: 88, dy: 217 },
   "btn6-string-3": { dx: 111, dy: 217 },
-  "btn6-string-2": { dx: 0, dy: 217 },
-  "btn6-string-1": { dx: 0, dy: 217 },
+  "btn6-string-2": { dx: 51, dy: 217 },
+  "btn6-string-1": { dx: -12, dy: 217 },
   "btn7-string-6": { dx: 18, dy: 260 },
-  "btn7-string-5": { dx: 50, dy: 260 },
+  "btn7-string-5": { dx: 53, dy: 260 },
   "btn7-string-4": { dx: 88, dy: 260 },
   "btn7-string-3": { dx: 114, dy: 260 },
-  "btn7-string-2": { dx: 0, dy: 260 },
-  "btn7-string-1": { dx: 0, dy: 260 },
+  "btn7-string-2": { dx: 50, dy: 260 },
+  "btn7-string-1": { dx: -10, dy: 260 },
   "btn8-string-6": { dx: 35, dy: 302 },
-  "btn8-string-5": { dx: 58, dy: 302 },
-  "btn8-string-4": { dx: 93, dy: 302 },
+  "btn8-string-5": { dx: 61, dy: 302 },
+  "btn8-string-4": { dx: 90, dy: 302 },
   "btn8-string-3": { dx: 123, dy: 302 },
-  "btn8-string-2": { dx: 0, dy: 302 },
-  "btn8-string-1": { dx: 0, dy: 302 },
+  "btn8-string-2": { dx: 68, dy: 302 },
+  "btn8-string-1": { dx: 6, dy: 302 },
   "btn9-string-6": { dx: 21, dy: 346 },
-  "btn9-string-5": { dx: 51, dy: 346 },
-  "btn9-string-4": { dx: 92, dy: 346 },
+  "btn9-string-5": { dx: 54, dy: 346 },
+  "btn9-string-4": { dx: 89, dy: 346 },
   "btn9-string-3": { dx: 120, dy: 346 },
-  "btn9-string-2": { dx: 0, dy: 346 },
-  "btn9-string-1": { dx: 0, dy: 346 },
+  "btn9-string-2": { dx: 59, dy: 346 },
+  "btn9-string-1": { dx: -7, dy: 346 },
   "btn10-string-6": { dx: 20, dy: 377 },
-  "btn10-string-5": { dx: 53, dy: 377 },
+  "btn10-string-5": { dx: 56, dy: 377 },
   "btn10-string-4": { dx: 92, dy: 377 },
   "btn10-string-3": { dx: 123, dy: 377 },
-  "btn10-string-2": { dx: 0, dy: 377 },
-  "btn10-string-1": { dx: 0, dy: 377 },
+  "btn10-string-2": { dx: 61, dy: 377 },
+  "btn10-string-1": { dx: -5, dy: 377 },
   "btn11-string-6": { dx: 34, dy: 417 },
-  "btn11-string-5": { dx: 57, dy: 417 },
+  "btn11-string-5": { dx: 60, dy: 417 },
   "btn11-string-4": { dx: 94, dy: 417 },
   "btn11-string-3": { dx: 126, dy: 417 },
-  "btn11-string-2": { dx: 0, dy: 417 },
-  "btn11-string-1": { dx: 0, dy: 417 },
+  "btn11-string-2": { dx: 64, dy: 417 },
+  "btn11-string-1": { dx: -8, dy: 417 },
   "btn12-string-6": { dx: 23, dy: 460 },
-  "btn12-string-5": { dx: 56, dy: 460 },
+  "btn12-string-5": { dx: 59, dy: 460 },
   "btn12-string-4": { dx: 96, dy: 460 },
   "btn12-string-3": { dx: 126, dy: 460 },
-  "btn12-string-2": { dx: 0, dy: 460 },
-  "btn12-string-1": { dx: 0, dy: 460 },
+  "btn12-string-2": { dx: 60, dy: 460 },
+  "btn12-string-1": { dx: -16, dy: 460 },
   "btn13-string-6": { dx: 22, dy: 485 },
-  "btn13-string-5": { dx: 54, dy: 485 },
-  "btn13-string-4": { dx: 96, dy: 485 },
+  "btn13-string-5": { dx: 57, dy: 485 },
+  "btn13-string-4": { dx: 90, dy: 485 },
   "btn13-string-3": { dx: 124, dy: 485 },
-  "btn13-string-2": { dx: 0, dy: 485 },
-  "btn13-string-1": { dx: 0, dy: 485 },
+  "btn13-string-2": { dx: 63, dy: 485 },
+  "btn13-string-1": { dx: -5, dy: 485 },
 };
 
 function initSvgGrid() {
@@ -265,6 +267,37 @@ function initSvgGrid() {
       svg.appendChild(rect); svg.appendChild(circle); svg.appendChild(text);
       svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, rootHlText, bluesHlText };
       rect.addEventListener('click', handleFretClick);
+      rect.addEventListener('pointerdown', () => {
+        if (!document.body.classList.contains('scales-mode')) return;
+        const cell = svgCells[key];
+        const dotMap = [
+          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+        ];
+        for (const { el } of dotMap) {
+          if (el.getAttribute('opacity') === '1') {
+            el.setAttribute('fill', 'darkorange');
+            el._origFill = dotMap.find(d => d.el === el).orig;
+          }
+        }
+      });
+      const restoreScaleDot = () => {
+        if (!document.body.classList.contains('scales-mode')) return;
+        const cell = svgCells[key];
+        const dotMap = [
+          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+        ];
+        setTimeout(() => {
+          for (const { el, orig } of dotMap) {
+            if (el.getAttribute('opacity') === '1') el.setAttribute('fill', orig);
+          }
+        }, 300);
+      };
+      rect.addEventListener('pointerup', restoreScaleDot);
+      rect.addEventListener('pointercancel', restoreScaleDot);
     }
   }
 }
@@ -542,6 +575,11 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('four-chord-mode');
       startFourChordRound();
     } else if (index === 3) {
+      gameMode = 'chord';
+      chordMode = 'slash';
+      document.body.classList.add('slash-chord-mode');
+      startSlashChordRound();
+    } else if (index === 4) {
       gameMode = 'freeplay';
       document.body.classList.add('free-play-mode', 'scales-mode');
       lockedStrings.clear();
@@ -554,11 +592,6 @@ mainButtons.forEach((btn, index) => {
         cell.circle.setAttribute('opacity', '0');
         cell.text.setAttribute('opacity', '0');
       });
-    } else if (index === 4) {
-      gameMode = 'chord';
-      chordMode = 'slash';
-      document.body.classList.add('slash-chord-mode');
-      startSlashChordRound();
     } else {
       gameMode = 'single';
       headLineEl.innerHTML = 'SINGLE NOTES';

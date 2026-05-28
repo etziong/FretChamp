@@ -65,6 +65,20 @@ modal.addEventListener('click', (e) => {
   }
 });
 
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const settingsClose = document.getElementById('settings-close');
+
+settingsBtn.addEventListener('click', () => {
+  settingsModal.style.display = 'flex';
+});
+settingsClose.addEventListener('click', () => {
+  settingsModal.style.display = 'none';
+});
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) settingsModal.style.display = 'none';
+});
+
 const shareBtn = document.getElementById('share-btn');
 const SHARE_URL = 'https://firebasestorage.googleapis.com/v0/b/fretchamp.firebasestorage.app/o/FretChamp.apk?alt=media&token=59cb5a10-fb15-4715-8305-184fb277f490';
 
