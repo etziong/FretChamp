@@ -147,7 +147,7 @@ header nav img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   margin-top: 35px;
 }
 
