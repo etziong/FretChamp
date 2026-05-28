@@ -36,6 +36,8 @@ body {
   background: #000000;
   position: relative;
   padding: 0 32px;
+  max-width: 390px;
+  margin: 0 auto;
 }
 
 .app {
