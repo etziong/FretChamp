@@ -288,9 +288,11 @@ function initSvgGrid() {
           { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
           { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
         ];
-        for (const { el, orig } of dotMap) {
-          if (el.getAttribute('opacity') === '1') el.setAttribute('fill', orig);
-        }
+        setTimeout(() => {
+          for (const { el, orig } of dotMap) {
+            if (el.getAttribute('opacity') === '1') el.setAttribute('fill', orig);
+          }
+        }, 300);
       };
       rect.addEventListener('pointerup', restoreScaleDot);
       rect.addEventListener('pointercancel', restoreScaleDot);
