@@ -615,7 +615,7 @@ mainButtons.forEach((btn, index) => {
       basicChordCategory = null;
       lastBasicChordName = null;
       document.body.classList.add('basic-chord-mode');
-      headLineEl.textContent = 'BASIC CHORDS';
+      headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
       instracEl.textContent = 'Choose category';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
@@ -1091,7 +1091,7 @@ function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
   instracEl.textContent = 'Remember!';
-  headLineEl.textContent = 'BASIC CHORDS';
+  headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
