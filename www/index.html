@@ -34,6 +34,7 @@
         <button class="main-btn">TREE NOTES CHORDS</button>
         <button class="main-btn">FOUR NOTES CHORDS</button>
         <button class="main-btn">SLASH CHORDS</button>
+        <button class="main-btn basic-chords-btn">BASIC CHORDS</button>
         <button class="main-btn">SCALES</button>
       </section>
 
@@ -43,7 +44,7 @@
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
         <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
       </section>
-      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Brenard Vitali Goel ©</p>
+      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Goel ©</p>
       <div class="bottom-bar">
         <div class="mute-wrapper">
           <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
@@ -67,6 +68,10 @@
       <p class="no5th-note">No 5th needed</p>
       <p class="rootDisplay">Root: G / 6th Str</p>
       <p class="feedback"></p>
+      <div class="basic-chord-selector">
+        <button class="basic-chord-cat-btn" data-cat="open">Open Chords</button>
+        <button class="basic-chord-cat-btn" data-cat="barre">Barre Chords</button>
+      </div>
       <div class="scale-selector">
 
         <div class="scale-group">
@@ -159,6 +164,7 @@
 
       </div>
       <p class = "noteD"></p>
+      <p class="basic-chord-countdown"></p>
       <button class="ext-btn">Add tensions</button>
       <div class="string-lock-section">
         <span class="string-lock-label">Open/Lock<br>Strings</span>

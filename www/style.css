@@ -144,11 +144,69 @@ header nav img {
 
 .buttons-section {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
   margin-top: 35px;
+}
+
+.main-btn:first-child,
+.main-btn:last-child {
+  grid-column: 1 / -1;
+}
+
+.bass-mode .buttons-section {
+  grid-template-columns: 1fr;
+}
+
+.bass-mode .basic-chords-btn {
+  display: none;
+}
+
+.basic-chord-selector {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  width: 140px;
+}
+
+.basic-chord-mode .basic-chord-selector {
+  display: flex;
+}
+
+.basic-chord-cat-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.basic-chord-cat-btn.active {
+  border-color: darkorange;
+  color: darkorange;
+}
+
+.basic-chord-countdown {
+  display: none;
+  font-size: 64px;
+  color: #22c55e;
+  font-weight: bold;
+  font-style: normal;
+  line-height: 1;
+}
+
+.basic-study-phase .basic-chord-countdown {
+  display: block;
+}
+
+.basic-chord-mode .string-lock-section {
+  display: none;
 }
 
 .main-btn {
@@ -183,6 +241,8 @@ header nav img {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  position: relative;
+  top: -7px;
 }
 
 
@@ -728,4 +788,9 @@ header nav img {
 
 .scale-btn-free.active {
   color: darkorange !important;
+}
+
+.credit-text {
+  position: relative;
+  top: -9px;
 }
