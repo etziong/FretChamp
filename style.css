@@ -734,9 +734,6 @@ header nav img {
   display: none;
 }
 
-.scale-selector.has-open .scale-btn-free {
-  display: none;
-}
 
 .scale-back-btn {
   display: none;
@@ -862,6 +859,7 @@ header nav img {
 
 .scale-btn-free {
   margin-top: 14px;
+  margin-bottom: 14px;
   border-color: rgba(255,255,255,0.5) !important;
   color: rgba(255,255,255,0.85) !important;
   font-style: italic;
