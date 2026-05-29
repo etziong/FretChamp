@@ -432,7 +432,6 @@ function handleFretClick(e) {
 
 homeBtn.addEventListener('click', () => {
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase');
-  clearInterval(basicCountdownTimer);
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -491,6 +490,76 @@ const noteNameDisplay = document.querySelector('.noteNameDisplay');
 const scoreNumberEl = document.querySelector('.score-number');
 const instracEl = document.querySelector('.Instrac');
 const muteBtn = document.querySelector('.mute-btn');
+const peekBtn = document.querySelector('.peek-btn');
+const peekLabel = document.querySelector('.peek-label');
+
+function getPeekKeys() {
+  return Array.from(targetKeys);
+}
+
+function showPeek() {
+  const keys = getPeekKeys();
+  keys.forEach(key => {
+    if (svgCells[key]) {
+      svgCells[key].circle.setAttribute('fill', 'darkorange');
+      svgCells[key].circle.setAttribute('opacity', '1');
+    }
+  });
+}
+
+function hidePeek() {
+  const keys = getPeekKeys();
+  keys.forEach(key => {
+    if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
+  });
+}
+
+function updatePeekLabel() {
+  if (!peekLabel) return;
+  const word = (gameMode === 'single' || gameMode === 'freeplay' || gameMode === 'basicchord') ? 'Notes' : 'Chords';
+  peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>${word}`;
+}
+
+let instracFlashTimeout = null;
+
+function bothCatGroupsSelected() {
+  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
+  return !!(g1 && g2);
+}
+
+peekBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
+
+  if (!g1 && !g2) {
+    const prev = instracEl.innerHTML;
+    instracEl.innerHTML = 'Choose chords<br>Shape and roots';
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+    return;
+  }
+  if (!g2) {
+    const prev = instracEl.innerHTML;
+    instracEl.innerHTML = 'Choose root';
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+    return;
+  }
+  if (!g1 || targetKeys.size === 0) {
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
+    return;
+  }
+  showPeek();
+});
+peekBtn.addEventListener('pointerup', hidePeek);
+peekBtn.addEventListener('pointerleave', hidePeek);
+
 let score = 0;
 let isMuted = false;
 const lockedStrings = new Set();
@@ -591,7 +660,6 @@ mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
     document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase');
-    clearInterval(basicCountdownTimer);
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -599,19 +667,23 @@ mainButtons.forEach((btn, index) => {
     if (index === 1) {
       gameMode = 'chord';
       chordMode = 'triads';
+      updatePeekLabel();
       startChordRound();
     } else if (index === 2) {
       gameMode = 'chord';
       chordMode = 'sevenths';
+      updatePeekLabel();
       document.body.classList.add('four-chord-mode');
       startFourChordRound();
     } else if (index === 3) {
       gameMode = 'chord';
       chordMode = 'slash';
+      updatePeekLabel();
       document.body.classList.add('slash-chord-mode');
       startSlashChordRound();
     } else if (index === 4) {
       gameMode = 'basicchord';
+      updatePeekLabel();
       basicChordCategory = null;
       lastBasicChordName = null;
       document.body.classList.add('basic-chord-mode');
@@ -625,6 +697,7 @@ mainButtons.forEach((btn, index) => {
       });
     } else if (index === 5) {
       gameMode = 'freeplay';
+      updatePeekLabel();
       document.body.classList.add('free-play-mode', 'scales-mode');
       lockedStrings.clear();
       document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
@@ -638,6 +711,7 @@ mainButtons.forEach((btn, index) => {
       });
     } else {
       gameMode = 'single';
+      updatePeekLabel();
       headLineEl.innerHTML = 'SINGLE NOTES';
       instracEl.innerHTML = 'Find (all)<br>Displayed notes';
       note = randomNote();
@@ -689,11 +763,18 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
   });
 });
 
+const group1Cats = ['open', 'barre'];
+const group2Cats = ['root6', 'root5'];
+
 document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
   catBtn.addEventListener('click', () => {
-    document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+    const cat = catBtn.dataset.cat;
+    const sameGroup = group1Cats.includes(cat) ? group1Cats : group2Cats;
+    document.querySelectorAll('.basic-chord-cat-btn').forEach(b => {
+      if (sameGroup.includes(b.dataset.cat)) b.classList.remove('active');
+    });
     catBtn.classList.add('active');
-    basicChordCategory = catBtn.dataset.cat;
+    basicChordCategory = cat;
     startBasicChordRound();
   });
 });
@@ -1065,61 +1146,98 @@ const basicBarreChords = [
   { name: 'Emaj7',keys: ['btn8-string-5','btn10-string-4','btn9-string-3','btn10-string-2','btn8-string-1'] },
 ];
 
+const basicRoot6Chords = [
+  // F (E-shape, fret 1)
+  { name: 'F',    keys: ['btn2-string-6','btn4-string-5','btn4-string-4','btn3-string-3','btn2-string-2','btn2-string-1'] },
+  { name: 'Fm',   keys: ['btn2-string-6','btn4-string-5','btn4-string-4','btn2-string-3','btn2-string-2','btn2-string-1'] },
+  { name: 'F7',   keys: ['btn2-string-6','btn4-string-5','btn2-string-4','btn3-string-3','btn2-string-2','btn2-string-1'] },
+  { name: 'Fm7',  keys: ['btn2-string-6','btn4-string-5','btn2-string-4','btn2-string-3','btn2-string-2','btn2-string-1'] },
+  { name: 'Fmaj7',keys: ['btn2-string-6','btn4-string-5','btn3-string-4','btn3-string-3','btn2-string-2','btn2-string-1'] },
+  // G (E-shape, fret 3)
+  { name: 'G',    keys: ['btn4-string-6','btn6-string-5','btn6-string-4','btn5-string-3','btn4-string-2','btn4-string-1'] },
+  { name: 'Gm',   keys: ['btn4-string-6','btn6-string-5','btn6-string-4','btn4-string-3','btn4-string-2','btn4-string-1'] },
+  { name: 'G7',   keys: ['btn4-string-6','btn6-string-5','btn4-string-4','btn5-string-3','btn4-string-2','btn4-string-1'] },
+  { name: 'Gm7',  keys: ['btn4-string-6','btn6-string-5','btn4-string-4','btn4-string-3','btn4-string-2','btn4-string-1'] },
+  { name: 'Gmaj7',keys: ['btn4-string-6','btn6-string-5','btn5-string-4','btn5-string-3','btn4-string-2','btn4-string-1'] },
+  // A (E-shape, fret 5)
+  { name: 'A',    keys: ['btn6-string-6','btn8-string-5','btn8-string-4','btn7-string-3','btn6-string-2','btn6-string-1'] },
+  { name: 'Am',   keys: ['btn6-string-6','btn8-string-5','btn8-string-4','btn6-string-3','btn6-string-2','btn6-string-1'] },
+  { name: 'A7',   keys: ['btn6-string-6','btn8-string-5','btn6-string-4','btn7-string-3','btn6-string-2','btn6-string-1'] },
+  { name: 'Am7',  keys: ['btn6-string-6','btn8-string-5','btn6-string-4','btn6-string-3','btn6-string-2','btn6-string-1'] },
+  { name: 'Amaj7',keys: ['btn6-string-6','btn8-string-5','btn7-string-4','btn7-string-3','btn6-string-2','btn6-string-1'] },
+  // B (E-shape, fret 7)
+  { name: 'B',    keys: ['btn8-string-6','btn10-string-5','btn10-string-4','btn9-string-3','btn8-string-2','btn8-string-1'] },
+  { name: 'Bm',   keys: ['btn8-string-6','btn10-string-5','btn10-string-4','btn8-string-3','btn8-string-2','btn8-string-1'] },
+  { name: 'B7',   keys: ['btn8-string-6','btn10-string-5','btn8-string-4','btn9-string-3','btn8-string-2','btn8-string-1'] },
+  { name: 'Bm7',  keys: ['btn8-string-6','btn10-string-5','btn8-string-4','btn8-string-3','btn8-string-2','btn8-string-1'] },
+  { name: 'Bmaj7',keys: ['btn8-string-6','btn10-string-5','btn9-string-4','btn9-string-3','btn8-string-2','btn8-string-1'] },
+  // C (E-shape, fret 8)
+  { name: 'C',    keys: ['btn9-string-6','btn11-string-5','btn11-string-4','btn10-string-3','btn9-string-2','btn9-string-1'] },
+  { name: 'Cm',   keys: ['btn9-string-6','btn11-string-5','btn11-string-4','btn9-string-3','btn9-string-2','btn9-string-1'] },
+  { name: 'C7',   keys: ['btn9-string-6','btn11-string-5','btn9-string-4','btn10-string-3','btn9-string-2','btn9-string-1'] },
+  { name: 'Cm7',  keys: ['btn9-string-6','btn11-string-5','btn9-string-4','btn9-string-3','btn9-string-2','btn9-string-1'] },
+  { name: 'Cmaj7',keys: ['btn9-string-6','btn11-string-5','btn10-string-4','btn10-string-3','btn9-string-2','btn9-string-1'] },
+  // D (E-shape, fret 10)
+  { name: 'D',    keys: ['btn11-string-6','btn13-string-5','btn13-string-4','btn12-string-3','btn11-string-2','btn11-string-1'] },
+  { name: 'Dm',   keys: ['btn11-string-6','btn13-string-5','btn13-string-4','btn11-string-3','btn11-string-2','btn11-string-1'] },
+  { name: 'D7',   keys: ['btn11-string-6','btn13-string-5','btn11-string-4','btn12-string-3','btn11-string-2','btn11-string-1'] },
+  { name: 'Dm7',  keys: ['btn11-string-6','btn13-string-5','btn11-string-4','btn11-string-3','btn11-string-2','btn11-string-1'] },
+  { name: 'Dmaj7',keys: ['btn11-string-6','btn13-string-5','btn12-string-4','btn12-string-3','btn11-string-2','btn11-string-1'] },
+];
+
+const basicRoot5Chords = [
+  // B (A-shape, fret 2)
+  { name: 'B',    keys: ['btn3-string-5','btn5-string-4','btn5-string-3','btn5-string-2','btn3-string-1'] },
+  { name: 'Bm',   keys: ['btn3-string-5','btn5-string-4','btn5-string-3','btn4-string-2','btn3-string-1'] },
+  { name: 'B7',   keys: ['btn3-string-5','btn5-string-4','btn3-string-3','btn5-string-2','btn3-string-1'] },
+  { name: 'Bm7',  keys: ['btn3-string-5','btn5-string-4','btn3-string-3','btn4-string-2','btn3-string-1'] },
+  { name: 'Bmaj7',keys: ['btn3-string-5','btn5-string-4','btn4-string-3','btn5-string-2','btn3-string-1'] },
+  // C (A-shape, fret 3)
+  { name: 'C',    keys: ['btn4-string-5','btn6-string-4','btn6-string-3','btn6-string-2','btn4-string-1'] },
+  { name: 'Cm',   keys: ['btn4-string-5','btn6-string-4','btn6-string-3','btn5-string-2','btn4-string-1'] },
+  { name: 'C7',   keys: ['btn4-string-5','btn6-string-4','btn4-string-3','btn6-string-2','btn4-string-1'] },
+  { name: 'Cm7',  keys: ['btn4-string-5','btn6-string-4','btn4-string-3','btn5-string-2','btn4-string-1'] },
+  { name: 'Cmaj7',keys: ['btn4-string-5','btn6-string-4','btn5-string-3','btn6-string-2','btn4-string-1'] },
+  // D (A-shape, fret 5)
+  { name: 'D',    keys: ['btn6-string-5','btn8-string-4','btn8-string-3','btn8-string-2','btn6-string-1'] },
+  { name: 'Dm',   keys: ['btn6-string-5','btn8-string-4','btn8-string-3','btn7-string-2','btn6-string-1'] },
+  { name: 'D7',   keys: ['btn6-string-5','btn8-string-4','btn6-string-3','btn8-string-2','btn6-string-1'] },
+  { name: 'Dm7',  keys: ['btn6-string-5','btn8-string-4','btn6-string-3','btn7-string-2','btn6-string-1'] },
+  { name: 'Dmaj7',keys: ['btn6-string-5','btn8-string-4','btn7-string-3','btn8-string-2','btn6-string-1'] },
+  // E (A-shape, fret 7)
+  { name: 'E',    keys: ['btn8-string-5','btn10-string-4','btn10-string-3','btn10-string-2','btn8-string-1'] },
+  { name: 'Em',   keys: ['btn8-string-5','btn10-string-4','btn10-string-3','btn9-string-2','btn8-string-1'] },
+  { name: 'E7',   keys: ['btn8-string-5','btn10-string-4','btn8-string-3','btn10-string-2','btn8-string-1'] },
+  { name: 'Em7',  keys: ['btn8-string-5','btn10-string-4','btn8-string-3','btn9-string-2','btn8-string-1'] },
+  { name: 'Emaj7',keys: ['btn8-string-5','btn10-string-4','btn9-string-3','btn10-string-2','btn8-string-1'] },
+  // F (A-shape, fret 8)
+  { name: 'F',    keys: ['btn9-string-5','btn11-string-4','btn11-string-3','btn11-string-2','btn9-string-1'] },
+  { name: 'Fm',   keys: ['btn9-string-5','btn11-string-4','btn11-string-3','btn10-string-2','btn9-string-1'] },
+  { name: 'F7',   keys: ['btn9-string-5','btn11-string-4','btn9-string-3','btn11-string-2','btn9-string-1'] },
+  { name: 'Fm7',  keys: ['btn9-string-5','btn11-string-4','btn9-string-3','btn10-string-2','btn9-string-1'] },
+  { name: 'Fmaj7',keys: ['btn9-string-5','btn11-string-4','btn10-string-3','btn11-string-2','btn9-string-1'] },
+  // G (A-shape, fret 10)
+  { name: 'G',    keys: ['btn11-string-5','btn13-string-4','btn13-string-3','btn13-string-2','btn11-string-1'] },
+  { name: 'Gm',   keys: ['btn11-string-5','btn13-string-4','btn13-string-3','btn12-string-2','btn11-string-1'] },
+  { name: 'G7',   keys: ['btn11-string-5','btn13-string-4','btn11-string-3','btn13-string-2','btn11-string-1'] },
+  { name: 'Gm7',  keys: ['btn11-string-5','btn13-string-4','btn11-string-3','btn12-string-2','btn11-string-1'] },
+  { name: 'Gmaj7',keys: ['btn11-string-5','btn13-string-4','btn12-string-3','btn13-string-2','btn11-string-1'] },
+];
+
 let basicChordCategory = null;
 let lastBasicChordName = null;
-let basicCountdownTimer = null;
 let basicStudyKeys = [];
-const countdownEl = document.querySelector('.basic-chord-countdown');
-
-let basicTimerSeconds = 5;
-const timerSelector = document.querySelector('.timer-selector');
-const timerToggleBtn = document.querySelector('.timer-toggle-btn');
-timerToggleBtn.addEventListener('click', () => {
-  timerSelector.classList.toggle('open');
-});
-document.querySelectorAll('.timer-opt-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    basicTimerSeconds = parseInt(btn.dataset.seconds);
-    document.querySelectorAll('.timer-opt-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    timerToggleBtn.textContent = basicTimerSeconds === 0 ? 'Timer Off' : `Timer ${basicTimerSeconds}s`;
-    timerSelector.classList.remove('open');
-  });
-});
 
 function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
-  instracEl.textContent = 'Remember!';
-  headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
+  headLineEl.innerHTML = 'BASIC CHORD<br>SHAPES';
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
     cell.text.setAttribute('opacity', '0');
   });
-  chord.keys.forEach(key => {
-    if (svgCells[key]) {
-      svgCells[key].circle.setAttribute('fill', 'darkorange');
-      svgCells[key].circle.setAttribute('opacity', '1');
-    }
-  });
-  document.body.classList.add('basic-study-phase');
-  if (basicTimerSeconds === 0) {
-    countdownEl.textContent = '';
-    clearInterval(basicCountdownTimer);
-    return;
-  }
-  let count = basicTimerSeconds;
-  countdownEl.textContent = count;
-  clearInterval(basicCountdownTimer);
-  basicCountdownTimer = setInterval(() => {
-    count--;
-    countdownEl.textContent = count > 0 ? count : '';
-    if (count <= 0) {
-      clearInterval(basicCountdownTimer);
-      startBasicChordPlay(chord);
-    }
-  }, 1000);
+  startBasicChordPlay(chord);
 }
 
 function startBasicChordPlay(chord) {
@@ -1133,7 +1251,10 @@ function startBasicChordPlay(chord) {
 
 function startBasicChordRound() {
   if (!basicChordCategory) return;
-  const pool = basicChordCategory === 'open' ? basicOpenChords : basicBarreChords;
+  const pool = basicChordCategory === 'open' ? basicOpenChords :
+               basicChordCategory === 'root6' ? basicRoot6Chords :
+               basicChordCategory === 'root5' ? basicRoot5Chords :
+               basicBarreChords;
   let chord;
   do { chord = pool[Math.floor(Math.random() * pool.length)]; } while (chord.name === lastBasicChordName && pool.length > 1);
   lastBasicChordName = chord.name;

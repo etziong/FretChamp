@@ -153,8 +153,8 @@ header nav img {
 .buttons-section {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 7px;
   margin-top: 35px;
   direction: ltr;
 }
@@ -257,8 +257,8 @@ header nav img {
 
 .main-btn {
   width: 100%;
-  height: 65px;
-  padding: 0 12px;
+  height: 42px;
+  padding: 0 20px;
   font-size: 13px;
   border-radius: 9px;
   background: linear-gradient(135deg, #1a6fdb, #0a3a8a);
