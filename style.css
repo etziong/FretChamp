@@ -1,4 +1,11 @@
 
+:root {
+  --font-1: 17px;
+  --font-2: 15px;
+  --font-3: 13px;
+  --font-4: 11px;
+}
+
   /* ── Responsive for ALL screen sizes ── */
 
 * {
@@ -185,13 +192,19 @@ header nav img {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.35);
   color: white;
-  font-size: 12px;
+  font-size: var(--font-3);
   font-family: system-ui, sans-serif;
   border-radius: 6px;
   padding: 5px 8px;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
+}
+
+.basic-cat-label {
+  font-size: var(--font-4);
+  color: rgba(255,255,255,0.5);
+  font-family: system-ui, sans-serif;
 }
 
 .basic-chord-cat-btn.active {
@@ -199,70 +212,44 @@ header nav img {
   color: darkorange;
 }
 
-.basic-chord-countdown {
-  display: none;
-  font-size: 100px;
-  color: #4a90d9;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: bold;
-  font-style: italic;
-  line-height: 1;
-  position: absolute;
-  bottom: 75px;
-  left: 20px;
-}
 
-.basic-study-phase .basic-chord-countdown {
-  display: block;
-}
-
-.timer-selector {
+.peek-wrapper {
   display: none;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-.basic-chord-mode .timer-selector {
-  display: flex;
-}
-.timer-toggle-btn {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.35);
-  color: white;
-  font-size: 12px;
-  font-family: system-ui, sans-serif;
-  border-radius: 6px;
-  padding: 5px 8px;
+  align-items: center;
   cursor: pointer;
-  text-align: left;
-  width: 95px;
-  white-space: nowrap;
+  position: fixed;
+  top: 50px;
+  right: 12px;
+  z-index: 100;
 }
-.timer-options {
-  display: none;
-  flex-direction: column;
-  gap: 3px;
-}
-.timer-selector.open .timer-options {
+.greed-mode .peek-wrapper {
   display: flex;
 }
-.timer-opt-btn {
+.peek-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.75);
-  font-size: 12px;
-  font-family: system-ui, sans-serif;
-  padding: 4px 8px;
   cursor: pointer;
-  text-align: left;
-  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 51;
 }
-.timer-opt-btn.active {
-  color: darkorange;
+.peek-label {
+  color: rgba(255,255,255,0.6);
+  font-size: var(--font-3);
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  line-height: 1.3;
 }
-.timer-opt-btn:hover {
-  color: white;
+.peek-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
+.peek-wrapper:active { opacity: 0.6; }
 
 .basic-chord-mode .string-lock-section {
   display: none;
@@ -428,22 +415,23 @@ header nav img {
 }
 
 .headLine {
-  font-size: 17px;
+  font-size: var(--font-1);
   color: rgb(255, 255, 255);
 }
 
 .Instrac {
-  font-size: 15px;
+  font-size: var(--font-2);
   color: rgb(255, 255, 255);
   width: 145px;
 }
 
 .basic-chord-hint {
   display: none;
-  font-size: 11px;
-  color: rgba(255,255,255,0.5);
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
   font-style: normal;
-  line-height: 1.5;
 }
 .basic-chord-mode .basic-chord-hint {
   display: block;
@@ -514,7 +502,7 @@ header nav img {
 
 .bottom-bar {
   display: none;
-  position: absolute;
+  position: fixed;
   bottom: 12px;
   left: 12px;
   flex-direction: row;
@@ -570,7 +558,7 @@ header nav img {
 }
 
 .mute-label {
-  font-size: 13px;
+  font-size: var(--font-3);
   color: white;
   opacity: 0.7;
   font-family: system-ui, sans-serif;

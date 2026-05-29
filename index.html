@@ -45,7 +45,6 @@
         <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
       </section>
       <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Goel ©</p>
-      <p class="basic-chord-countdown"></p>
       <div class="bottom-bar">
         <div class="mute-wrapper">
           <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
@@ -64,25 +63,20 @@
       <section class ="noteNameDisplay" >
       <p class="score-inline"><span class="score-label-sm">Score</span> <span class="score-number">0</span></p>
       <p class = 'headLine'>SINGLE NOTES</p>
+      <p class = "noteD"></p>
       <p class = "Instrac">Find (all)<br>Displayed notes</p>
-      <p class="basic-chord-hint">Set a display timer<br>for Beginners</p>
+      <p class="basic-chord-hint">Tap "Show Notes"<br>if needed</p>
       <p class="slash-instrac">Play the note<br>after the slash<br>as bass</p>
       <p class="no5th-note">No 5th needed</p>
       <p class="rootDisplay">Root: G / 6th Str</p>
       <p class="feedback"></p>
-      <p class = "noteD"></p>
       <div class="basic-chord-selector">
+        <span class="basic-cat-label">Choose open or barre:</span>
         <button class="basic-chord-cat-btn" data-cat="open">Open Chords</button>
         <button class="basic-chord-cat-btn" data-cat="barre">Barre Chords</button>
-      </div>
-      <div class="timer-selector">
-        <button class="timer-toggle-btn">Timer 5s</button>
-        <div class="timer-options">
-          <button class="timer-opt-btn" data-seconds="10">10s</button>
-          <button class="timer-opt-btn active" data-seconds="5">5s</button>
-          <button class="timer-opt-btn" data-seconds="2">2s</button>
-          <button class="timer-opt-btn" data-seconds="0">Timer Off</button>
-        </div>
+        <span class="basic-cat-label" style="margin-top:10px;">Choose root on 5 or 6 str:</span>
+        <button class="basic-chord-cat-btn" data-cat="root6">Root: 6th Str</button>
+        <button class="basic-chord-cat-btn" data-cat="root5">Root: 5th Str</button>
       </div>
       <div class="scale-selector">
 
@@ -192,6 +186,10 @@
       </section>
 
     </div>
+  <div class="peek-wrapper">
+    <button class="peek-btn"></button>
+    <span class="peek-label"><img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>Notes</span>
+  </div>
   </main>
 
   <footer>
