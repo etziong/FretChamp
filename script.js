@@ -520,8 +520,41 @@ function updatePeekLabel() {
   peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>${word}`;
 }
 
+let instracFlashTimeout = null;
+
+function bothCatGroupsSelected() {
+  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
+  return !!(g1 && g2);
+}
+
 peekBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
+
+  if (!g1 && !g2) {
+    const prev = instracEl.innerHTML;
+    instracEl.innerHTML = 'Choose chords<br>Shape and roots';
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+    return;
+  }
+  if (!g2) {
+    const prev = instracEl.innerHTML;
+    instracEl.innerHTML = 'Choose root';
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+    return;
+  }
+  if (!g1 || targetKeys.size === 0) {
+    instracEl.style.color = 'darkorange';
+    clearTimeout(instracFlashTimeout);
+    instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
+    return;
+  }
   showPeek();
 });
 peekBtn.addEventListener('pointerup', hidePeek);

@@ -223,7 +223,7 @@ header nav img {
   right: 12px;
   z-index: 100;
 }
-.greed-mode .peek-wrapper {
+.basic-chord-mode .peek-wrapper {
   display: flex;
 }
 .peek-btn {
