@@ -885,11 +885,21 @@ header nav img {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 16px 8px;
+  padding: 16px 16px 16px;
   position: sticky;
   top: 0;
   background: #0a0a0f;
   z-index: 10;
+}
+.cl-subtitle {
+  font-size: 15px;
+  color: white;
+  font-weight: bold;
+  font-family: system-ui;
+  font-style: italic;
+  padding: 0 16px 14px 0;
+  margin: 0;
+  text-align: left;
 }
 .cl-title {
   font-size: var(--font-1);

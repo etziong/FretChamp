@@ -1921,10 +1921,6 @@ function renderStrings56(body) {
   const fretY = f => pT + f * fretH;
   const slotY = f => pT + (f - 0.5) * fretH; // center of fret slot
 
-  // Intro text
-  svg.appendChild(el('text', {x:strX(6)-8, y:11, 'text-anchor':'start', fill:'rgba(255,255,255,0.45)', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, 'Beginners — memorize the'));
-  svg.appendChild(el('text', {x:strX(6)-8, y:23, 'text-anchor':'start', fill:'rgba(255,255,255,0.45)', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, 'note positions on these strings'));
-
   // String labels
   const strLabels = {6:'Str 6',5:'Str 5',4:'',3:'',2:'',1:''};
   const strTune   = {6:'E',5:'A',4:'D',3:'G',2:'B',1:'e'};
@@ -1987,6 +1983,20 @@ function renderStrings56(body) {
 function renderChordListSection(tab) {
   const body = document.getElementById('cl-body');
   body.innerHTML = '';
+  const subtitles = {
+    strings56: 'For beginners — root notes on strings 5 & 6',
+    open:      'Open chord shapes',
+    barre:     'Barre chord shapes',
+    triads:    'Inversions for 3-note chords',
+    sevenths:  'Inversions for 4-note chords',
+    jazz:      'Common jazz chord shapes',
+  };
+  if (subtitles[tab]) {
+    const h = document.createElement('p');
+    h.className = 'cl-subtitle';
+    h.textContent = subtitles[tab];
+    body.appendChild(h);
+  }
   if (tab === 'strings56') { renderStrings56(body); return; }
   if (tab === 'jazz') { renderJazzTable(body); return; }
   const items = chordListData[tab] || [];
@@ -2015,7 +2025,7 @@ function renderChordListSection(tab) {
 
 function renderJazzTable(body) {
   const note = document.createElement('p');
-  note.style.cssText = 'font-size:10px;color:rgba(255,165,0,0.7);margin-bottom:8px;font-family:system-ui;';
+  note.style.cssText = 'font-size:13px;color:white;margin-bottom:8px;margin-top:-8px;font-family:system-ui;';
   note.textContent = 'Root = C • 5th omitted where possible';
   body.appendChild(note);
 
