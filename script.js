@@ -1849,6 +1849,15 @@ const chordListData = {
     { name:'2nd inv', fret:7, dots:[[5,7],[4,7],[3,7],[2,8]], muted:[6,1], root:[3,7] },
     { name:'3rd inv', fret:9, dots:[[5,10],[4,9],[3,9],[2,9]], muted:[6,1], root:[2,9] },
   ],
+  slash: [
+    { section: 'Common slash chords' },
+    { name:'G/B',  fret:1, dots:[[5,2],[1,3]], muted:[6],  root:[5,2] },
+    { name:'C/E',  fret:1, dots:[[5,3],[4,2],[2,1]], muted:[], root:[6,0] },
+    { name:'D/F#', fret:1, dots:[[6,2],[3,2],[2,3],[1,2]], muted:[5], root:[6,2] },
+    { name:'Am/G', fret:1, dots:[[6,3],[4,2],[3,2],[2,1]], muted:[], root:[6,3] },
+    { name:'F/A',  fret:1, barre:{fret:1,from:1,to:2}, dots:[[4,3],[3,2]], muted:[6], root:[5,0] },
+    { name:'Em/B', fret:1, dots:[[5,2],[4,2]], muted:[], root:[5,2] },
+  ],
   jazz: 'table',
 };
 
@@ -1989,6 +1998,7 @@ function renderChordListSection(tab) {
     barre:     'Barre chord shapes',
     triads:    'Inversions for 3-note chords',
     sevenths:  'Inversions for 4-note chords',
+    slash:     'Chord with a specific bass note',
     jazz:      'Common jazz chord shapes',
   };
   if (subtitles[tab]) {
