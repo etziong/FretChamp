@@ -1692,3 +1692,381 @@ function nextRound() {
   }
 }
 
+// ── Chord List Reference ─────────────────────────────────────────────────────
+
+function makeChordSVG(chord, rootString) {
+  const W = 72, H = 96;
+  const pL = 10, pR = 10, pT = 20, pB = 8;
+  const gW = W - pL - pR, gH = H - pT - pB;
+  const STRINGS = 6, FRETS = 5;
+  const sx = i => pL + (i * gW / (STRINGS - 1));
+  const fy = j => pT + (j * gH / FRETS);
+  const slotY = (relFret) => pT + (relFret - 0.5) * gH / FRETS;
+  const startFret = chord.fret || 1;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+
+  const el = (tag, attrs) => {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+    return e;
+  };
+
+  // Strings
+  for (let i = 0; i < STRINGS; i++) {
+    svg.appendChild(el('line', { x1:sx(i),y1:fy(0),x2:sx(i),y2:fy(FRETS), stroke:'rgba(255,255,255,0.5)', 'stroke-width':'1' }));
+  }
+  // Frets
+  for (let j = 0; j <= FRETS; j++) {
+    svg.appendChild(el('line', { x1:sx(0),y1:fy(j),x2:sx(STRINGS-1),y2:fy(j),
+      stroke:'rgba(255,255,255,0.5)', 'stroke-width': j === 0 && startFret === 1 ? '4' : '1' }));
+  }
+  // Fret number
+  if (startFret > 1) {
+    const t = el('text', { x:sx(STRINGS-1)+3, y:fy(1)-2, fill:'rgba(255,255,255,0.6)', 'font-size':'7', 'font-family':'system-ui' });
+    t.textContent = `${startFret}fr`;
+    svg.appendChild(t);
+  }
+
+  // Barre
+  if (chord.barre) {
+    const { fret: bf, from: bs, to: be } = chord.barre;
+    const relF = bf - startFret + 1;
+    const x1 = sx(6 - be), x2 = sx(6 - bs);
+    svg.appendChild(el('line', { x1, y1:slotY(relF), x2, y2:slotY(relF), stroke:'white', 'stroke-width':'9', 'stroke-linecap':'round' }));
+    if (chord.root) {
+      const [rs, rf] = chord.root;
+      if (rf === bf && rs >= bs && rs <= be) {
+        svg.appendChild(el('circle', { cx:sx(6-rs), cy:slotY(relF), r:'5.5', fill:'darkorange' }));
+      }
+    }
+  }
+
+  // Dots
+  const barre = chord.barre;
+  const barreFret = barre ? barre.fret : -1;
+  // Find root dot: rootString param (jazz) or chord.root = [str, fret]
+  const rootDot = rootString
+    ? (chord.dots || []).find(([s]) => s === rootString)
+    : chord.root;
+
+  (chord.dots || []).forEach(([str, gFret]) => {
+    const relF = gFret - startFret + 1;
+    if (relF < 1 || relF > FRETS) return;
+    const x = sx(6 - str), y = slotY(relF);
+    const isRoot = rootDot && rootDot[0] === str && rootDot[1] === gFret;
+    svg.appendChild(el('circle', { cx:x, cy:y, r:'5.5', fill: isRoot ? 'darkorange' : 'white' }));
+  });
+
+  // Muted / Open indicators above nut
+  const muted = new Set(chord.muted || []);
+  const dotted = new Set((chord.dots || []).map(d => d[0]));
+  const barreCovered = new Set();
+  if (barre) { for (let s = barre.from; s <= barre.to; s++) barreCovered.add(s); }
+
+  for (let str = 1; str <= 6; str++) {
+    const x = sx(6 - str);
+    if (muted.has(str)) {
+      const t = el('text', { x, y:pT-6, 'text-anchor':'middle', fill:'rgba(255,255,255,0.7)', 'font-size':'9', 'font-family':'system-ui' });
+      t.textContent = '✕'; svg.appendChild(t);
+    } else if (!dotted.has(str) && !barreCovered.has(str)) {
+      const isOpenRoot = rootDot && rootDot[0] === str && rootDot[1] === 0;
+      svg.appendChild(el('circle', { cx:x, cy:pT-8, r:'4',
+        fill: isOpenRoot ? 'darkorange' : 'none',
+        stroke: isOpenRoot ? 'darkorange' : 'rgba(255,255,255,0.7)',
+        'stroke-width':'1.5' }));
+    }
+  }
+  return svg;
+}
+
+const chordListData = {
+  open: [
+    { section: 'E family' },
+    { name:'E',     fret:1, dots:[[5,2],[4,2],[3,1]], muted:[],   root:[6,0] },
+    { name:'Em',    fret:1, dots:[[5,2],[4,2]], muted:[],          root:[6,0] },
+    { name:'E7',    fret:1, dots:[[5,2],[3,1]], muted:[],          root:[6,0] },
+    { name:'Emaj7', fret:1, dots:[[5,2],[4,1],[3,1]], muted:[],   root:[6,0] },
+    { section: 'A family' },
+    { name:'A',     fret:1, dots:[[4,2],[3,2],[2,2]], muted:[6],  root:[5,0] },
+    { name:'Am',    fret:1, dots:[[4,2],[3,2],[2,1]], muted:[6],  root:[5,0] },
+    { name:'A7',    fret:1, dots:[[4,2],[2,2]], muted:[6],         root:[5,0] },
+    { name:'Amaj7', fret:1, dots:[[4,2],[3,1],[2,2]], muted:[6],  root:[5,0] },
+    { section: 'D family' },
+    { name:'D',     fret:1, dots:[[3,2],[2,3],[1,2]], muted:[6,5],root:[4,0] },
+    { name:'Dm',    fret:1, dots:[[3,2],[2,3],[1,1]], muted:[6,5],root:[4,0] },
+    { name:'D7',    fret:1, dots:[[3,2],[2,1],[1,2]], muted:[6,5],root:[4,0] },
+    { section: 'G & C' },
+    { name:'G',     fret:1, dots:[[6,3],[5,2],[1,3]], muted:[],   root:[6,3] },
+    { name:'G7',    fret:1, dots:[[6,3],[5,2],[1,1]], muted:[],   root:[6,3] },
+    { name:'C',     fret:1, dots:[[5,3],[4,2],[2,1]], muted:[6],  root:[5,3] },
+    { name:'Cmaj7', fret:1, dots:[[5,3],[4,2]], muted:[6],         root:[5,3] },
+    { name:'B7',    fret:1, dots:[[5,2],[4,1],[3,2],[1,2]], muted:[6], root:[5,2] },
+  ],
+  barre: [
+    { section: 'E-shape (root on 6th string)' },
+    { name:'Major',  fret:1, barre:{fret:1,from:1,to:6}, dots:[[5,3],[4,3],[3,2]], muted:[],  root:[6,1] },
+    { name:'Minor',  fret:1, barre:{fret:1,from:1,to:6}, dots:[[5,3],[4,3]], muted:[],         root:[6,1] },
+    { name:'7',      fret:1, barre:{fret:1,from:1,to:6}, dots:[[5,3],[3,2]], muted:[],         root:[6,1] },
+    { name:'m7',     fret:1, barre:{fret:1,from:1,to:6}, dots:[[5,3]], muted:[],               root:[6,1] },
+    { name:'maj7',   fret:1, barre:{fret:1,from:1,to:6}, dots:[[5,3],[4,3],[3,2]], muted:[],  root:[6,1] },
+    { section: 'A-shape (root on 5th string)' },
+    { name:'Major',  fret:1, barre:{fret:1,from:1,to:5}, dots:[[4,3],[3,3],[2,3]], muted:[6], root:[5,1] },
+    { name:'Minor',  fret:1, barre:{fret:1,from:1,to:5}, dots:[[4,3],[3,3]], muted:[6],        root:[5,1] },
+    { name:'7',      fret:1, barre:{fret:1,from:1,to:5}, dots:[[4,3],[3,2]], muted:[6],        root:[5,1] },
+    { name:'m7',     fret:1, barre:{fret:1,from:1,to:5}, dots:[[4,3]], muted:[6],              root:[5,1] },
+    { name:'maj7',   fret:1, barre:{fret:1,from:1,to:5}, dots:[[4,3],[3,3],[2,2]], muted:[6], root:[5,1] },
+  ],
+  triads: [
+    { section: 'Strings 1-2-3 (C major)' },
+    { name:'Root pos', fret:5, dots:[[3,5],[2,5],[1,5]], muted:[6,5,4], barre:{fret:5,from:1,to:3}, root:[3,5] },
+    { name:'1st inv',  fret:3, dots:[[3,4],[2,3],[1,3]], muted:[6,5,4], barre:{fret:3,from:1,to:2}, root:[2,3] },
+    { name:'2nd inv',  fret:7, dots:[[3,7],[2,8],[1,8]], muted:[6,5,4], root:[1,8] },
+    { section: 'Strings 2-3-4 (C major)' },
+    { name:'Root pos', fret:5, dots:[[4,5],[3,5],[2,5]], muted:[6,5,1], barre:{fret:5,from:2,to:4}, root:[4,5] },
+    { name:'1st inv',  fret:2, dots:[[4,3],[3,2],[2,3]], muted:[6,5,1], root:[3,2] },
+    { name:'2nd inv',  fret:7, dots:[[4,7],[3,7],[2,8]], muted:[6,5,1], root:[2,8] },
+    { section: 'Strings 3-4-5 (C major)' },
+    { name:'Root pos', fret:2, dots:[[5,3],[4,2],[3,5]], muted:[6,2,1], root:[5,3] },
+    { name:'1st inv',  fret:5, dots:[[5,7],[4,5],[3,5]], muted:[6,2,1], root:[4,5] },
+    { name:'2nd inv',  fret:9, dots:[[5,10],[4,9],[3,9]], muted:[6,2,1], root:[3,9] },
+    { section: 'Strings 4-5-6 (C major)' },
+    { name:'Root pos', fret:3, dots:[[6,3],[5,3],[4,5]], muted:[3,2,1], root:[6,3] },
+    { name:'1st inv',  fret:7, dots:[[6,8],[5,7],[4,7]], muted:[3,2,1], root:[5,7] },
+    { name:'2nd inv',  fret:10,dots:[[6,10],[5,10],[4,10]], muted:[3,2,1], root:[4,10] },
+  ],
+  sevenths: [
+    { section: 'Strings 1-2-3-4 (Cmaj7)' },
+    { name:'Root',    fret:3, dots:[[4,3],[3,5],[2,5],[1,5]], muted:[6,5], root:[4,3] },
+    { name:'1st inv', fret:4, dots:[[4,5],[3,4],[2,5],[1,5]], muted:[6,5], root:[3,4] },
+    { name:'2nd inv', fret:7, dots:[[4,7],[3,7],[2,8],[1,7]], muted:[6,5], root:[2,8] },
+    { name:'3rd inv', fret:8, dots:[[4,9],[3,8],[2,8],[1,8]], muted:[6,5], root:[1,8] },
+    { section: 'Strings 2-3-4-5 (Cmaj7)' },
+    { name:'Root',    fret:2, dots:[[5,3],[4,3],[3,5],[2,5]], muted:[6,1], root:[5,3] },
+    { name:'1st inv', fret:4, dots:[[5,5],[4,5],[3,4],[2,5]], muted:[6,1], root:[4,5] },
+    { name:'2nd inv', fret:7, dots:[[5,7],[4,7],[3,7],[2,8]], muted:[6,1], root:[3,7] },
+    { name:'3rd inv', fret:9, dots:[[5,10],[4,9],[3,9],[2,9]], muted:[6,1], root:[2,9] },
+  ],
+  jazz: 'table',
+};
+
+// Jazz chord table data: [chordName, root6voicing, root5voicing, root4voicing]
+// voicing = {fret, dots, muted} or null
+const jazzTableData = [
+  { section: 'MAJOR' },
+  { name:'maj7',     r6:{fret:7,dots:[[6,8],[5,7],[4,9],[3,9]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,4],[2,5]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,7]],muted:[6,5]} },
+  { name:'maj6',     r6:{fret:7,dots:[[6,8],[5,7],[4,7],[3,9]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,2],[2,5]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,9],[2,10],[1,8]],muted:[6,5]} },
+  { name:'maj9',     r6:{fret:7,dots:[[6,8],[5,7],[4,9],[3,7]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,4],[2,3]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,7],[1,7]],muted:[6,5]} },
+  { name:'maj7#11',  r6:{fret:7,dots:[[6,8],[5,7],[4,9],[3,11]],muted:[2,1]},r5:{fret:3,dots:[[5,3],[4,4],[3,4],[2,5]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,9],[2,10],[1,11]],muted:[6,5]} },
+  { section: 'MINOR' },
+  { name:'m7',       r6:{fret:6,dots:[[6,8],[5,6],[4,8],[3,8]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,1],[3,3],[2,1]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,8],[2,8],[1,8]],muted:[6,5]} },
+  { name:'m6',       r6:{fret:6,dots:[[6,8],[5,6],[4,7],[3,8]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,1],[3,2],[2,4]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,8],[2,10],[1,8]],muted:[6,5]} },
+  { name:'m9',       r6:{fret:6,dots:[[6,8],[5,6],[4,8],[3,7]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,1],[3,3],[2,3]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,8],[2,7],[1,8]],muted:[6,5]} },
+  { name:'m(maj7)',  r6:{fret:6,dots:[[6,8],[5,6],[4,9],[3,8]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,1],[3,4],[2,1]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,8],[2,8],[1,7]],muted:[6,5]} },
+  { section: 'DOMINANT' },
+  { name:'7',        r6:{fret:7,dots:[[6,8],[5,7],[4,8],[3,9]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,2],[3,3],[2,1]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,8]],muted:[6,5]} },
+  { name:'9',        r6:{fret:7,dots:[[6,8],[5,7],[4,8],[3,7]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,3],[2,3]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,10]],muted:[6,5]} },
+  { name:'7b9',      r6:{fret:6,dots:[[6,8],[5,7],[4,8],[3,6]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,3],[2,2]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,9]],muted:[6,5]} },
+  { name:'7#9',      r6:{fret:7,dots:[[6,8],[5,7],[4,8],[3,8]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,3],[2,4]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,11]],muted:[6,5]} },
+  { name:'7#11',     r6:{fret:7,dots:[[6,8],[5,7],[4,8],[3,11]],muted:[2,1]},r5:{fret:3,dots:[[5,3],[4,4],[3,3],[2,5]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,9],[2,12],[1,8]],muted:[6,5]} },
+  { name:'13',       r6:{fret:8,dots:[[6,8],[4,8],[3,9],[2,10]],muted:[5,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,2],[1,5]],muted:[6,2]}, r4:{fret:7,dots:[[4,10],[3,9],[2,7],[1,5]],muted:[6,5]} },
+  { name:'7b13',     r6:{fret:8,dots:[[6,8],[4,8],[3,9],[2,9]],muted:[5,1]},  r5:{fret:2,dots:[[5,3],[4,2],[3,3],[1,4]],muted:[6,2]}, r4:{fret:7,dots:[[4,10],[3,9],[2,8],[1,4]],muted:[6,5]} },
+  { name:'7alt',     r6:{fret:7,dots:[[6,8],[5,7],[4,8],[3,8]],muted:[2,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,3],[2,4]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,9],[1,11]],muted:[6,5]} },
+  { section: 'SUSPENDED' },
+  { name:'sus2',     r6:{fret:5,dots:[[6,8],[5,5],[4,5],[3,5]],muted:[2,1]}, r5:{fret:3,dots:[[5,3],[4,5],[3,5],[2,3]],muted:[6,1]}, r4:{fret:9,dots:[[4,10],[3,12],[2,10],[1,10]],muted:[6,5]} },
+  { name:'sus4',     r6:{fret:5,dots:[[6,8],[5,8],[4,5],[3,5]],muted:[2,1]}, r5:{fret:3,dots:[[5,3],[4,3],[3,5],[2,6]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,10],[2,11],[1,8]],muted:[6,5]} },
+  { name:'7sus4',    r6:{fret:5,dots:[[6,8],[5,8],[4,8],[3,5]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,3],[3,3],[2,1]],muted:[6,1]}, r4:{fret:8,dots:[[4,10],[3,10],[2,11],[1,10]],muted:[6,5]} },
+  { section: 'SYMMETRIC' },
+  { name:'dim7',     r6:{fret:6,dots:[[6,8],[5,6],[4,7],[3,8]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,1],[3,2],[2,4]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,8],[2,7],[1,9]],muted:[6,5]} },
+  { name:'aug',      r6:{fret:6,dots:[[6,8],[5,7],[4,6],[3,9]],muted:[2,1]}, r5:{fret:1,dots:[[5,3],[4,2],[3,1],[2,5]],muted:[6,1]}, r4:{fret:7,dots:[[4,10],[3,9],[2,9],[1,8]],muted:[6,5]} },
+  { name:'aug7',     r6:{fret:7,dots:[[6,8],[5,7],[4,8],[2,9]],muted:[3,1]}, r5:{fret:2,dots:[[5,3],[4,2],[3,3],[1,4]],muted:[6,2]}, r4:{fret:7,dots:[[4,10],[3,9],[2,9],[1,8]],muted:[6,5]} },
+];
+
+function renderStrings56(body) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const FRETS = 13;
+  const W = 260, H = 708;
+  const pL = 28, pR = 8, pT = 110, pB = 12;
+  const gridH = H - pT - pB;
+  const fretH = gridH / FRETS;
+  const DOT_R = 14;
+
+  // 6 strings: str6 (leftmost) to str1 (rightmost)
+  const strCount = 6;
+  const gridW = W - pL - pR;
+  const strSpacing = gridW / (strCount - 1);
+  const strX = s => pL + (6 - s) * strSpacing; // str6=leftmost, str1=rightmost
+
+  const dotFrets = [3, 5, 7, 9, 12];
+  const stringNotes = {
+    6: ['E','F','','G','','A','','B','C','','D','','E'],
+    5: ['A','','B','C','','D','','E','F','','G','','A'],
+  };
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.display = 'block';
+
+  const el = (tag, attrs, text) => {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  };
+
+  const fretY = f => pT + f * fretH;
+  const slotY = f => pT + (f - 0.5) * fretH; // center of fret slot
+
+  // Intro text
+  svg.appendChild(el('text', {x:strX(6)-8, y:11, 'text-anchor':'start', fill:'rgba(255,255,255,0.45)', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, 'Beginners — memorize the'));
+  svg.appendChild(el('text', {x:strX(6)-8, y:23, 'text-anchor':'start', fill:'rgba(255,255,255,0.45)', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, 'note positions on these strings'));
+
+  // String labels
+  const strLabels = {6:'Str 6',5:'Str 5',4:'',3:'',2:'',1:''};
+  const strTune   = {6:'E',5:'A',4:'D',3:'G',2:'B',1:'e'};
+  [6,5,4,3,2,1].forEach(s => {
+    const x = strX(s);
+    if (strLabels[s]) {
+      svg.appendChild(el('text', {x, y:52, 'text-anchor':'middle', fill:'white', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, strLabels[s]));
+    }
+  });
+
+  // Nut
+  svg.appendChild(el('line', {x1:strX(6)-8, y1:pT, x2:strX(1)+8, y2:pT, stroke:'white', 'stroke-width':'4'}));
+
+  // Fret lines
+  for (let f = 1; f <= FRETS; f++) {
+    const y = fretY(f);
+    svg.appendChild(el('line', {x1:strX(6)-8, y1:y, x2:strX(1)+8, y2:y, stroke:'rgba(255,255,255,0.3)', 'stroke-width':'1'}));
+  }
+
+  // String lines
+  [6,5,4,3,2,1].forEach(s => {
+    const x = strX(s);
+    const w = s===6 ? '2.5' : s===5 ? '2' : s===4 ? '1.5' : s===3 ? '1.2' : '1';
+    svg.appendChild(el('line', {x1:x, y1:pT, x2:x, y2:pT+FRETS*fretH, stroke:'rgba(255,255,255,0.55)', 'stroke-width':w}));
+  });
+
+  // Fret numbers
+  for (let f = 1; f <= FRETS; f++) {
+    svg.appendChild(el('text', {x:pL-5, y:slotY(f)+4, 'text-anchor':'end', fill:'rgba(255,255,255,0.4)', 'font-size':'10', 'font-family':'system-ui'}, String(f)));
+  }
+
+  // Position markers (between str3 and str4)
+  const mX = (strX(3)+strX(4))/2;
+  dotFrets.forEach(f => {
+    const y = slotY(f);
+    if (f===12) {
+      svg.appendChild(el('circle', {cx:mX-6, cy:y, r:'4', fill:'rgba(255,255,255,0.2)'}));
+      svg.appendChild(el('circle', {cx:mX+6, cy:y, r:'4', fill:'rgba(255,255,255,0.2)'}));
+    } else {
+      svg.appendChild(el('circle', {cx:mX, cy:y, r:'4', fill:'rgba(255,255,255,0.2)'}));
+    }
+  });
+
+  // Note dots on str 5 & 6 only
+  [6,5].forEach(s => {
+    const notes = stringNotes[s];
+    const x = strX(s);
+    notes.forEach((note, idx) => {
+      if (!note) return;
+      const f = idx; // idx 0 = open, idx 1-12 = frets 1-12
+      const y = f === 0 ? slotY(1) - fretH : slotY(f);
+      svg.appendChild(el('circle', {cx:x, cy:y, r:DOT_R, fill:'#111', stroke:'white', 'stroke-width':'2'}));
+      svg.appendChild(el('text', {x, y:y+5, 'text-anchor':'middle', fill:'white', 'font-size':'12', 'font-weight':'bold', 'font-family':'system-ui'}, note));
+    });
+  });
+
+  body.appendChild(svg);
+}
+
+function renderChordListSection(tab) {
+  const body = document.getElementById('cl-body');
+  body.innerHTML = '';
+  if (tab === 'strings56') { renderStrings56(body); return; }
+  if (tab === 'jazz') { renderJazzTable(body); return; }
+  const items = chordListData[tab] || [];
+  let grid = null;
+  items.forEach(item => {
+    if (item.section !== undefined) {
+      const title = document.createElement('p');
+      title.className = 'cl-section-title';
+      title.textContent = item.section;
+      body.appendChild(title);
+      grid = document.createElement('div');
+      grid.className = 'cl-chord-grid';
+      body.appendChild(grid);
+    } else if (grid) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cl-chord-item';
+      wrap.appendChild(makeChordSVG(item));
+      const lbl = document.createElement('span');
+      lbl.className = 'cl-chord-name';
+      lbl.textContent = item.name;
+      wrap.appendChild(lbl);
+      grid.appendChild(wrap);
+    }
+  });
+}
+
+function renderJazzTable(body) {
+  const note = document.createElement('p');
+  note.style.cssText = 'font-size:10px;color:rgba(255,165,0,0.7);margin-bottom:8px;font-family:system-ui;';
+  note.textContent = 'Root = C • 5th omitted where possible';
+  body.appendChild(note);
+
+  const table = document.createElement('table');
+  table.className = 'cl-jazz-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Chord</th><th>Root<br>str 6</th><th>Root<br>str 5</th><th>Root<br>str 4</th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  jazzTableData.forEach(row => {
+    const tr = document.createElement('tr');
+    if (row.section) {
+      tr.className = 'cl-jazz-section';
+      tr.innerHTML = `<td colspan="4">${row.section}</td>`;
+    } else {
+      const tdName = document.createElement('td');
+      tdName.textContent = row.name;
+      tr.appendChild(tdName);
+      [[row.r6,6],[row.r5,5],[row.r4,4]].forEach(([v,rs]) => {
+        const td = document.createElement('td');
+        if (v) td.appendChild(makeChordSVG(v, rs));
+        else { const ph = document.createElement('div'); ph.className='cl-empty-cell'; ph.textContent='—'; td.appendChild(ph); }
+        tr.appendChild(td);
+      });
+    }
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  body.appendChild(table);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+const clModal = document.getElementById('chord-list-modal');
+const clBtn = document.getElementById('chord-list-btn');
+const clClose = clModal.querySelector('.cl-close');
+
+clBtn.addEventListener('click', () => {
+  clModal.classList.add('open');
+  renderChordListSection('strings56');
+  clModal.querySelectorAll('.cl-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === 'strings56');
+  });
+});
+clClose.addEventListener('click', () => clModal.classList.remove('open'));
+clModal.querySelectorAll('.cl-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    clModal.querySelectorAll('.cl-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderChordListSection(tab.dataset.tab);
+  });
+});
+}); // DOMContentLoaded
+
