@@ -343,6 +343,7 @@ function handleFretClick(e) {
   const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
   if (bassMode && stringNum <= 2) return;
   if (lockedStrings.has(stringNum)) return;
+  if (gameMode === 'basicchord' && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
   showTapRipple(key);
   playNote(bassMode ? freqFromKey(key) / 2 : freqFromKey(key));
   if (gameMode === 'freeplay') return;
@@ -521,6 +522,15 @@ function updatePeekLabel() {
 }
 
 let instracFlashTimeout = null;
+let hintFlashTimeout = null;
+const basicChordHintEl = document.querySelector('.basic-chord-hint');
+
+function flashBasicChordHint() {
+  if (!basicChordHintEl) return;
+  basicChordHintEl.style.color = 'darkorange';
+  clearTimeout(hintFlashTimeout);
+  hintFlashTimeout = setTimeout(() => { basicChordHintEl.style.color = ''; }, 3000);
+}
 
 function bothCatGroupsSelected() {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
@@ -533,20 +543,8 @@ peekBtn.addEventListener('pointerdown', (e) => {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
   const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
 
-  if (!g1 && !g2) {
-    const prev = instracEl.innerHTML;
-    instracEl.innerHTML = 'Choose chords<br>Shape and roots';
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
-    return;
-  }
-  if (!g2) {
-    const prev = instracEl.innerHTML;
-    instracEl.innerHTML = 'Choose root';
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+  if (!bothCatGroupsSelected()) {
+    flashBasicChordHint();
     return;
   }
   if (!g1 || targetKeys.size === 0) {
@@ -681,7 +679,7 @@ mainButtons.forEach((btn, index) => {
       lastBasicChordName = null;
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
-      instracEl.textContent = 'Choose category';
+      instracEl.innerHTML = 'Find the<br>display chord';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -1256,7 +1254,7 @@ function startBasicChordPlay(chord) {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
   targetKeys = new Set(chord.keys);
-  instracEl.textContent = `Find: 0 / ${chord.keys.length}`;
+  instracEl.innerHTML = `Find:<br>${chord.name}`;
 }
 
 function startBasicChordRound() {
