@@ -251,8 +251,46 @@ header nav img {
 .peek-wrapper:active { opacity: 0.6; }
 
 .basic-chord-mode .string-lock-section,
-.three-chord-mode .string-lock-section {
+.three-chord-mode .string-lock-section,
+.four-inverts-mode .string-lock-section {
   display: none;
+}
+.four-inverts-mode .ext-btn {
+  display: none;
+}
+.four-inverts-set-selector {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.greed-mode.four-inverts-mode .four-inverts-set-selector {
+  display: flex;
+}
+.four-inverts-hint {
+  display: none;
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+  font-style: normal;
+}
+.greed-mode.four-inverts-mode .four-inverts-hint {
+  display: block;
+}
+.four-inverts-set-btn {
+  background: rgba(255,255,255,0.12);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: var(--font-3);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.four-inverts-set-btn.active {
+  background: darkorange;
+  border-color: darkorange;
 }
 .three-chord-set-selector {
   display: none;

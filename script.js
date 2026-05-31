@@ -432,7 +432,7 @@ function handleFretClick(e) {
 }
 
 homeBtn.addEventListener('click', () => {
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -480,7 +480,7 @@ extBtn.addEventListener('click', () => {
     headLineEl.innerHTML = 'EXTENDED<br>CHORDS';
   } else {
     extBtn.textContent = 'Add tensions';
-    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTED<br>CHORDS' : 'TREE NOTES<br>CHORDS';
+    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTES<br>CHORDS' : 'THREE NOTES<br>INVERSION';
     no5thNote.style.display = 'none';
   }
 });
@@ -657,7 +657,7 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -694,17 +694,23 @@ mainButtons.forEach((btn, index) => {
       startChordRound();
     } else if (index === 4) {
       gameMode = 'chord';
+      chordMode = 'fourInverts';
+      updatePeekLabel();
+      document.body.classList.add('four-inverts-mode');
+      startFourInvertsRound();
+    } else if (index === 5) {
+      gameMode = 'chord';
       chordMode = 'sevenths';
       updatePeekLabel();
       document.body.classList.add('four-chord-mode');
       startFourChordRound();
-    } else if (index === 5) {
+    } else if (index === 6) {
       gameMode = 'chord';
       chordMode = 'slash';
       updatePeekLabel();
       document.body.classList.add('slash-chord-mode');
       startSlashChordRound();
-    } else if (index === 6) {
+    } else if (index === 7) {
       gameMode = 'freeplay';
       updatePeekLabel();
       document.body.classList.add('free-play-mode', 'scales-mode');
@@ -785,6 +791,23 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
     catBtn.classList.add('active');
     basicChordCategory = cat;
     startBasicChordRound();
+  });
+});
+
+document.querySelectorAll('.four-inverts-set-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.four-inverts-set-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const activeNums = btn.dataset.active.split(',').map(Number);
+    lockedStrings.clear();
+    for (let s = 1; s <= 6; s++) {
+      if (!activeNums.includes(s)) lockedStrings.add(s);
+    }
+    document.querySelectorAll('.str-btn').forEach(b => {
+      const s = parseInt(b.dataset.string);
+      b.classList.toggle('locked', lockedStrings.has(s));
+    });
+    startFourInvertsRound();
   });
 });
 
@@ -1378,12 +1401,31 @@ function startFourChordRound() {
   }
   lastChordName = chordName;
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'FOUR NOTED<br>CHORDS';
+  headLineEl.innerHTML = 'FOUR NOTES<br>CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = `Find chord tones`;
   const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9'];
   const isNo5th = extBtn.classList.contains('active') && no5thSuffixes.some(s => chordName.endsWith(s));
   no5thNote.style.display = isNo5th ? 'block' : 'none';
+  highlightChordNotes(chordNotes);
+}
+
+function startFourInvertsRound() {
+  const weightedChords = [
+    ...Object.keys(dominant7), ...Object.keys(dominant7),
+    ...Object.keys(minor7),    ...Object.keys(minor7),
+    ...Object.keys(major7),    ...Object.keys(major7),
+    ...Object.keys(halfDim7),
+  ];
+  let chordName;
+  do { chordName = weightedChords[Math.floor(Math.random() * weightedChords.length)]; } while (chordName === lastChordName && weightedChords.length > 1);
+  lastChordName = chordName;
+  chordNotes = allSeventhChords[chordName];
+  foundChordNotes = new Set();
+  headLineEl.innerHTML = 'FOUR NOTES<br>INVERSION';
+  notesDisplay.innerHTML = formatNoteName(chordName);
+  instracEl.textContent = 'Find chord tones';
+  no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
 }
 
@@ -1423,7 +1465,7 @@ function startChordRound() {
   lastChordName = chordName;
   chordNotes = allTriads[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'TREE NOTES<br>CHORDS';
+  headLineEl.innerHTML = 'THREE NOTES<br>INVERSION';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = 'Find 3 notes';
   highlightChordNotes(chordNotes);
@@ -1715,6 +1757,7 @@ function nextRound() {
     startBasicChordRound();
   } else if (gameMode === 'chord') {
     if (chordMode === 'sevenths') startFourChordRound();
+    else if (chordMode === 'fourInverts') startFourInvertsRound();
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
   } else {
