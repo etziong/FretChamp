@@ -2033,7 +2033,7 @@ function renderStrings56(body) {
 }
 
 function renderScalesSection(body) {
-  const list = ['Major Modes','Blues Shapes','Melodic Minor','Harmonic Minor','Diminished','Whole Tone'];
+  const list = ['Major Modes','Blues Shapes','Melodic M Modes','Harmonic Minor','Diminished','Whole Tone'];
   list.forEach(name => {
     const item = document.createElement('p');
     item.style.cssText = 'font-size:15px;color:white;font-family:system-ui;margin:0 0 10px 0;';
@@ -2056,7 +2056,7 @@ function renderChordListSection(tab) {
     triads:    'Inversions for 3-note chords',
     sevenths:  'Inversions for 4-note chords',
     slash:     'Chord with a specific bass note',
-    scales:    'Scales available in the app',
+    scales:    'Scale list in the app',
     jazz:      'Common jazz chord shapes',
   };
   if (subtitles[tab]) {
