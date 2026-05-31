@@ -30,11 +30,12 @@
 
       <p id="mode-label">Guitar Mode</p>
       <section class="buttons-section">
+        <button class="main-btn guide-btn">GUIDE</button>
         <button class="main-btn">SINGLE NOTES</button>
+        <button class="main-btn basic-chords-btn">BASIC CHORDS SHAPE</button>
         <button class="main-btn">TREE NOTES CHORDS</button>
         <button class="main-btn">FOUR NOTES CHORDS</button>
         <button class="main-btn">SLASH CHORDS</button>
-        <button class="main-btn basic-chords-btn">BASIC CHORDS SHAPE</button>
         <button class="main-btn scales-btn">SCALES</button>
       </section>
 
@@ -43,7 +44,6 @@
         <button class="small-btn" id="feedback-btn" style="padding:6px 8px;"><img src="feadBack.png" style="width:45px;height:43px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px) translateY(4px);"></button>
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
         <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
-        <button class="small-btn" id="chord-list-btn" style="font-size:11px;font-weight:bold;color:white;letter-spacing:0.5px;padding-bottom:6px;">Chord<br>List</button>
       </section>
       <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Goel ©</p>
       <div class="bottom-bar">
@@ -66,6 +66,7 @@
       <p class = 'headLine'>SINGLE NOTES</p>
       <p class = "noteD"></p>
       <p class = "Instrac">Find (all)<br>Displayed notes</p>
+      <p class="single-note-hint">Beginners — first start<br>learning strings 5 &amp; 6<br>(lock other strings)</p>
       <p class="basic-chord-hint">Tap "Show Notes"<br>if needed</p>
       <p class="slash-instrac">Play the note<br>after the slash<br>as bass</p>
       <p class="no5th-note">No 5th needed</p>
@@ -73,6 +74,7 @@
       <p class="feedback"></p>
       <div class="basic-chord-selector">
         <span class="basic-cat-label">Choose open or barre:</span>
+      
         <button class="basic-chord-cat-btn" data-cat="open">Open Chords</button>
         <button class="basic-chord-cat-btn" data-cat="barre">Barre Chords</button>
         <span class="basic-cat-label" style="margin-top:10px;">Choose root on 5 or 6 str:</span>
@@ -222,18 +224,18 @@
   <div id="chord-list-modal" dir="ltr">
     <div class="cl-content">
       <div class="cl-header">
-        <span class="cl-title">Chord Reference</span>
-        <button class="cl-close">✕</button>
+        <span class="cl-title">Guide</span>
+        <button class="cl-close"><img src="homeIcon.png" style="width:26px;height:26px;object-fit:contain;opacity:0.7;"></button>
       </div>
       <div class="cl-tabs">
-        <button class="cl-tab active" data-tab="strings56">Note Grid</button>
+        <button class="cl-tab active" data-tab="strings56">Instructions</button>
         <button class="cl-tab" data-tab="open">Open</button>
         <button class="cl-tab" data-tab="barre">Barre</button>
         <button class="cl-tab" data-tab="triads">Triads</button>
         <button class="cl-tab" data-tab="sevenths">7ths</button>
         <button class="cl-tab" data-tab="slash">Slash</button>
+        <button class="cl-tab" data-tab="jazz">Pro / Jazz</button>
         <button class="cl-tab" data-tab="scales">Scales</button>
-        <button class="cl-tab" data-tab="jazz">Jazz</button>
       </div>
       <div class="cl-body" id="cl-body"></div>
     </div>

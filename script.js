@@ -664,24 +664,17 @@ mainButtons.forEach((btn, index) => {
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
-    if (index === 1) {
-      gameMode = 'chord';
-      chordMode = 'triads';
-      updatePeekLabel();
-      startChordRound();
+    if (index === 0) {
+      const modal = document.getElementById('chord-list-modal');
+      modal.classList.add('open');
+      history.pushState({ guideOpen: true }, '');
+      renderChordListSection('strings56');
+      modal.querySelectorAll('.cl-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === 'strings56');
+      });
+      document.body.classList.remove('greed-mode');
+      return;
     } else if (index === 2) {
-      gameMode = 'chord';
-      chordMode = 'sevenths';
-      updatePeekLabel();
-      document.body.classList.add('four-chord-mode');
-      startFourChordRound();
-    } else if (index === 3) {
-      gameMode = 'chord';
-      chordMode = 'slash';
-      updatePeekLabel();
-      document.body.classList.add('slash-chord-mode');
-      startSlashChordRound();
-    } else if (index === 4) {
       gameMode = 'basicchord';
       updatePeekLabel();
       basicChordCategory = null;
@@ -695,7 +688,24 @@ mainButtons.forEach((btn, index) => {
         cell.circle.setAttribute('opacity', '0');
         cell.text.setAttribute('opacity', '0');
       });
+    } else if (index === 3) {
+      gameMode = 'chord';
+      chordMode = 'triads';
+      updatePeekLabel();
+      startChordRound();
+    } else if (index === 4) {
+      gameMode = 'chord';
+      chordMode = 'sevenths';
+      updatePeekLabel();
+      document.body.classList.add('four-chord-mode');
+      startFourChordRound();
     } else if (index === 5) {
+      gameMode = 'chord';
+      chordMode = 'slash';
+      updatePeekLabel();
+      document.body.classList.add('slash-chord-mode');
+      startSlashChordRound();
+    } else if (index === 6) {
       gameMode = 'freeplay';
       updatePeekLabel();
       document.body.classList.add('free-play-mode', 'scales-mode');
@@ -2046,11 +2056,34 @@ function renderScalesSection(body) {
   body.appendChild(note);
 }
 
+function renderInstructionsSection(body) {
+  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
+  const welcome = document.createElement('p');
+  welcome.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.5);font-family:system-ui;margin:0 0 8px 0;font-weight:bold;';
+  welcome.textContent = 'Welcome :-)';
+  body.appendChild(welcome);
+  s('This app helps users practice notes, basic and advanced chords, inversions, and scales, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br>Suitable for both beginners and advanced players.', false);
+  s('1. Single note greed', true);
+  s('Know and practice the note positions on the guitar fretboard. Fretboard fluency will allow you to improvise solos and find chord shapes in real time.<br><br>Beginners: Start with strings 5 &amp; 6 — they hold the root notes for all basic chord shapes. Use the string lock to focus on those strings first.', false);
+  s('2. Basic chord shapes', true);
+  s('Suitable for beginners — practice open chords and barre chords with the root on strings 5 &amp; 6.', false);
+  s('3. Triads inverts', true);
+  s('Practice 3-note chord inversions across 4 string sets. Note that each string set contains 3 positions.', false);
+  s('4. Four-note chord inversions', true);
+  s('Practice 7th chord inversions across 3 string sets. Each set contains 4 inversions.', false);
+  s('5. Slash chords', true);
+  s('Practice slash chord shapes. The note after the slash is the bass note of the chord — place it on the bass string (5 or 6).', false);
+  s('6. Pro / Jazz chords', true);
+  s('This is the core of the app — practice septachords and tensions. You will be able to grab and play any chord in real time.', false);
+  s('7. Scales', true);
+  s('Practice all important scales.', false);
+}
+
 function renderChordListSection(tab) {
   const body = document.getElementById('cl-body');
   body.innerHTML = '';
   const subtitles = {
-    strings56: 'Beginners — learn the notes on strings 5 & 6 first, as roots for basic chord shapes',
+    strings56: 'Instructions:',
     open:      'Open chord shapes',
     barre:     'Barre chord shapes',
     triads:    'Inversions for 3-note chords',
@@ -2065,9 +2098,72 @@ function renderChordListSection(tab) {
     h.textContent = subtitles[tab];
     body.appendChild(h);
   }
-  if (tab === 'strings56') { renderStrings56(body); return; }
+  if (tab === 'strings56') { renderInstructionsSection(body); return; }
   if (tab === 'scales') { renderScalesSection(body); return; }
   if (tab === 'jazz') { renderJazzTable(body); return; }
+  if (false) { // placeholder
+    const intro = document.createElement('p');
+    intro.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 16px 0;line-height:1.6;';
+    intro.innerHTML = 'This app helps users practice notes, chord tones, and inversions (through string locking), while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br>Suitable for both beginners and advanced players.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes.';
+    body.appendChild(intro);
+    const sub = document.createElement('p');
+    sub.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;font-weight:bold;';
+    sub.textContent = '1. Single note greed';
+    body.appendChild(sub);
+    const line = document.createElement('p');
+    line.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line.innerHTML = 'Know and practice the note positions on the guitar fretboard. Fretboard fluency will allow you to improvise solos and find chord shapes in real time.<br><br>Beginners: Start with strings 5 &amp; 6 — they hold the root notes for all basic chord shapes. Use the string lock to focus on those strings first.';
+    body.appendChild(line);
+    const sub2 = document.createElement('p');
+    sub2.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub2.textContent = '2. Basic chord shapes';
+    body.appendChild(sub2);
+    const line2 = document.createElement('p');
+    line2.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line2.textContent = 'Suitable for beginners — practice open chords and barre chords with the root on strings 5 & 6.';
+    body.appendChild(line2);
+    const sub3 = document.createElement('p');
+    sub3.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub3.textContent = '3. Triads inverts';
+    body.appendChild(sub3);
+    const line3 = document.createElement('p');
+    line3.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line3.textContent = 'Practice 3-note chord inversions across 4 string sets. Note that each string set contains 3 positions.';
+    body.appendChild(line3);
+    const sub4 = document.createElement('p');
+    sub4.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub4.textContent = '4. Four-note chord inversions';
+    body.appendChild(sub4);
+    const line4 = document.createElement('p');
+    line4.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line4.textContent = 'Practice 7th chord inversions across 3 string sets. Each set contains 4 inversions.';
+    body.appendChild(line4);
+    const sub5 = document.createElement('p');
+    sub5.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub5.textContent = '5. Slash chords';
+    body.appendChild(sub5);
+    const line5 = document.createElement('p');
+    line5.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line5.textContent = 'Practice slash chord shapes. The note after the slash is the bass note of the chord — place it on the bass string (5 or 6).';
+    body.appendChild(line5);
+    const sub6 = document.createElement('p');
+    sub6.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub6.textContent = '6. Jazz / Advanced chords';
+    body.appendChild(sub6);
+    const line6 = document.createElement('p');
+    line6.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line6.textContent = 'This is the core of the app. Practice 4-note chord shapes with tensions — you will be able to grab and play any chord in real time.';
+    body.appendChild(line6);
+    const sub7 = document.createElement('p');
+    sub7.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub7.textContent = '7. Scales';
+    body.appendChild(sub7);
+    const line7 = document.createElement('p');
+    line7.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line7.textContent = 'Practice all important scales.';
+    body.appendChild(line7);
+    return;
+  }
   const items = chordListData[tab] || [];
   let grid = null;
   items.forEach(item => {
@@ -2132,14 +2228,19 @@ const clModal = document.getElementById('chord-list-modal');
 const clBtn = document.getElementById('chord-list-btn');
 const clClose = clModal.querySelector('.cl-close');
 
-clBtn.addEventListener('click', () => {
-  clModal.classList.add('open');
-  renderChordListSection('strings56');
-  clModal.querySelectorAll('.cl-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === 'strings56');
-  });
+const closeGuide = () => {
+  clModal.classList.remove('open');
+  homeBtn.click();
+};
+
+clClose.addEventListener('click', closeGuide);
+
+window.addEventListener('popstate', e => {
+  if (clModal.classList.contains('open')) {
+    clModal.classList.remove('open');
+    homeBtn.click();
+  }
 });
-clClose.addEventListener('click', () => clModal.classList.remove('open'));
 clModal.querySelectorAll('.cl-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     clModal.querySelectorAll('.cl-tab').forEach(t => t.classList.remove('active'));

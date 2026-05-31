@@ -168,7 +168,6 @@ header nav img {
 }
 
 .basic-chords-btn {
-  order: -1;
   grid-column: 1 / -1;
 }
 
@@ -425,6 +424,17 @@ header nav img {
   width: 145px;
 }
 
+.single-note-hint {
+  display: none;
+  font-size: var(--font-4);
+  color: rgba(255,255,255,0.5);
+  font-family: system-ui, sans-serif;
+  font-style: italic;
+  line-height: 1.5;
+}
+.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.basic-chord-mode):not(.scales-mode) .single-note-hint {
+  display: block;
+}
 .basic-chord-hint {
   display: none;
   font-size: var(--font-3);
@@ -904,6 +914,8 @@ header nav img {
 .cl-title {
   font-size: var(--font-1);
   font-weight: bold;
+  font-style: italic;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 .cl-close {
