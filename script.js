@@ -788,7 +788,7 @@ document.querySelector('.scale-selector').addEventListener('click', e => {
 });
 
 
-const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]}};
+const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor":{"notes":["btn4-string-6","btn6-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn5-string-4","btn6-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn4-string-2","btn5-string-2","btn8-string-2","btn4-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor Pos.5":{"notes":["btn11-string-6","btn12-string-6","btn11-string-5","btn13-string-5","btn14-string-5","btn11-string-4","btn13-string-4","btn12-string-3","btn13-string-3","btn11-string-2","btn12-string-2","btn11-string-1","btn12-string-1"],"roots":["btn11-string-5","btn13-string-3"],"blues":[]}};
 
 function repositionCell(key, dx, dy) {
   const base = baseCellPositions[key];
@@ -1782,6 +1782,37 @@ function makeChordSVG(chord, rootString) {
   return svg;
 }
 
+function makeScaleSVG(scaleName) {
+  const data = scaleData[scaleName];
+  if (!data) return null;
+  const parseBtn = id => { const m = id.match(/btn(\d+)-string-(\d+)/); return m ? {fret:+m[1],str:+m[2]} : null; };
+  const allNotes = (data.notes||[]).map(parseBtn).filter(Boolean);
+  const rootSet = new Set((data.roots||[]).map(parseBtn).filter(Boolean).map(n=>`${n.fret},${n.str}`));
+  const frets = allNotes.map(n=>n.fret).filter(f=>f>0);
+  if (!frets.length) return null;
+  const minFret = Math.min(...frets);
+  const W=72,H=96,pL=10,pR=10,pT=16,pB=8,STRINGS=6,FRETS=6;
+  const gW=W-pL-pR, gH=H-pT-pB;
+  const sx = i => pL + i*(gW/(STRINGS-1));
+  const strX = str => sx(6-str);
+  const fy = j => pT + j*(gH/FRETS);
+  const slotY = fret => pT + (fret-minFret+0.5)*(gH/FRETS);
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  const el=(tag,attrs)=>{const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e;};
+  for(let i=0;i<STRINGS;i++) svg.appendChild(el('line',{x1:sx(i),y1:fy(0),x2:sx(i),y2:fy(FRETS),stroke:'rgba(255,255,255,0.25)','stroke-width':'1'}));
+  for(let j=0;j<=FRETS;j++) svg.appendChild(el('line',{x1:sx(0),y1:fy(j),x2:sx(STRINGS-1),y2:fy(j),stroke:j===0&&minFret===1?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.2)','stroke-width':j===0&&minFret===1?'3':'1'}));
+  if(minFret>1){const t=el('text',{x:sx(STRINGS-1)+3,y:fy(1)-1,fill:'rgba(255,255,255,0.5)','font-size':'7','font-family':'system-ui'});t.textContent=`${minFret}fr`;svg.appendChild(t);}
+  allNotes.forEach(({fret,str})=>{
+    if(fret-minFret<0||fret-minFret>=FRETS) return;
+    const isRoot=rootSet.has(`${fret},${str}`);
+    svg.appendChild(el('circle',{cx:strX(str),cy:slotY(fret),r:'4.5',fill:isRoot?'darkorange':'white'}));
+  });
+  return svg;
+}
+
 const chordListData = {
   open: [
     { section: 'E family' },
@@ -1894,13 +1925,18 @@ const jazzTableData = [
 ];
 
 function renderStrings56(body) {
+  const noteLabel = document.createElement('p');
+  noteLabel.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.5);font-style:italic;font-family:system-ui;margin:0 0 10px 0;padding:0;text-align:left;';
+  noteLabel.textContent = 'Natural notes only — no sharps or flats';
+  body.appendChild(noteLabel);
+
   const NS = 'http://www.w3.org/2000/svg';
   const FRETS = 13;
-  const W = 260, H = 708;
-  const pL = 28, pR = 8, pT = 110, pB = 12;
+  const W = 295, H = 708;
+  const pL = 28, pR = 20, pT = 110, pB = 12;
   const gridH = H - pT - pB;
   const fretH = gridH / FRETS;
-  const DOT_R = 14;
+  const DOT_R = 12;
 
   // 6 strings: str6 (leftmost) to str1 (rightmost)
   const strCount = 6;
@@ -1912,6 +1948,10 @@ function renderStrings56(body) {
   const stringNotes = {
     6: ['E','F','','G','','A','','B','C','','D','','E'],
     5: ['A','','B','C','','D','','E','F','','G','','A'],
+    4: ['D','','E','F','','G','','A','','B','C','','D'],
+    3: ['G','','A','','B','C','','D','','E','F','','G'],
+    2: ['B','C','','D','','E','F','','G','','A','','B'],
+    1: ['E','F','','G','','A','','B','C','','D','','E'],
   };
 
   const svg = document.createElementNS(NS, 'svg');
@@ -1931,29 +1971,29 @@ function renderStrings56(body) {
   const slotY = f => pT + (f - 0.5) * fretH; // center of fret slot
 
   // String labels
-  const strLabels = {6:'Str 6',5:'Str 5',4:'',3:'',2:'',1:''};
+  const strLabels = {6:'Str 6',5:'Str 5',4:'Str 4',3:'Str 3',2:'Str 2',1:'Str 1'};
   const strTune   = {6:'E',5:'A',4:'D',3:'G',2:'B',1:'e'};
   [6,5,4,3,2,1].forEach(s => {
     const x = strX(s);
-    if (strLabels[s]) {
-      svg.appendChild(el('text', {x, y:52, 'text-anchor':'middle', fill:'white', 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, strLabels[s]));
-    }
+    const primary = s === 6 || s === 5;
+    const labelFill = 'white';
+    svg.appendChild(el('text', {x, y:52, 'text-anchor':'middle', fill:labelFill, 'font-size':'11', 'font-weight':'bold', 'font-family':'system-ui'}, strLabels[s]));
   });
 
   // Nut
-  svg.appendChild(el('line', {x1:strX(6)-8, y1:pT, x2:strX(1)+8, y2:pT, stroke:'white', 'stroke-width':'4'}));
+  svg.appendChild(el('line', {x1:strX(6)-8, y1:pT, x2:strX(1)+8, y2:pT, stroke:'rgba(255,255,255,0.3)', 'stroke-width':'4'}));
 
   // Fret lines
   for (let f = 1; f <= FRETS; f++) {
     const y = fretY(f);
-    svg.appendChild(el('line', {x1:strX(6)-8, y1:y, x2:strX(1)+8, y2:y, stroke:'rgba(255,255,255,0.3)', 'stroke-width':'1'}));
+    svg.appendChild(el('line', {x1:strX(6)-8, y1:y, x2:strX(1)+8, y2:y, stroke:'rgba(255,255,255,0.15)', 'stroke-width':'1'}));
   }
 
   // String lines
   [6,5,4,3,2,1].forEach(s => {
     const x = strX(s);
     const w = s===6 ? '2.5' : s===5 ? '2' : s===4 ? '1.5' : s===3 ? '1.2' : '1';
-    svg.appendChild(el('line', {x1:x, y1:pT, x2:x, y2:pT+FRETS*fretH, stroke:'rgba(255,255,255,0.55)', 'stroke-width':w}));
+    svg.appendChild(el('line', {x1:x, y1:pT, x2:x, y2:pT+FRETS*fretH, stroke:'rgba(255,255,255,0.2)', 'stroke-width':w}));
   });
 
   // Fret numbers
@@ -1973,32 +2013,50 @@ function renderStrings56(body) {
     }
   });
 
-  // Note dots on str 5 & 6 only
-  [6,5].forEach(s => {
+  // Note dots on all strings (5&6 white, 4&3&2&1 dimmed)
+  [6,5,4,3,2,1].forEach(s => {
     const notes = stringNotes[s];
     const x = strX(s);
+    const primary = s === 6 || s === 5;
+    const stroke = 'rgba(255,255,255,0.35)';
+    const textFill = 'white';
     notes.forEach((note, idx) => {
       if (!note) return;
-      const f = idx; // idx 0 = open, idx 1-12 = frets 1-12
+      const f = idx;
       const y = f === 0 ? slotY(1) - fretH : slotY(f);
-      svg.appendChild(el('circle', {cx:x, cy:y, r:DOT_R, fill:'#111', stroke:'white', 'stroke-width':'2'}));
-      svg.appendChild(el('text', {x, y:y+5, 'text-anchor':'middle', fill:'white', 'font-size':'12', 'font-weight':'bold', 'font-family':'system-ui'}, note));
+      svg.appendChild(el('circle', {cx:x, cy:y, r:DOT_R, fill:'#111', stroke, 'stroke-width':'2'}));
+      svg.appendChild(el('text', {x, y:y+4, 'text-anchor':'middle', fill:textFill, 'font-size':'10', 'font-weight':'bold', 'font-family':'system-ui'}, note));
     });
   });
 
   body.appendChild(svg);
 }
 
+function renderScalesSection(body) {
+  const list = ['Major Modes','Blues Shapes','Melodic Minor','Harmonic Minor','Diminished','Whole Tone'];
+  list.forEach(name => {
+    const item = document.createElement('p');
+    item.style.cssText = 'font-size:15px;color:white;font-family:system-ui;margin:0 0 10px 0;';
+    item.textContent = name;
+    body.appendChild(item);
+  });
+  const note = document.createElement('p');
+  note.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:16px 0 0 0;font-weight:bold;';
+  note.textContent = '* Scale shapes on the fretboard appear in the Scales tab of the app.';
+  body.appendChild(note);
+}
+
 function renderChordListSection(tab) {
   const body = document.getElementById('cl-body');
   body.innerHTML = '';
   const subtitles = {
-    strings56: 'For beginners — root notes on strings 5 & 6',
+    strings56: 'Beginners — learn the notes on strings 5 & 6 first, as roots for basic chord shapes',
     open:      'Open chord shapes',
     barre:     'Barre chord shapes',
     triads:    'Inversions for 3-note chords',
     sevenths:  'Inversions for 4-note chords',
     slash:     'Chord with a specific bass note',
+    scales:    'Scales available in the app',
     jazz:      'Common jazz chord shapes',
   };
   if (subtitles[tab]) {
@@ -2008,6 +2066,7 @@ function renderChordListSection(tab) {
     body.appendChild(h);
   }
   if (tab === 'strings56') { renderStrings56(body); return; }
+  if (tab === 'scales') { renderScalesSection(body); return; }
   if (tab === 'jazz') { renderJazzTable(body); return; }
   const items = chordListData[tab] || [];
   let grid = null;
