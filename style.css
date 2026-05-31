@@ -250,8 +250,32 @@ header nav img {
 }
 .peek-wrapper:active { opacity: 0.6; }
 
-.basic-chord-mode .string-lock-section {
+.basic-chord-mode .string-lock-section,
+.three-chord-mode .string-lock-section {
   display: none;
+}
+.three-chord-set-selector {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.greed-mode.three-chord-mode .three-chord-set-selector {
+  display: flex;
+}
+.three-chord-set-btn {
+  background: rgba(255,255,255,0.12);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: var(--font-3);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.three-chord-set-btn.active {
+  background: darkorange;
+  border-color: darkorange;
 }
 
 .main-btn {
@@ -426,13 +450,24 @@ header nav img {
 
 .single-note-hint {
   display: none;
-  font-size: var(--font-4);
-  color: rgba(255,255,255,0.5);
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
   font-family: system-ui, sans-serif;
-  font-style: italic;
-  line-height: 1.5;
+  font-style: normal;
 }
-.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.basic-chord-mode):not(.scales-mode) .single-note-hint {
+.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.basic-chord-mode):not(.scales-mode):not(.three-chord-mode) .single-note-hint {
+  display: block;
+}
+.three-chord-hint {
+  display: none;
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+  font-style: normal;
+}
+.greed-mode.three-chord-mode .three-chord-hint {
   display: block;
 }
 .basic-chord-hint {

@@ -432,7 +432,7 @@ function handleFretClick(e) {
 }
 
 homeBtn.addEventListener('click', () => {
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -689,6 +689,7 @@ mainButtons.forEach((btn, index) => {
     } else if (index === 3) {
       gameMode = 'chord';
       chordMode = 'triads';
+      document.body.classList.add('three-chord-mode');
       updatePeekLabel();
       startChordRound();
     } else if (index === 4) {
@@ -785,6 +786,31 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
     basicChordCategory = cat;
     startBasicChordRound();
   });
+});
+
+document.querySelectorAll('.three-chord-set-btn:not(.three-chord-free-btn)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.three-chord-set-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const activeNums = btn.dataset.active.split(',').map(Number);
+    lockedStrings.clear();
+    for (let s = 1; s <= 6; s++) {
+      if (!activeNums.includes(s)) lockedStrings.add(s);
+    }
+    document.querySelectorAll('.str-btn').forEach(b => {
+      const s = parseInt(b.dataset.string);
+      b.classList.toggle('locked', lockedStrings.has(s));
+    });
+    startChordRound();
+  });
+});
+
+document.querySelector('.three-chord-free-btn').addEventListener('click', () => {
+  document.querySelectorAll('.three-chord-set-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.three-chord-free-btn').classList.add('active');
+  lockedStrings.clear();
+  document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  startChordRound();
 });
 
 document.querySelector('.scale-selector').addEventListener('click', e => {

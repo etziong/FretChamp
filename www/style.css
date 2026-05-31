@@ -251,8 +251,32 @@ header nav img {
 }
 .peek-wrapper:active { opacity: 0.6; }
 
-.basic-chord-mode .string-lock-section {
+.basic-chord-mode .string-lock-section,
+.three-chord-mode .string-lock-section {
   display: none;
+}
+.three-chord-set-selector {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.greed-mode.three-chord-mode .three-chord-set-selector {
+  display: flex;
+}
+.three-chord-set-btn {
+  background: rgba(255,255,255,0.12);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: var(--font-3);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.three-chord-set-btn.active {
+  background: darkorange;
+  border-color: darkorange;
 }
 
 .main-btn {
@@ -425,6 +449,28 @@ header nav img {
   width: 145px;
 }
 
+.single-note-hint {
+  display: none;
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+  font-style: normal;
+}
+.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.basic-chord-mode):not(.scales-mode):not(.three-chord-mode) .single-note-hint {
+  display: block;
+}
+.three-chord-hint {
+  display: none;
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+  font-style: normal;
+}
+.greed-mode.three-chord-mode .three-chord-hint {
+  display: block;
+}
 .basic-chord-hint {
   display: none;
   font-size: var(--font-3);
@@ -861,4 +907,156 @@ header nav img {
 .credit-text {
   position: relative;
   top: -9px;
+}
+
+/* ── Chord List Modal ── */
+#chord-list-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 500;
+  overflow-y: auto;
+}
+#chord-list-modal.open { display: block; }
+
+.cl-content {
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+  font-family: system-ui, sans-serif;
+  color: white;
+}
+.cl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 16px;
+  position: sticky;
+  top: 0;
+  background: #000;
+  z-index: 10;
+}
+.cl-subtitle {
+  font-size: 15px;
+  color: white;
+  font-weight: bold;
+  font-family: system-ui;
+  font-style: italic;
+  padding: 0 16px 14px 0;
+  margin: 0;
+  text-align: left;
+}
+.cl-title {
+  font-size: var(--font-1);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.cl-close {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.cl-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 12px;
+  position: sticky;
+  top: 44px;
+  background: #000;
+  z-index: 10;
+}
+.cl-tab {
+  flex: 0 0 calc(25% - 5px);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.6);
+  font-size: var(--font-4);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+}
+.cl-tab.active {
+  border-color: darkorange;
+  color: darkorange;
+}
+.cl-body {
+  padding: 8px 16px;
+  direction: ltr;
+  text-align: left;
+}
+.cl-section-title {
+  font-size: var(--font-3);
+  color: rgba(255,255,255,0.5);
+  margin: 16px 0 8px;
+  letter-spacing: 0.5px;
+}
+.cl-chord-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+}
+.cl-chord-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.cl-chord-name {
+  font-size: var(--font-4);
+  color: rgba(255,255,255,0.85);
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Jazz table */
+.cl-jazz-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: system-ui, sans-serif;
+}
+.cl-jazz-table th {
+  color: darkorange;
+  font-size: 10px;
+  padding: 4px 2px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255,165,0,0.3);
+}
+.cl-jazz-table th:first-child { text-align: left; min-width: 56px; }
+.cl-jazz-table td {
+  padding: 2px 2px;
+  text-align: center;
+  vertical-align: middle;
+}
+.cl-jazz-table td:first-child {
+  color: rgba(255,255,255,0.75);
+  font-size: 11px;
+  text-align: left;
+  padding-right: 4px;
+  white-space: nowrap;
+}
+.cl-jazz-section td {
+  color: darkorange;
+  font-size: 10px;
+  padding: 10px 0 3px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.cl-empty-cell {
+  width: 72px;
+  height: 96px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.2);
+  font-size: 9px;
 }
