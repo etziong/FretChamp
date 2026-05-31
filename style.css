@@ -514,7 +514,7 @@ header nav img {
   display: none;
   position: fixed;
   bottom: 12px;
-  left: 12px;
+  left: max(24px, calc(50vw - 171px));
   flex-direction: row;
   align-items: flex-end;
   gap: 12px;

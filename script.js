@@ -2058,10 +2058,6 @@ function renderScalesSection(body) {
 
 function renderInstructionsSection(body) {
   const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
-  const welcome = document.createElement('p');
-  welcome.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.5);font-family:system-ui;margin:0 0 8px 0;font-weight:bold;';
-  welcome.textContent = 'Welcome :-)';
-  body.appendChild(welcome);
   s('This app helps users practice notes, basic and advanced chords, inversions, and scales, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br>Suitable for both beginners and advanced players.', false);
   s('1. Single note greed', true);
   s('Know and practice the note positions on the guitar fretboard. Fretboard fluency will allow you to improvise solos and find chord shapes in real time.<br><br>Beginners: Start with strings 5 &amp; 6 — they hold the root notes for all basic chord shapes. Use the string lock to focus on those strings first.', false);
@@ -2083,7 +2079,7 @@ function renderChordListSection(tab) {
   const body = document.getElementById('cl-body');
   body.innerHTML = '';
   const subtitles = {
-    strings56: 'Instructions:',
+    strings56: 'Welcome :-)',
     open:      'Open chord shapes',
     barre:     'Barre chord shapes',
     triads:    'Inversions for 3-note chords',
