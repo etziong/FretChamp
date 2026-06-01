@@ -353,7 +353,7 @@ header nav img {
 }
 .main-btn:active { opacity: 0.65; transform: translateY(0); }
 
-.bass-mode .main-btn { height: 50px; }
+.bass-mode .main-btn { aspect-ratio: 3 / 2; }
 
 .small-btn {
   flex: 1 1 0;

@@ -169,6 +169,7 @@ header nav img {
 }
 
 .basic-chords-btn {
+  order: unset;
   grid-column: 1 / -1;
   aspect-ratio: unset;
   height: 30px;
@@ -352,7 +353,7 @@ header nav img {
 }
 .main-btn:active { opacity: 0.65; transform: translateY(0); }
 
-.bass-mode .main-btn { height: 50px; }
+.bass-mode .main-btn { aspect-ratio: 3 / 2; }
 
 .small-btn {
   flex: 1 1 0;
@@ -631,7 +632,7 @@ header nav img {
   display: none;
   position: fixed;
   bottom: 12px;
-  left: 12px;
+  left: max(24px, calc(50vw - 171px));
   flex-direction: row;
   align-items: flex-end;
   gap: 12px;
@@ -1031,6 +1032,8 @@ header nav img {
 .cl-title {
   font-size: var(--font-1);
   font-weight: bold;
+  font-style: italic;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 .cl-close {

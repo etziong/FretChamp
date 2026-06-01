@@ -343,6 +343,7 @@ function handleFretClick(e) {
   const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
   if (bassMode && stringNum <= 2) return;
   if (lockedStrings.has(stringNum)) return;
+  if (gameMode === 'basicchord' && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
   showTapRipple(key);
   playNote(bassMode ? freqFromKey(key) / 2 : freqFromKey(key));
   if (gameMode === 'freeplay') return;
@@ -431,7 +432,7 @@ function handleFretClick(e) {
 }
 
 homeBtn.addEventListener('click', () => {
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -479,7 +480,7 @@ extBtn.addEventListener('click', () => {
     headLineEl.innerHTML = 'EXTENDED<br>CHORDS';
   } else {
     extBtn.textContent = 'Add tensions';
-    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FOUR NOTED<br>CHORDS' : 'TREE NOTES<br>CHORDS';
+    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FREE CHORDS<br>& EXTENSIONS' : 'THREE NOTES<br>INVERSION';
     no5thNote.style.display = 'none';
   }
 });
@@ -521,6 +522,16 @@ function updatePeekLabel() {
 }
 
 let instracFlashTimeout = null;
+let hintFlashTimeout = null;
+const basicChordHintEl = document.querySelector('.basic-chord-hint');
+
+
+function flashBasicChordHint() {
+  if (!basicChordHintEl) return;
+  basicChordHintEl.style.color = 'darkorange';
+  clearTimeout(hintFlashTimeout);
+  hintFlashTimeout = setTimeout(() => { basicChordHintEl.style.color = ''; }, 3000);
+}
 
 function bothCatGroupsSelected() {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
@@ -533,20 +544,8 @@ peekBtn.addEventListener('pointerdown', (e) => {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
   const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
 
-  if (!g1 && !g2) {
-    const prev = instracEl.innerHTML;
-    instracEl.innerHTML = 'Choose chords<br>Shape and roots';
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
-    return;
-  }
-  if (!g2) {
-    const prev = instracEl.innerHTML;
-    instracEl.innerHTML = 'Choose root';
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.innerHTML = prev; instracEl.style.color = ''; }, 3000);
+  if (!bothCatGroupsSelected()) {
+    flashBasicChordHint();
     return;
   }
   if (!g1 || targetKeys.size === 0) {
@@ -659,36 +658,33 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
-    if (index === 1) {
-      gameMode = 'basicchord';
-      updatePeekLabel();
-      basicChordCategory = null;
-      lastBasicChordName = null;
-      document.body.classList.add('basic-chord-mode');
-      headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
-      instracEl.innerHTML = 'Find the<br>display chord';
-      notesDisplay.innerHTML = '';
-      targetKeys.clear();
-      Object.values(svgCells).forEach(cell => {
-        cell.circle.setAttribute('opacity', '0');
-        cell.text.setAttribute('opacity', '0');
+    if (index === 0) {
+      const modal = document.getElementById('chord-list-modal');
+      modal.classList.add('open');
+      history.pushState({ guideOpen: true }, '');
+      renderChordListSection('strings56');
+      modal.querySelectorAll('.cl-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === 'strings56');
       });
+      document.body.classList.remove('greed-mode');
+      return;
     } else if (index === 2) {
       gameMode = 'chord';
       chordMode = 'triads';
+      document.body.classList.add('three-chord-mode');
       updatePeekLabel();
       startChordRound();
     } else if (index === 3) {
       gameMode = 'chord';
-      chordMode = 'sevenths';
+      chordMode = 'fourInverts';
       updatePeekLabel();
-      document.body.classList.add('four-chord-mode');
-      startFourChordRound();
+      document.body.classList.add('four-inverts-mode');
+      startFourInvertsRound();
     } else if (index === 4) {
       gameMode = 'chord';
       chordMode = 'slash';
@@ -696,6 +692,12 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('slash-chord-mode');
       startSlashChordRound();
     } else if (index === 5) {
+      gameMode = 'chord';
+      chordMode = 'sevenths';
+      updatePeekLabel();
+      document.body.classList.add('four-chord-mode');
+      startFourChordRound();
+    } else if (index === 6) {
       gameMode = 'freeplay';
       updatePeekLabel();
       document.body.classList.add('free-play-mode', 'scales-mode');
@@ -703,6 +705,20 @@ mainButtons.forEach((btn, index) => {
       document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
       headLineEl.textContent = 'SCALES';
       instracEl.innerHTML = 'Choose scale<br>to practice';
+      notesDisplay.innerHTML = '';
+      targetKeys.clear();
+      Object.values(svgCells).forEach(cell => {
+        cell.circle.setAttribute('opacity', '0');
+        cell.text.setAttribute('opacity', '0');
+      });
+    } else if (index === 7) {
+      gameMode = 'basicchord';
+      updatePeekLabel();
+      basicChordCategory = null;
+      lastBasicChordName = null;
+      document.body.classList.add('basic-chord-mode');
+      headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
+      instracEl.innerHTML = 'Find the<br>display chord';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -777,6 +793,56 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
     basicChordCategory = cat;
     startBasicChordRound();
   });
+});
+
+document.querySelectorAll('.four-inverts-set-btn:not(.four-inverts-free-btn)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.four-inverts-set-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const activeNums = btn.dataset.active.split(',').map(Number);
+    lockedStrings.clear();
+    for (let s = 1; s <= 6; s++) {
+      if (!activeNums.includes(s)) lockedStrings.add(s);
+    }
+    document.querySelectorAll('.str-btn').forEach(b => {
+      const s = parseInt(b.dataset.string);
+      b.classList.toggle('locked', lockedStrings.has(s));
+    });
+    startFourInvertsRound();
+  });
+});
+
+document.querySelector('.four-inverts-free-btn').addEventListener('click', () => {
+  document.querySelectorAll('.four-inverts-set-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.four-inverts-free-btn').classList.add('active');
+  lockedStrings.clear();
+  document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  startFourInvertsRound();
+});
+
+document.querySelectorAll('.three-chord-set-btn:not(.three-chord-free-btn)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.three-chord-set-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const activeNums = btn.dataset.active.split(',').map(Number);
+    lockedStrings.clear();
+    for (let s = 1; s <= 6; s++) {
+      if (!activeNums.includes(s)) lockedStrings.add(s);
+    }
+    document.querySelectorAll('.str-btn').forEach(b => {
+      const s = parseInt(b.dataset.string);
+      b.classList.toggle('locked', lockedStrings.has(s));
+    });
+    startChordRound();
+  });
+});
+
+document.querySelector('.three-chord-free-btn').addEventListener('click', () => {
+  document.querySelectorAll('.three-chord-set-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.three-chord-free-btn').classList.add('active');
+  lockedStrings.clear();
+  document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  startChordRound();
 });
 
 document.querySelector('.scale-selector').addEventListener('click', e => {
@@ -1344,12 +1410,31 @@ function startFourChordRound() {
   }
   lastChordName = chordName;
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'FOUR NOTED<br>CHORDS';
+  headLineEl.innerHTML = 'FREE CHORDS<br>& EXTENSIONS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = `Find chord tones`;
   const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9'];
   const isNo5th = extBtn.classList.contains('active') && no5thSuffixes.some(s => chordName.endsWith(s));
   no5thNote.style.display = isNo5th ? 'block' : 'none';
+  highlightChordNotes(chordNotes);
+}
+
+function startFourInvertsRound() {
+  const weightedChords = [
+    ...Object.keys(dominant7), ...Object.keys(dominant7),
+    ...Object.keys(minor7),    ...Object.keys(minor7),
+    ...Object.keys(major7),    ...Object.keys(major7),
+    ...Object.keys(halfDim7),
+  ];
+  let chordName;
+  do { chordName = weightedChords[Math.floor(Math.random() * weightedChords.length)]; } while (chordName === lastChordName && weightedChords.length > 1);
+  lastChordName = chordName;
+  chordNotes = allSeventhChords[chordName];
+  foundChordNotes = new Set();
+  headLineEl.innerHTML = 'FOUR NOTES<br>INVERSION';
+  notesDisplay.innerHTML = formatNoteName(chordName);
+  instracEl.textContent = 'Find chord tones';
+  no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
 }
 
@@ -1389,7 +1474,7 @@ function startChordRound() {
   lastChordName = chordName;
   chordNotes = allTriads[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'TREE NOTES<br>CHORDS';
+  headLineEl.innerHTML = 'THREE NOTES<br>INVERSION';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = 'Find 3 notes';
   highlightChordNotes(chordNotes);
@@ -1681,6 +1766,7 @@ function nextRound() {
     startBasicChordRound();
   } else if (gameMode === 'chord') {
     if (chordMode === 'sevenths') startFourChordRound();
+    else if (chordMode === 'fourInverts') startFourInvertsRound();
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
   } else {
@@ -2046,11 +2132,16 @@ function renderScalesSection(body) {
   body.appendChild(note);
 }
 
+function renderInstructionsSection(body) {
+  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
+  s('This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br><br>A Bass Guitar version is also available within the app.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.', false);
+}
+
 function renderChordListSection(tab) {
   const body = document.getElementById('cl-body');
   body.innerHTML = '';
   const subtitles = {
-    strings56: 'Beginners — learn the notes on strings 5 & 6 first, as roots for basic chord shapes',
+    strings56: 'Welcome :-)',
     open:      'Open chord shapes',
     barre:     'Barre chord shapes',
     triads:    'Inversions for 3-note chords',
@@ -2065,9 +2156,72 @@ function renderChordListSection(tab) {
     h.textContent = subtitles[tab];
     body.appendChild(h);
   }
-  if (tab === 'strings56') { renderStrings56(body); return; }
+  if (tab === 'strings56') { renderInstructionsSection(body); return; }
   if (tab === 'scales') { renderScalesSection(body); return; }
   if (tab === 'jazz') { renderJazzTable(body); return; }
+  if (false) { // placeholder
+    const intro = document.createElement('p');
+    intro.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 16px 0;line-height:1.6;';
+    intro.innerHTML = 'This app helps users practice notes, chord tones, and inversions (through string locking), while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br>Suitable for both beginners and advanced players.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes.';
+    body.appendChild(intro);
+    const sub = document.createElement('p');
+    sub.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;font-weight:bold;';
+    sub.textContent = '1. Single note greed';
+    body.appendChild(sub);
+    const line = document.createElement('p');
+    line.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line.innerHTML = 'Know and practice the note positions on the guitar fretboard. Fretboard fluency will allow you to improvise solos and find chord shapes in real time.<br><br>Beginners: Start with strings 5 &amp; 6 — they hold the root notes for all basic chord shapes. Use the string lock to focus on those strings first.';
+    body.appendChild(line);
+    const sub2 = document.createElement('p');
+    sub2.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub2.textContent = '2. Basic chord shapes';
+    body.appendChild(sub2);
+    const line2 = document.createElement('p');
+    line2.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line2.textContent = 'Suitable for beginners — practice open chords and barre chords with the root on strings 5 & 6.';
+    body.appendChild(line2);
+    const sub3 = document.createElement('p');
+    sub3.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub3.textContent = '3. Triads inverts';
+    body.appendChild(sub3);
+    const line3 = document.createElement('p');
+    line3.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line3.textContent = 'Practice 3-note chord inversions across 4 string sets. Note that each string set contains 3 positions.';
+    body.appendChild(line3);
+    const sub4 = document.createElement('p');
+    sub4.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub4.textContent = '4. Four-note chord inversions';
+    body.appendChild(sub4);
+    const line4 = document.createElement('p');
+    line4.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line4.textContent = 'Practice 7th chord inversions across 3 string sets. Each set contains 4 inversions.';
+    body.appendChild(line4);
+    const sub5 = document.createElement('p');
+    sub5.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub5.textContent = '5. Slash chords';
+    body.appendChild(sub5);
+    const line5 = document.createElement('p');
+    line5.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line5.textContent = 'Practice slash chord shapes. The note after the slash is the bass note of the chord — place it on the bass string (5 or 6).';
+    body.appendChild(line5);
+    const sub6 = document.createElement('p');
+    sub6.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub6.textContent = '6. Jazz / Advanced chords';
+    body.appendChild(sub6);
+    const line6 = document.createElement('p');
+    line6.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line6.textContent = 'This is the core of the app. Practice 4-note chord shapes with tensions — you will be able to grab and play any chord in real time.';
+    body.appendChild(line6);
+    const sub7 = document.createElement('p');
+    sub7.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:12px 0 8px 0;font-weight:bold;';
+    sub7.textContent = '7. Scales';
+    body.appendChild(sub7);
+    const line7 = document.createElement('p');
+    line7.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.6);font-family:system-ui;margin:0 0 8px 0;line-height:1.6;';
+    line7.textContent = 'Practice all important scales.';
+    body.appendChild(line7);
+    return;
+  }
   const items = chordListData[tab] || [];
   let grid = null;
   items.forEach(item => {
@@ -2090,6 +2244,194 @@ function renderChordListSection(tab) {
       grid.appendChild(wrap);
     }
   });
+  if (tab === 'triads' || tab === 'sevenths') renderCustomSets(body, tab);
+}
+
+// ── Custom Chord Sets (editable, persisted in localStorage) ──────────────────
+
+function getCustomSets() {
+  try { return JSON.parse(localStorage.getItem('customChordSets') || '{}'); } catch { return {}; }
+}
+function saveCustomSets(data) {
+  localStorage.setItem('customChordSets', JSON.stringify(data));
+}
+function emptyDiagram() {
+  return { name: '', startFret: 1, heads: {}, dots: {} };
+}
+function emptySet(tab) {
+  const count = tab === 'sevenths' ? 4 : 3;
+  return { title: '', diagrams: Array.from({ length: count }, emptyDiagram) };
+}
+
+function makeEditableDiagramSVG(diag, onChange) {
+  const W = 72, H = 96;
+  const pL = 10, pR = 10, pT = 20, pB = 8;
+  const gW = W - pL - pR, gH = H - pT - pB;
+  const STRINGS = 6, FRETS = 5;
+  const sx = i => pL + (i * gW / (STRINGS - 1));
+  const fy = j => pT + (j * gH / FRETS);
+  const slotY = r => pT + (r - 0.5) * gH / FRETS;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+
+  const el = (tag, attrs) => {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+    return e;
+  };
+
+  function redraw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const sf = diag.startFret || 1;
+
+    for (let i = 0; i < STRINGS; i++)
+      svg.appendChild(el('line', { x1:sx(i),y1:fy(0),x2:sx(i),y2:fy(FRETS), stroke:'rgba(255,255,255,0.5)', 'stroke-width':'1' }));
+    for (let j = 0; j <= FRETS; j++)
+      svg.appendChild(el('line', { x1:sx(0),y1:fy(j),x2:sx(STRINGS-1),y2:fy(j),
+        stroke:'rgba(255,255,255,0.5)', 'stroke-width': j===0 && sf===1 ? '4' : '1' }));
+    if (sf > 1) {
+      const t = el('text', { x:sx(STRINGS-1)+3, y:fy(1)-2, fill:'rgba(255,255,255,0.6)', 'font-size':'7', 'font-family':'system-ui' });
+      t.textContent = `${sf}fr`; svg.appendChild(t);
+    }
+
+    // Above-nut indicators
+    for (let s = 1; s <= 6; s++) {
+      const x = sx(6 - s), h = diag.heads[`s${s}`] || 'none';
+      if (h === 'muted') {
+        const t = el('text', { x, y:pT-6, 'text-anchor':'middle', fill:'rgba(255,255,255,0.8)', 'font-size':'9', 'font-family':'system-ui' });
+        t.textContent = '✕'; svg.appendChild(t);
+      } else if (h === 'open') {
+        svg.appendChild(el('circle', { cx:x, cy:pT-8, r:'4', fill:'none', stroke:'rgba(255,255,255,0.7)', 'stroke-width':'1.5' }));
+      }
+    }
+
+    // Dots
+    for (let s = 1; s <= 6; s++) {
+      for (let r = 1; r <= FRETS; r++) {
+        const state = diag.dots[`s${s}r${r}`];
+        if (state) svg.appendChild(el('circle', { cx:sx(6-s), cy:slotY(r), r:'5.5', fill: state==='root' ? 'darkorange' : 'white' }));
+      }
+    }
+
+    // Clickable above-nut areas
+    for (let s = 1; s <= 6; s++) {
+      const r = el('rect', { x:sx(6-s)-7, y:2, width:14, height:pT-4, fill:'transparent', cursor:'pointer' });
+      r.addEventListener('click', () => {
+        const cur = diag.heads[`s${s}`] || 'none';
+        const nxt = { none:'muted', muted:'open', open:'none' }[cur];
+        if (nxt === 'none') delete diag.heads[`s${s}`]; else diag.heads[`s${s}`] = nxt;
+        onChange(); redraw();
+      });
+      svg.appendChild(r);
+    }
+
+    // Clickable fret slots
+    const slotH = gH / FRETS, slotW = gW / (STRINGS - 1);
+    for (let s = 1; s <= 6; s++) {
+      for (let rf = 1; rf <= FRETS; rf++) {
+        const r = el('rect', { x:sx(6-s)-slotW/2, y:slotY(rf)-slotH/2, width:slotW, height:slotH, fill:'transparent', cursor:'pointer' });
+        r.addEventListener('click', () => {
+          const key = `s${s}r${rf}`;
+          const cur = diag.dots[key] || 'none';
+          if (cur === 'none') {
+            diag.dots[key] = 'white';
+          } else if (cur === 'white') {
+            Object.keys(diag.dots).forEach(k => { if (diag.dots[k] === 'root') diag.dots[k] = 'white'; });
+            diag.dots[key] = 'root';
+          } else {
+            delete diag.dots[key];
+          }
+          onChange(); redraw();
+        });
+        svg.appendChild(r);
+      }
+    }
+  }
+  redraw();
+  return svg;
+}
+
+function renderCustomSets(body, tab) {
+  const data = getCustomSets();
+  const sets = (data[tab] || []);
+
+  sets.forEach((set, setIdx) => {
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:4px;';
+
+    const titleEl = document.createElement('span');
+    titleEl.contentEditable = true;
+    titleEl.className = 'cl-section-title';
+    titleEl.style.cssText += 'outline:none;border-bottom:1px dashed rgba(255,255,255,0.3);min-width:80px;';
+    titleEl.textContent = set.title || 'New String Set';
+    titleEl.addEventListener('blur', () => { set.title = titleEl.textContent; saveCustomSets(data); });
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕';
+    delBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:14px;padding:0 4px;';
+    delBtn.addEventListener('click', () => {
+      data[tab].splice(setIdx, 1); saveCustomSets(data); renderChordListSection(tab);
+    });
+
+    titleRow.appendChild(titleEl); titleRow.appendChild(delBtn);
+    body.appendChild(titleRow);
+
+    const grid = document.createElement('div');
+    grid.className = 'cl-chord-grid';
+    body.appendChild(grid);
+
+    const onChange = () => saveCustomSets(data);
+
+    set.diagrams.forEach(diag => {
+      const wrap = document.createElement('div');
+      wrap.className = 'cl-chord-item';
+
+      // Fret selector
+      const fretRow = document.createElement('div');
+      fretRow.style.cssText = 'display:flex;align-items:center;gap:3px;justify-content:center;margin-bottom:2px;';
+      const fretLbl = document.createElement('span');
+      fretLbl.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.5);font-family:system-ui;min-width:28px;text-align:center;';
+      fretLbl.textContent = `fr ${diag.startFret || 1}`;
+      const mkBtn = (txt) => {
+        const b = document.createElement('button');
+        b.textContent = txt;
+        b.style.cssText = 'background:none;border:1px solid rgba(255,255,255,0.3);color:white;cursor:pointer;padding:1px 5px;font-size:9px;border-radius:3px;line-height:1.4;';
+        return b;
+      };
+      const up = mkBtn('+'), dn = mkBtn('−');
+      up.addEventListener('click', () => { diag.startFret = Math.min(12, (diag.startFret||1)+1); fretLbl.textContent=`fr ${diag.startFret}`; onChange(); });
+      dn.addEventListener('click', () => { diag.startFret = Math.max(1, (diag.startFret||1)-1); fretLbl.textContent=`fr ${diag.startFret}`; onChange(); });
+      fretRow.append(dn, fretLbl, up);
+      wrap.appendChild(fretRow);
+
+      wrap.appendChild(makeEditableDiagramSVG(diag, onChange));
+
+      const nameEl = document.createElement('div');
+      nameEl.contentEditable = true;
+      nameEl.className = 'cl-chord-name';
+      nameEl.style.cssText += 'outline:none;border-bottom:1px dashed rgba(255,255,255,0.2);min-height:14px;';
+      nameEl.textContent = diag.name || '';
+      nameEl.addEventListener('blur', () => { diag.name = nameEl.textContent; onChange(); });
+      wrap.appendChild(nameEl);
+
+      grid.appendChild(wrap);
+    });
+  });
+
+  // Add String Set button
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+ Add String Set';
+  addBtn.style.cssText = 'margin-top:16px;background:rgba(255,255,255,0.08);color:white;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-family:system-ui;width:100%;';
+  addBtn.addEventListener('click', () => {
+    const d = getCustomSets();
+    if (!d[tab]) d[tab] = [];
+    d[tab].push(emptySet(tab));
+    saveCustomSets(d);
+    renderChordListSection(tab);
+  });
+  body.appendChild(addBtn);
 }
 
 function renderJazzTable(body) {
@@ -2132,14 +2474,19 @@ const clModal = document.getElementById('chord-list-modal');
 const clBtn = document.getElementById('chord-list-btn');
 const clClose = clModal.querySelector('.cl-close');
 
-clBtn.addEventListener('click', () => {
-  clModal.classList.add('open');
-  renderChordListSection('strings56');
-  clModal.querySelectorAll('.cl-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === 'strings56');
-  });
+const closeGuide = () => {
+  clModal.classList.remove('open');
+  homeBtn.click();
+};
+
+clClose.addEventListener('click', closeGuide);
+
+window.addEventListener('popstate', e => {
+  if (clModal.classList.contains('open')) {
+    clModal.classList.remove('open');
+    homeBtn.click();
+  }
 });
-clClose.addEventListener('click', () => clModal.classList.remove('open'));
 clModal.querySelectorAll('.cl-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     clModal.querySelectorAll('.cl-tab').forEach(t => t.classList.remove('active'));
