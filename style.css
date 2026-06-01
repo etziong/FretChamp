@@ -329,7 +329,7 @@ header nav img {
 
 .main-btn {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 2;
   padding: 6px 4px;
   font-size: 11px;
   border-radius: 6px;
