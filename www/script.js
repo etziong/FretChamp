@@ -446,7 +446,7 @@ document.getElementById('bass-btn').addEventListener('click', () => {
   document.body.classList.toggle('bass-mode', bassMode);
   document.getElementById('bass-btn').classList.toggle('active', bassMode);
   document.getElementById('bass-btn-img').src = bassMode ? 'guitarHead.png' : 'bassHead.png';
-  document.getElementById('mode-label').textContent = bassMode ? 'Bass Mode' : 'Guitar Mode';
+  document.getElementById('mode-label').textContent = bassMode ? 'Bass Mode Trainer' : 'Guitar Mode Trainer';
   if (bassMode) {
     applyOffsets(bassOffsets);
     Object.entries(svgCells).forEach(([key, cell]) => {
@@ -480,7 +480,7 @@ extBtn.addEventListener('click', () => {
     headLineEl.innerHTML = 'EXTENDED<br>CHORDS';
   } else {
     extBtn.textContent = 'Add tensions';
-    headLineEl.innerHTML = chordMode === 'sevenths' ? 'FREE CHORDS<br>& EXTENSIONS' : 'THREE NOTES<br>INVERSION';
+    headLineEl.innerHTML = chordMode === 'sevenths' ? '7THS &<br>TENSIONS' : 'TRIADS';
     no5thNote.style.display = 'none';
   }
 });
@@ -717,7 +717,7 @@ mainButtons.forEach((btn, index) => {
       basicChordCategory = null;
       lastBasicChordName = null;
       document.body.classList.add('basic-chord-mode');
-      headLineEl.innerHTML = 'BASIC CHORDS<br>SHAPE';
+      headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
       instracEl.innerHTML = 'Find the<br>display chord';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
@@ -728,7 +728,7 @@ mainButtons.forEach((btn, index) => {
     } else {
       gameMode = 'single';
       updatePeekLabel();
-      headLineEl.innerHTML = 'SINGLE NOTES';
+      headLineEl.innerHTML = 'SINGLE NOTE';
       instracEl.innerHTML = 'Find (all)<br>Displayed notes';
       note = randomNote();
       notesDisplay.innerHTML = formatNoteName(note);
@@ -1297,7 +1297,7 @@ let basicStudyKeys = [];
 function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
-  headLineEl.innerHTML = 'BASIC CHORD<br>SHAPES';
+  headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
@@ -1410,7 +1410,7 @@ function startFourChordRound() {
   }
   lastChordName = chordName;
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'FREE CHORDS<br>& EXTENSIONS';
+  headLineEl.innerHTML = '7THS &<br>TENSIONS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = `Find chord tones`;
   const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9'];
@@ -1431,7 +1431,7 @@ function startFourInvertsRound() {
   lastChordName = chordName;
   chordNotes = allSeventhChords[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'FOUR NOTES<br>INVERSION';
+  headLineEl.innerHTML = '7TH CHORD';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
@@ -1445,7 +1445,7 @@ function startSlashChordRound() {
   lastSlashChordName = chordName;
   chordNotes = slashChords[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'SLASH<br>CHORDS';
+  headLineEl.innerHTML = 'SLASH CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
@@ -1474,7 +1474,7 @@ function startChordRound() {
   lastChordName = chordName;
   chordNotes = allTriads[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = 'THREE NOTES<br>INVERSION';
+  headLineEl.innerHTML = 'TRIADS';
   notesDisplay.innerHTML = formatNoteName(chordName);
   instracEl.textContent = 'Find 3 notes';
   highlightChordNotes(chordNotes);
@@ -1770,7 +1770,7 @@ function nextRound() {
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
   } else {
-    headLineEl.textContent = 'SINGLE NOTES';
+    headLineEl.textContent = 'SINGLE NOTE';
     instracEl.innerHTML = 'Find (all)<br>Displayed notes';
     note = randomNote();
     notesDisplay.innerHTML = formatNoteName(note);
@@ -2134,7 +2134,11 @@ function renderScalesSection(body) {
 
 function renderInstructionsSection(body) {
   const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
-  s('This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br><br>A Bass Guitar version is also available within the app.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.', false);
+  const isBass = document.body.classList.contains('bass-mode');
+  const text = isBass
+    ? 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.'
+    : 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br><br>A Bass Guitar version is also available within the app.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.';
+  s(text, false);
 }
 
 function renderChordListSection(tab) {

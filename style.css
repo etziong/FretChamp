@@ -172,7 +172,7 @@ header nav img {
   order: unset;
   grid-column: 1 / -1;
   aspect-ratio: unset;
-  height: 30px;
+  height: 45px;
 }
 
 .scales-btn {
@@ -181,9 +181,7 @@ header nav img {
 .guide-btn {
   grid-column: 1 / -1;
   aspect-ratio: unset;
-  height: 30px;
-  justify-content: flex-start;
-  padding-left: 12px;
+  height: 40px;
 }
 
 .basic-chord-selector {
