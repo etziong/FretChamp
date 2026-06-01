@@ -700,16 +700,16 @@ mainButtons.forEach((btn, index) => {
       startFourInvertsRound();
     } else if (index === 5) {
       gameMode = 'chord';
-      chordMode = 'sevenths';
-      updatePeekLabel();
-      document.body.classList.add('four-chord-mode');
-      startFourChordRound();
-    } else if (index === 6) {
-      gameMode = 'chord';
       chordMode = 'slash';
       updatePeekLabel();
       document.body.classList.add('slash-chord-mode');
       startSlashChordRound();
+    } else if (index === 6) {
+      gameMode = 'chord';
+      chordMode = 'sevenths';
+      updatePeekLabel();
+      document.body.classList.add('four-chord-mode');
+      startFourChordRound();
     } else if (index === 7) {
       gameMode = 'freeplay';
       updatePeekLabel();
@@ -2249,6 +2249,194 @@ function renderChordListSection(tab) {
       grid.appendChild(wrap);
     }
   });
+  if (tab === 'triads' || tab === 'sevenths') renderCustomSets(body, tab);
+}
+
+// ── Custom Chord Sets (editable, persisted in localStorage) ──────────────────
+
+function getCustomSets() {
+  try { return JSON.parse(localStorage.getItem('customChordSets') || '{}'); } catch { return {}; }
+}
+function saveCustomSets(data) {
+  localStorage.setItem('customChordSets', JSON.stringify(data));
+}
+function emptyDiagram() {
+  return { name: '', startFret: 1, heads: {}, dots: {} };
+}
+function emptySet(tab) {
+  const count = tab === 'sevenths' ? 4 : 3;
+  return { title: '', diagrams: Array.from({ length: count }, emptyDiagram) };
+}
+
+function makeEditableDiagramSVG(diag, onChange) {
+  const W = 72, H = 96;
+  const pL = 10, pR = 10, pT = 20, pB = 8;
+  const gW = W - pL - pR, gH = H - pT - pB;
+  const STRINGS = 6, FRETS = 5;
+  const sx = i => pL + (i * gW / (STRINGS - 1));
+  const fy = j => pT + (j * gH / FRETS);
+  const slotY = r => pT + (r - 0.5) * gH / FRETS;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+
+  const el = (tag, attrs) => {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+    return e;
+  };
+
+  function redraw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const sf = diag.startFret || 1;
+
+    for (let i = 0; i < STRINGS; i++)
+      svg.appendChild(el('line', { x1:sx(i),y1:fy(0),x2:sx(i),y2:fy(FRETS), stroke:'rgba(255,255,255,0.5)', 'stroke-width':'1' }));
+    for (let j = 0; j <= FRETS; j++)
+      svg.appendChild(el('line', { x1:sx(0),y1:fy(j),x2:sx(STRINGS-1),y2:fy(j),
+        stroke:'rgba(255,255,255,0.5)', 'stroke-width': j===0 && sf===1 ? '4' : '1' }));
+    if (sf > 1) {
+      const t = el('text', { x:sx(STRINGS-1)+3, y:fy(1)-2, fill:'rgba(255,255,255,0.6)', 'font-size':'7', 'font-family':'system-ui' });
+      t.textContent = `${sf}fr`; svg.appendChild(t);
+    }
+
+    // Above-nut indicators
+    for (let s = 1; s <= 6; s++) {
+      const x = sx(6 - s), h = diag.heads[`s${s}`] || 'none';
+      if (h === 'muted') {
+        const t = el('text', { x, y:pT-6, 'text-anchor':'middle', fill:'rgba(255,255,255,0.8)', 'font-size':'9', 'font-family':'system-ui' });
+        t.textContent = '✕'; svg.appendChild(t);
+      } else if (h === 'open') {
+        svg.appendChild(el('circle', { cx:x, cy:pT-8, r:'4', fill:'none', stroke:'rgba(255,255,255,0.7)', 'stroke-width':'1.5' }));
+      }
+    }
+
+    // Dots
+    for (let s = 1; s <= 6; s++) {
+      for (let r = 1; r <= FRETS; r++) {
+        const state = diag.dots[`s${s}r${r}`];
+        if (state) svg.appendChild(el('circle', { cx:sx(6-s), cy:slotY(r), r:'5.5', fill: state==='root' ? 'darkorange' : 'white' }));
+      }
+    }
+
+    // Clickable above-nut areas
+    for (let s = 1; s <= 6; s++) {
+      const r = el('rect', { x:sx(6-s)-7, y:2, width:14, height:pT-4, fill:'transparent', cursor:'pointer' });
+      r.addEventListener('click', () => {
+        const cur = diag.heads[`s${s}`] || 'none';
+        const nxt = { none:'muted', muted:'open', open:'none' }[cur];
+        if (nxt === 'none') delete diag.heads[`s${s}`]; else diag.heads[`s${s}`] = nxt;
+        onChange(); redraw();
+      });
+      svg.appendChild(r);
+    }
+
+    // Clickable fret slots
+    const slotH = gH / FRETS, slotW = gW / (STRINGS - 1);
+    for (let s = 1; s <= 6; s++) {
+      for (let rf = 1; rf <= FRETS; rf++) {
+        const r = el('rect', { x:sx(6-s)-slotW/2, y:slotY(rf)-slotH/2, width:slotW, height:slotH, fill:'transparent', cursor:'pointer' });
+        r.addEventListener('click', () => {
+          const key = `s${s}r${rf}`;
+          const cur = diag.dots[key] || 'none';
+          if (cur === 'none') {
+            diag.dots[key] = 'white';
+          } else if (cur === 'white') {
+            Object.keys(diag.dots).forEach(k => { if (diag.dots[k] === 'root') diag.dots[k] = 'white'; });
+            diag.dots[key] = 'root';
+          } else {
+            delete diag.dots[key];
+          }
+          onChange(); redraw();
+        });
+        svg.appendChild(r);
+      }
+    }
+  }
+  redraw();
+  return svg;
+}
+
+function renderCustomSets(body, tab) {
+  const data = getCustomSets();
+  const sets = (data[tab] || []);
+
+  sets.forEach((set, setIdx) => {
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:4px;';
+
+    const titleEl = document.createElement('span');
+    titleEl.contentEditable = true;
+    titleEl.className = 'cl-section-title';
+    titleEl.style.cssText += 'outline:none;border-bottom:1px dashed rgba(255,255,255,0.3);min-width:80px;';
+    titleEl.textContent = set.title || 'New String Set';
+    titleEl.addEventListener('blur', () => { set.title = titleEl.textContent; saveCustomSets(data); });
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕';
+    delBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:14px;padding:0 4px;';
+    delBtn.addEventListener('click', () => {
+      data[tab].splice(setIdx, 1); saveCustomSets(data); renderChordListSection(tab);
+    });
+
+    titleRow.appendChild(titleEl); titleRow.appendChild(delBtn);
+    body.appendChild(titleRow);
+
+    const grid = document.createElement('div');
+    grid.className = 'cl-chord-grid';
+    body.appendChild(grid);
+
+    const onChange = () => saveCustomSets(data);
+
+    set.diagrams.forEach(diag => {
+      const wrap = document.createElement('div');
+      wrap.className = 'cl-chord-item';
+
+      // Fret selector
+      const fretRow = document.createElement('div');
+      fretRow.style.cssText = 'display:flex;align-items:center;gap:3px;justify-content:center;margin-bottom:2px;';
+      const fretLbl = document.createElement('span');
+      fretLbl.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.5);font-family:system-ui;min-width:28px;text-align:center;';
+      fretLbl.textContent = `fr ${diag.startFret || 1}`;
+      const mkBtn = (txt) => {
+        const b = document.createElement('button');
+        b.textContent = txt;
+        b.style.cssText = 'background:none;border:1px solid rgba(255,255,255,0.3);color:white;cursor:pointer;padding:1px 5px;font-size:9px;border-radius:3px;line-height:1.4;';
+        return b;
+      };
+      const up = mkBtn('+'), dn = mkBtn('−');
+      up.addEventListener('click', () => { diag.startFret = Math.min(12, (diag.startFret||1)+1); fretLbl.textContent=`fr ${diag.startFret}`; onChange(); });
+      dn.addEventListener('click', () => { diag.startFret = Math.max(1, (diag.startFret||1)-1); fretLbl.textContent=`fr ${diag.startFret}`; onChange(); });
+      fretRow.append(dn, fretLbl, up);
+      wrap.appendChild(fretRow);
+
+      wrap.appendChild(makeEditableDiagramSVG(diag, onChange));
+
+      const nameEl = document.createElement('div');
+      nameEl.contentEditable = true;
+      nameEl.className = 'cl-chord-name';
+      nameEl.style.cssText += 'outline:none;border-bottom:1px dashed rgba(255,255,255,0.2);min-height:14px;';
+      nameEl.textContent = diag.name || '';
+      nameEl.addEventListener('blur', () => { diag.name = nameEl.textContent; onChange(); });
+      wrap.appendChild(nameEl);
+
+      grid.appendChild(wrap);
+    });
+  });
+
+  // Add String Set button
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+ Add String Set';
+  addBtn.style.cssText = 'margin-top:16px;background:rgba(255,255,255,0.08);color:white;border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-family:system-ui;width:100%;';
+  addBtn.addEventListener('click', () => {
+    const d = getCustomSets();
+    if (!d[tab]) d[tab] = [];
+    d[tab].push(emptySet(tab));
+    saveCustomSets(d);
+    renderChordListSection(tab);
+  });
+  body.appendChild(addBtn);
 }
 
 function renderJazzTable(body) {
