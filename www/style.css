@@ -4,6 +4,7 @@
   --font-2: 15px;
   --font-3: 13px;
   --font-4: 11px;
+  --font-5: 10px;
 }
 
   /* ── Responsive for ALL screen sizes ── */
@@ -168,7 +169,6 @@ header nav img {
 }
 
 .basic-chords-btn {
-  order: -1;
   grid-column: 1 / -1;
 }
 
@@ -520,10 +520,44 @@ header nav img {
 .basic-chord-mode .basic-chord-hint {
   display: block;
 }
+.basic-chord-beginner-hint {
+  display: none;
+  font-size: 11px;
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+  font-style: normal;
+  margin-top: 10px;
+}
+.basic-chord-mode .basic-chord-beginner-hint {
+  display: block;
+}
+.practice-56-btn {
+  display: none;
+  margin-top: 10px;
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  width: 95px;
+}
+.practice-56-btn.active {
+  border-color: darkorange;
+  color: darkorange;
+}
+.basic-chord-mode .practice-56-btn {
+  display: block;
+}
 
 .slash-instrac {
   display: none;
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255,255,255,0.55);
   font-style: italic;
   font-family: system-ui, sans-serif;
@@ -537,7 +571,7 @@ header nav img {
 
 .no5th-note {
   display: none;
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255,255,255,0.55);
   font-style: italic;
   font-family: system-ui, sans-serif;
