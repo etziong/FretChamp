@@ -44,7 +44,7 @@ body {
   background: #000000;
   position: relative;
   padding: 0 32px;
-  max-width: 390px;
+  max-width: 300px;
   margin: 0 auto;
 }
 
@@ -288,41 +288,45 @@ header nav img {
   display: block;
 }
 .four-inverts-set-btn {
-  background: rgba(255,255,255,0.12);
+  background: transparent;
   color: white;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
   padding: 6px 10px;
   font-size: var(--font-3);
   cursor: pointer;
   letter-spacing: 1px;
+  width: 100px;
+  text-align: left;
 }
 .four-inverts-set-btn.active {
-  background: darkorange;
   border-color: darkorange;
+  color: darkorange;
 }
 .three-chord-set-selector {
   display: none;
   flex-direction: column;
   gap: 6px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .greed-mode.three-chord-mode .three-chord-set-selector {
   display: flex;
 }
 .three-chord-set-btn {
-  background: rgba(255,255,255,0.12);
+  background: transparent;
   color: white;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
   padding: 6px 10px;
   font-size: var(--font-3);
   cursor: pointer;
   letter-spacing: 1px;
+  width: 100px;
+  text-align: left;
 }
 .three-chord-set-btn.active {
-  background: darkorange;
   border-color: darkorange;
+  color: darkorange;
 }
 
 .main-btn {
@@ -382,6 +386,9 @@ header nav img {
   flex-direction: row;
   gap: 12px;
   margin-top: 28px;
+}
+.bass-mode .buttons-row {
+  margin-top: 80px;
 }
 
 .greed-mode header,

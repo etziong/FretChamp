@@ -44,7 +44,7 @@
         <button class="small-btn" id="bass-btn"><img id="bass-btn-img" src="bassHead.png" alt="bass" style="width:50px;height:50px;object-fit:contain;margin-bottom:-8px;"></button>
         <button class="small-btn" id="feedback-btn" style="padding:6px 8px;"><img src="feadBack.png" style="width:45px;height:43px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px) translateY(4px);"></button>
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
-        <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:5px;"></button>
+        <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:7px;"></button>
       </section>
       <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Goel ©</p>
       <div class="bottom-bar">
@@ -226,7 +226,7 @@
     <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
       <h3 style="margin:0 0 8px;text-align:center;font-size:18px;letter-spacing:1px;">Help us improve our Beta!</h3>
       <p style="margin:0 0 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;">This app is still in beta. Found a bug or have a suggestion for the developers? Let us know how we can improve your experience.</p>
-      <input id="feedback-name" type="text" placeholder="Your name" style="width:100%;background:#2a2a4a;color:white;border:1px solid #555;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;outline:none;margin-bottom:10px;" />
+      <input id="feedback-name" type="text" placeholder="Your name" style="width:100%;background:#2a2a4a;color:white;border:1px solid #555;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;outline:none;margin-bottom:7px;" />
       <textarea id="feedback-text" placeholder="What would you like to share?" style="width:100%;height:110px;background:#2a2a4a;color:white;border:1px solid #555;border-radius:8px;padding:10px;font-size:14px;resize:none;box-sizing:border-box;outline:none;"></textarea>
       <div style="display:flex;gap:10px;margin-top:12px;">
         <button id="feedback-close" style="flex:1;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Cancel</button>
@@ -245,5 +245,9 @@
       <div class="cl-body" id="cl-body"></div>
     </div>
   </div>
+
+  <!-- Class Inspector Tool -->
+  <div id="class-inspector-tooltip" style="display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#000;color:#ff9800;padding:6px 14px;border-radius:8px;font-size:12px;font-family:monospace;z-index:999999;pointer-events:none;max-width:90vw;word-break:break-all;border:1px solid #ff9800;"></div>
+  <button id="class-inspector-btn" onclick="(function(){var btn=document.getElementById('class-inspector-btn');var tip=document.getElementById('class-inspector-tooltip');if(window.__ciActive){window.__ciActive=false;document.removeEventListener('mouseover',window.__ciOver,true);document.removeEventListener('click',window.__ciClick,true);tip.style.display='none';document.body.style.cursor='';btn.style.background='rgba(0,0,0,0.6)';btn.textContent='🔍';return;}window.__ciActive=true;document.body.style.cursor='crosshair';btn.style.background='darkorange';btn.textContent='✕';tip.style.display='block';tip.textContent='Hover...';window.__ciOver=function(e){var el=e.target;if(el===tip||el===btn)return;var tag=el.tagName.toLowerCase();var cls=typeof el.className==='string'?el.className.trim():'';var id=el.id?'#'+el.id:'';tip.textContent=(id||'')+' '+(cls?'.'+cls.split(' ').join(' .'):'')+'  ['+tag+']';};window.__ciClick=function(e){var el=e.target;if(el===btn)return;e.preventDefault();e.stopPropagation();var cls=typeof el.className==='string'?el.className.trim():'';var copy=cls?'.'+cls.split(' ')[0]:'#'+el.id;navigator.clipboard.writeText(copy).then(function(){tip.style.background='#1a5c1a';tip.textContent='Copied: '+copy;setTimeout(function(){tip.style.background='#000';},1500);});},true;document.addEventListener('mouseover',window.__ciOver,true);document.addEventListener('click',window.__ciClick,true);})()" style="position:fixed;top:10px;left:10px;z-index:9999999;background:darkorange;color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;">🔍</button>
 </body>
 </html>
