@@ -161,7 +161,7 @@ header nav img {
 }
 
 .bass-mode .buttons-section {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .bass-mode .basic-chords-btn {
