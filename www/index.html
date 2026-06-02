@@ -96,7 +96,7 @@
       </div>
       <p class="basic-chord-beginner-hint"><span style="color:darkorange">* Beginners:</span><br>first learn the notes<br>on strings 5 &amp; 6<br>in Single Note mode<br>(lock other strings)</p>      <div class="scale-selector">
 
-        <button class="scale-btn scale-btn-free" data-scale="Free Playing">Free Playing</button>
+<button class="scale-btn scale-btn-free" data-scale="Free Playing">Free Playing</button>
 
         <div class="scale-group">
           <button class="scale-category-btn">Major Modes<span class="scale-arrow">▾</span></button>
@@ -163,7 +163,7 @@
           </div>
         </div>
 
-        <div class="scale-group" style="margin-top:18px;">
+        <div class="scale-group" style="margin-top:8px;">
           <button class="scale-category-btn">All Over<span class="scale-arrow">▾</span></button>
           <div class="scale-group-list">
             <button class="scale-btn" data-scale="AO Major">Major</button>
@@ -206,6 +206,9 @@
     <button class="peek-btn"></button>
     <span class="peek-label"><img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>Notes</span>
   </div>
+  <div class="try-again-wrapper" id="try-again-wrapper">
+    <span class="peek-label"><img src="reload.png" class="peek-icon" alt="try again" /><br>Try<br>Again</span>
+  </div>
   </main>
 
   <footer>
@@ -247,7 +250,5 @@
   </div>
 
   <!-- Class Inspector Tool -->
-  <div id="class-inspector-tooltip" style="display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#000;color:#ff9800;padding:6px 14px;border-radius:8px;font-size:12px;font-family:monospace;z-index:999999;pointer-events:none;max-width:90vw;word-break:break-all;border:1px solid #ff9800;"></div>
-  <button id="class-inspector-btn" onclick="(function(){var btn=document.getElementById('class-inspector-btn');var tip=document.getElementById('class-inspector-tooltip');if(window.__ciActive){window.__ciActive=false;document.removeEventListener('mouseover',window.__ciOver,true);document.removeEventListener('click',window.__ciClick,true);tip.style.display='none';document.body.style.cursor='';btn.style.background='rgba(0,0,0,0.6)';btn.textContent='🔍';return;}window.__ciActive=true;document.body.style.cursor='crosshair';btn.style.background='darkorange';btn.textContent='✕';tip.style.display='block';tip.textContent='Hover...';window.__ciOver=function(e){var el=e.target;if(el===tip||el===btn)return;var tag=el.tagName.toLowerCase();var cls=typeof el.className==='string'?el.className.trim():'';var id=el.id?'#'+el.id:'';tip.textContent=(id||'')+' '+(cls?'.'+cls.split(' ').join(' .'):'')+'  ['+tag+']';};window.__ciClick=function(e){var el=e.target;if(el===btn)return;e.preventDefault();e.stopPropagation();var cls=typeof el.className==='string'?el.className.trim():'';var copy=cls?'.'+cls.split(' ')[0]:'#'+el.id;navigator.clipboard.writeText(copy).then(function(){tip.style.background='#1a5c1a';tip.textContent='Copied: '+copy;setTimeout(function(){tip.style.background='#000';},1500);});},true;document.addEventListener('mouseover',window.__ciOver,true);document.addEventListener('click',window.__ciClick,true);})()" style="position:fixed;top:10px;left:10px;z-index:9999999;background:darkorange;color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:18px;cursor:pointer;">🔍</button>
 </body>
 </html>

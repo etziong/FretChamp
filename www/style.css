@@ -231,9 +231,24 @@ header nav img {
   right: 12px;
   z-index: 100;
 }
-.basic-chord-mode .peek-wrapper {
+.basic-chord-mode .peek-wrapper,
+.scales-mode .peek-wrapper {
   display: flex;
 }
+.try-again-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: fixed;
+  top: 120px;
+  right: 12px;
+  z-index: 100;
+}
+.scales-mode .try-again-wrapper {
+  display: flex;
+}
+.try-again-wrapper:active { opacity: 0.6; }
 .peek-btn {
   position: absolute;
   inset: 0;
@@ -847,8 +862,8 @@ header nav img {
 .scale-selector {
   display: none;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 4px;
+  margin-top: 6px;
   width: 120px;
 }
 
@@ -912,12 +927,14 @@ header nav img {
   font-size: 13px;
   font-family: system-ui, sans-serif;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 3px 8px;
   cursor: pointer;
   text-align: left;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 110px;
+  
 }
 
 .scale-category-btn:hover {
@@ -928,6 +945,7 @@ header nav img {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-color: rgba(255,255,255,0.45);
+
 }
 
 .scale-arrow {
@@ -945,20 +963,24 @@ header nav img {
   flex-direction: column;
   gap: 4px;
   padding: 6px 0 2px 8px;
-  border: 1px solid rgba(255,255,255,0.25);
   border-top: none;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
+  
 }
 
 .scale-group.open .scale-group-list {
   display: flex;
+  
 }
 
 .scale-group-list .scale-btn {
   font-size: 13px;
   padding: 5px 8px;
   border: none;
+  margin-bottom: 4px;
+  
+
 }
 
 .scale-btn-disabled {
@@ -979,12 +1001,26 @@ header nav img {
   top: 28px;
 }
 
-.scale-btn-free {
-  margin-top: 14px;
-  margin-bottom: 14px;
+.scale-btn-try-again {
+  margin-top: 0;
+  margin-bottom: 4px;
   border-color: rgba(255,255,255,0.5) !important;
   color: rgba(255,255,255,0.85) !important;
   font-style: italic;
+  display: none;
+}
+.scales-mode .scale-btn-try-again {
+  display: block;
+}
+.scale-btn-free {
+  margin-top: 0;
+  margin-bottom: 8px;
+  border-color: rgba(255,255,255,0.5) !important;
+  color: rgba(255,255,255,0.85) !important;
+  font-style: italic;
+  padding: 4px;
+  width: 110px;
+  padding-left: 8px;
 }
 
 .scale-btn-free.active {
