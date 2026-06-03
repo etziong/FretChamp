@@ -279,6 +279,10 @@ header nav img {
 .four-inverts-mode .string-lock-section {
   display: none;
 }
+.bass-mode.three-chord-mode .string-lock-section,
+.bass-mode.four-inverts-mode .string-lock-section {
+  display: flex;
+}
 .four-inverts-mode .ext-btn {
   display: none;
 }
@@ -290,6 +294,9 @@ header nav img {
 }
 .greed-mode.four-inverts-mode .four-inverts-set-selector {
   display: flex;
+}
+.bass-mode.greed-mode.four-inverts-mode .four-inverts-set-selector {
+  display: none;
 }
 .four-inverts-hint {
   display: none;
@@ -326,6 +333,9 @@ header nav img {
 }
 .greed-mode.three-chord-mode .three-chord-set-selector {
   display: flex;
+}
+.bass-mode.greed-mode.three-chord-mode .three-chord-set-selector {
+  display: none;
 }
 .three-chord-set-btn {
   background: transparent;
