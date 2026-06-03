@@ -283,9 +283,6 @@ header nav img {
 .bass-mode.four-inverts-mode .string-lock-section {
   display: flex;
 }
-.four-inverts-mode .ext-btn {
-  display: none;
-}
 .four-inverts-set-selector {
   display: none;
   flex-direction: column;
@@ -750,30 +747,6 @@ header nav img {
 }
 
 
-.ext-btn {
-  display: none;
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 3px;
-  padding: 2px 6px;
-  cursor: pointer;
-  margin-top: -11px;
-  font-family: system-ui, sans-serif;
-  width: auto;
-  justify-self: start;
-  text-align: left;
-}
-
-.ext-btn.active {
-  color: darkorange;
-  border-color: darkorange;
-}
-
-.four-chord-mode .ext-btn {
-  display: block;
-}
 
 .feedback {
   font-size: 15px;

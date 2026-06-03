@@ -505,18 +505,6 @@ nextBtn.addEventListener('click', () => {
   nextRound();
 });
 
-const extBtn = document.querySelector('.ext-btn');
-extBtn.addEventListener('click', () => {
-  extBtn.classList.toggle('active');
-  if (extBtn.classList.contains('active')) {
-    extBtn.textContent = 'Tensions';
-    headLineEl.innerHTML = 'EXTENDED<br>CHORDS';
-  } else {
-    extBtn.textContent = 'Add tensions';
-    headLineEl.innerHTML = chordMode === 'sevenths' ? '7THS &<br>TENSIONS' : 'TRIADS';
-    no5thNote.style.display = 'none';
-  }
-});
 const headLineEl = document.querySelector('.headLine');
 const rootDisplayEl = document.querySelector('.rootDisplay');
 const no5thNote = document.querySelector('.no5th-note');
@@ -1250,6 +1238,12 @@ const tensionChords = {
 
   "C7b5":["C","E","Gb","Bb"],  "D7b5":["D","F#","Ab","C"], "E7b5":["E","G#","Bb","D"],
   "F7b5":["F","A","B","Eb"],   "G7b5":["G","B","Db","F"],  "A7b5":["A","C#","Eb","G"], "B7b5":["B","D#","F","A"],
+
+  "C9":["C","E","Bb","D"],   "D9":["D","F#","C","E"],   "E9":["E","G#","D","F#"],
+  "F9":["F","A","Eb","G"],   "G9":["G","B","F","A"],    "A9":["A","C#","G","B"],   "B9":["B","D#","A","C#"],
+
+  "C9sus4":["C","F","Bb","D"],   "D9sus4":["D","G","C","E"],   "E9sus4":["E","A","D","F#"],
+  "F9sus4":["F","Bb","Eb","G"],  "G9sus4":["G","C","F","A"],   "A9sus4":["A","D","G","B"],  "B9sus4":["B","E","A","C#"],
 };
 
 const slashChords = {
@@ -1539,41 +1533,29 @@ let lastChordName = null;
 let lastSlashChordName = null;
 
 function startFourChordRound() {
+  const keys = Object.keys(tensionChords);
   let chordName;
-  if (extBtn.classList.contains('active')) {
-    const keys = Object.keys(tensionChords);
-    do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastChordName && keys.length > 1);
-    chordNotes = tensionChords[chordName];
-  } else {
-    const weightedChords = [
-      ...Object.keys(dominant7), ...Object.keys(dominant7),
-      ...Object.keys(minor7),    ...Object.keys(minor7),
-      ...Object.keys(major7),    ...Object.keys(major7),
-      ...Object.keys(halfDim7),
-    ];
-    do { chordName = weightedChords[Math.floor(Math.random() * weightedChords.length)]; } while (chordName === lastChordName && weightedChords.length > 1);
-    chordNotes = allSeventhChords[chordName];
-  }
+  do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastChordName && keys.length > 1);
   lastChordName = chordName;
+  chordNotes = tensionChords[chordName];
   foundChordNotes = new Set();
-  headLineEl.innerHTML = '7THS &<br>TENSIONS';
+  headLineEl.innerHTML = 'TENSIONS';
   notesDisplay.innerHTML = formatNoteName(chordName);
-  instracEl.textContent = `Find chord tones`;
-  const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9'];
-  const isNo5th = extBtn.classList.contains('active') && no5thSuffixes.some(s => chordName.endsWith(s));
-  no5thNote.style.display = isNo5th ? 'block' : 'none';
+  instracEl.textContent = 'Find chord tones';
+  const no5thSuffixes = ['7b9','7#9','#11','11','maj9','13','b13','m9','9'];
+  no5thNote.style.display = no5thSuffixes.some(s => chordName.endsWith(s)) ? 'block' : 'none';
   highlightChordNotes(chordNotes);
 }
 
 function startFourInvertsRound() {
-  const weightedChords = [
-    ...Object.keys(dominant7), ...Object.keys(dominant7),
-    ...Object.keys(minor7),    ...Object.keys(minor7),
-    ...Object.keys(major7),    ...Object.keys(major7),
+  const allChords = [
+    ...Object.keys(dominant7),
+    ...Object.keys(minor7),
+    ...Object.keys(major7),
     ...Object.keys(halfDim7),
   ];
   let chordName;
-  do { chordName = weightedChords[Math.floor(Math.random() * weightedChords.length)]; } while (chordName === lastChordName && weightedChords.length > 1);
+  do { chordName = allChords[Math.floor(Math.random() * allChords.length)]; } while (chordName === lastChordName && allChords.length > 1);
   lastChordName = chordName;
   chordNotes = allSeventhChords[chordName];
   foundChordNotes = new Set();
@@ -2281,10 +2263,12 @@ function renderScalesSection(body) {
 function renderInstructionsSection(body) {
   const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
   const isBass = document.body.classList.contains('bass-mode');
-  const text = isBass
-    ? 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.'
-    : 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br><br>A Bass Guitar version is also available within the app.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.';
-  s(text, false);
+  s('This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid.<br>It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.', false);
+  if (!isBass) {
+    s('A Bass Guitar version is also available within the app.', false);
+    s('Please note:', false);
+    s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.', false);
+  }
   s('Have fun and good luck!', false);
 }
 
