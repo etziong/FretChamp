@@ -474,6 +474,12 @@ document.getElementById('bass-btn').addEventListener('click', () => {
   document.getElementById('bass-btn').classList.toggle('active', bassMode);
   document.getElementById('bass-btn-img').src = bassMode ? 'guitarHead.png' : 'bassHead.png';
   document.getElementById('mode-label').textContent = bassMode ? 'Bass Mode Trainer' : 'Guitar Mode Trainer';
+  const inSetMode = document.body.classList.contains('three-chord-mode') || document.body.classList.contains('four-inverts-mode');
+  if (inSetMode) {
+    lockedStrings.clear();
+    document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+    document.querySelectorAll('.three-chord-set-btn, .four-inverts-set-btn').forEach(b => b.classList.remove('active'));
+  }
   if (bassMode) {
     applyOffsets(bassOffsets);
     Object.entries(svgCells).forEach(([key, cell]) => {
@@ -1028,17 +1034,9 @@ function startScaleGame(scaleName, d) {
       setAllOp('1');
       // Phase 2: 3s stable display, then 6 blinks
       scaleGameTimeout = setTimeout(() => {
-        let blinks = 0;
-        const blink = setInterval(() => {
-          setAllOp(blinks % 2 === 0 ? '0' : '1');
-          blinks++;
-          if (blinks >= 10) {
-            clearInterval(blink);
-            clearScaleHighlights();
-            scaleGameActive = true;
-            instracEl.innerHTML = 'Find the scale<br>notes!';
-          }
-        }, 300);
+        clearScaleHighlights();
+        scaleGameActive = true;
+        instracEl.innerHTML = 'Find the scale<br>notes!';
       }, 3000);
     }
   }, 300);
