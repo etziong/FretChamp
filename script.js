@@ -2285,6 +2285,7 @@ function renderInstructionsSection(body) {
     ? 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.'
     : 'This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid. It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.<br><br>A Bass Guitar version is also available within the app.<br><br>Please note: This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.';
   s(text, false);
+  s('Have fun and good luck!', false);
 }
 
 function renderChordListSection(tab) {
