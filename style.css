@@ -847,6 +847,9 @@ header nav img {
 .free-playing-mode .noteD {
   display: none;
 }
+.scales-mode .mute-wrapper:has(.next-btn) {
+  display: none;
+}
 .free-playing-mode .score-inline {
   display: none;
 }
@@ -935,18 +938,6 @@ header nav img {
   border-color: rgba(255,255,255,0.45);
 }
 
-.scale-category-btn.auto-active {
-  color: darkorange;
-  border-color: darkorange;
-}
-
-.scale-manual-hint {
-  font-size: 10px;
-  color: rgba(255,255,255,0.4);
-  font-family: system-ui, sans-serif;
-  margin: 2px 0 8px 0;
-  line-height: 1.4;
-}
 
 .scale-arrow {
   font-size: 11px;
@@ -1011,21 +1002,6 @@ header nav img {
 }
 .scales-mode .scale-btn-try-again {
   display: block;
-}
-.scale-btn-free {
-  margin-top: 0;
-  margin-bottom: 8px;
-  border-color: rgba(255,255,255,0.5) !important;
-  color: rgba(255,255,255,0.85) !important;
-  font-style: italic;
-  padding: 4px;
-  width: 110px;
-  padding-left: 8px;
-}
-
-.scale-btn-free.active {
-  color: darkorange !important;
-  border-color: darkorange !important;
 }
 
 .credit-text {
