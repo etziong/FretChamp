@@ -2260,9 +2260,9 @@ function renderScalesSection(body) {
 }
 
 function renderInstructionsSection(body) {
-  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
+  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;text-wrap:balance;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
   const isBass = document.body.classList.contains('bass-mode');
-  s('This app helps users practice notes, chord tones,<br>and inversions, while improving fretboard visualization, navigation, and control of the guitar grid.<br>It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.', false);
+  s('This app helps users practice notes, chord tones,<br>and inversions, while improving fretboard visualization, navigation, and control of the guitar&nbsp;grid.<br>It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or&nbsp;traveling.', false);
   if (!isBass) {
     s('A Bass Guitar version is also available<br>within the app.', false);
     s('Please note:', false);
