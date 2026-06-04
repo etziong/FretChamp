@@ -1002,7 +1002,7 @@ function startScaleGame(scaleName, d) {
   const bluesKeys = new Set((d.blues||[]).filter(k => !skipKey(k)));
   scaleGameNotes = new Set([...noteKeys, ...rootKeys, ...bluesKeys]);
 
-  instracEl.innerHTML = '<span style="color:darkorange">Pay attention!!!</span>';
+  instracEl.innerHTML = '<span style="color:darkorange">Watch the scale<br>note positions!</span>';
 
   const setAllOp = op => {
     noteKeys.forEach(k  => { if (svgCells[k]) { svgCells[k].scaleNoteCircle.setAttribute('opacity', op); } });
@@ -2262,11 +2262,11 @@ function renderScalesSection(body) {
 function renderInstructionsSection(body) {
   const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
   const isBass = document.body.classList.contains('bass-mode');
-  s('This app helps users practice notes, chord tones, and inversions, while improving fretboard visualization, navigation, and control of the guitar grid.<br>It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.', false);
+  s('This app helps users practice notes, chord tones,<br>and inversions, while improving fretboard visualization, navigation, and control of the guitar grid.<br>It is ideal for practicing when away from your guitar, such as while waiting in line, commuting, or traveling.', false);
   if (!isBass) {
-    s('A Bass Guitar version is also available within the app.', false);
+    s('A Bass Guitar version is also available<br>within the app.', false);
     s('Please note:', false);
-    s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre chord shapes.', false);
+    s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre<br>chord shapes.', false);
   }
   s('Have fun and good luck!', false);
 }
