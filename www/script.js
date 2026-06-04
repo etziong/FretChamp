@@ -365,7 +365,7 @@ function handleFretClick(e) {
           scaleGameActive = false;
           showWellDone();
           setTimeout(playBigSuccess, 300);
-          instracEl.innerHTML = 'Find the scale<br>notes!';
+          instracEl.innerHTML = 'Tap Try Again<br>or choose<br>another scale';
         }
       } else if (!scaleGameNotes.has(key)) {
         feedbackEl.textContent = 'Try again';
