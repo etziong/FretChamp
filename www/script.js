@@ -782,7 +782,7 @@ mainButtons.forEach((btn, index) => {
       lastBasicChordName = null;
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
-      instracEl.innerHTML = 'Find the<br>display chord';
+      instracEl.innerHTML = 'Find the<br>displayed chord';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -804,7 +804,7 @@ mainButtons.forEach((btn, index) => {
       gameMode = 'single';
       updatePeekLabel();
       headLineEl.innerHTML = 'SINGLE NOTE';
-      instracEl.innerHTML = 'Find (all)<br>Displayed notes';
+      instracEl.innerHTML = 'Find all<br>displayed notes';
       note = randomNote();
       notesDisplay.innerHTML = formatNoteName(note);
       highlightNotes(note);
@@ -1898,7 +1898,7 @@ function nextRound() {
     else startChordRound();
   } else {
     headLineEl.textContent = 'SINGLE NOTE';
-    instracEl.innerHTML = 'Find (all)<br>Displayed notes';
+    instracEl.innerHTML = 'Find all<br>displayed notes';
     note = randomNote();
     notesDisplay.innerHTML = formatNoteName(note);
     highlightNotes(note);
