@@ -346,11 +346,12 @@ function handleFretClick(e) {
   if (gameMode === 'basicchord' && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
   showTapRipple(key);
   playNote(bassMode ? freqFromKey(key) / 2 : freqFromKey(key));
+  if (gameMode === 'freeplaying') return;
   if (gameMode === 'freeplay') {
     if (scaleGameActive && scaleGameNotes.size > 0) {
       if (scaleGameNotes.has(key) && !scaleGameFound.has(key)) {
         scaleGameFound.add(key);
-        const activeSvgScale = document.querySelector('.scale-btn.active');
+        const activeSvgScale = document.querySelector('.scale-btn.active:not(.scale-btn-free)');
         const scaleName = activeSvgScale ? activeSvgScale.dataset.scale : null;
         const d = scaleName ? scaleData[scaleName] : null;
         showScaleNoteFound(key, d);
@@ -364,7 +365,15 @@ function handleFretClick(e) {
           scaleGameActive = false;
           showWellDone();
           setTimeout(playBigSuccess, 300);
-          instracEl.innerHTML = 'Find the scale<br>notes!';
+          if (scaleAutoCategory) {
+            const activeCatBtn = document.querySelector('.scale-category-btn.auto-active');
+            if (activeCatBtn) {
+              const autoScales = getScalesForCategoryBtn(activeCatBtn);
+              setTimeout(() => { if (scaleAutoCategory) startAutoScaleRound(autoScales); }, 2500);
+            }
+          } else {
+            instracEl.innerHTML = 'Find the scale<br>notes!';
+          }
         }
       } else if (!scaleGameNotes.has(key)) {
         feedbackEl.textContent = 'Try again';
@@ -459,7 +468,7 @@ function handleFretClick(e) {
 }
 
 homeBtn.addEventListener('click', () => {
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -564,7 +573,7 @@ peekBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
 
   if (gameMode === 'freeplay' && scaleGameActive) {
-    const activeBtn = document.querySelector('.scale-btn.active');
+    const activeBtn = document.querySelector('.scale-btn.active:not(.scale-btn-free)');
     if (!activeBtn) return;
     const d = scaleData[activeBtn.dataset.scale];
     if (!d) return;
@@ -721,7 +730,7 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -767,7 +776,7 @@ mainButtons.forEach((btn, index) => {
       lockedStrings.clear();
       document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
       headLineEl.textContent = 'SCALES';
-      instracEl.innerHTML = 'Choose scale<br>to practice';
+      instracEl.innerHTML = 'Choose a<br>category';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -782,6 +791,17 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
       instracEl.innerHTML = 'Find the<br>display chord';
+      notesDisplay.innerHTML = '';
+      targetKeys.clear();
+      Object.values(svgCells).forEach(cell => {
+        cell.circle.setAttribute('opacity', '0');
+        cell.text.setAttribute('opacity', '0');
+      });
+    } else if (index === 8) {
+      gameMode = 'freeplaying';
+      document.body.classList.add('free-playing-mode');
+      headLineEl.textContent = 'FREE PLAYING';
+      instracEl.innerHTML = 'Play something<br>nice :-)';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -821,24 +841,81 @@ document.querySelectorAll('.str-btn').forEach(strBtn => {
 });
 
 const scaleSelector = document.querySelector('.scale-selector');
-const scaleBackBtn = document.querySelector('.scale-back-btn');
 
-scaleBackBtn.addEventListener('click', () => {
-  document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
-  scaleSelector.classList.remove('has-open');
-});
+
+function getScalesForCategoryBtn(catBtn) {
+  const scales = [];
+  catBtn.closest('.scale-group').querySelectorAll('.scale-btn:not(.scale-btn-disabled):not(.scale-btn-free)').forEach(b => {
+    if (b.dataset.scale) scales.push(b.dataset.scale);
+  });
+  return scales;
+}
+
+function exitScaleAutoMode() {
+  scaleAutoCategory = null;
+  scaleAutoLastScale = null;
+  scaleManualMode = false;
+  document.querySelectorAll('.scale-category-btn').forEach(b => b.classList.remove('auto-active'));
+  document.querySelectorAll('.scale-btn-free').forEach(b => b.classList.remove('active'));
+}
+
+function startAutoScaleRound(scales) {
+  let scaleName;
+  do {
+    scaleName = scales[Math.floor(Math.random() * scales.length)];
+  } while (scaleName === scaleAutoLastScale && scales.length > 1);
+  scaleAutoLastScale = scaleName;
+  document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.scale-btn[data-scale="${scaleName}"]`);
+  if (btn) {
+    btn.classList.add('active');
+    const group = btn.closest('.scale-group');
+    if (group) {
+      document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
+      group.classList.add('open');
+      scaleSelector.classList.add('has-open');
+    }
+  }
+  applyScaleHighlights(scaleName);
+}
 
 document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
   catBtn.addEventListener('click', () => {
     const group = catBtn.closest('.scale-group');
+    const catName = catBtn.textContent.replace('▾', '').trim();
     const isOpen = group.classList.contains('open');
-    document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
-    if (!isOpen) {
-      group.classList.add('open');
-      scaleSelector.classList.add('has-open');
-    } else {
-      scaleSelector.classList.remove('has-open');
+
+    // In manual mode: just open/close the group
+    if (scaleManualMode) {
+      document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
+      if (!isOpen) { group.classList.add('open'); scaleSelector.classList.add('has-open'); }
+      else { scaleSelector.classList.remove('has-open'); }
+      return;
     }
+
+    // Toggle off auto mode for this category
+    if (scaleAutoCategory === catName) {
+      exitScaleAutoMode();
+      document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
+      if (!isOpen) { group.classList.add('open'); scaleSelector.classList.add('has-open'); }
+      else { scaleSelector.classList.remove('has-open'); }
+      return;
+    }
+
+    const scales = getScalesForCategoryBtn(catBtn);
+    if (scales.length === 0) {
+      document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
+      if (!isOpen) { group.classList.add('open'); scaleSelector.classList.add('has-open'); }
+      else { scaleSelector.classList.remove('has-open'); }
+      return;
+    }
+
+    exitScaleAutoMode();
+    scaleAutoCategory = catName;
+    catBtn.classList.add('auto-active');
+    document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
+    scaleSelector.classList.remove('has-open');
+    startAutoScaleRound(scales);
   });
 });
 
@@ -911,11 +988,34 @@ document.querySelector('.three-chord-free-btn').addEventListener('click', () => 
 document.querySelector('.scale-selector').addEventListener('click', e => {
   const btn = e.target.closest('.scale-btn');
   if (!btn || btn.disabled) return;
-  document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   if (btn.classList.contains('scale-btn-free')) {
+    if (scaleManualMode) {
+      scaleManualMode = false;
+      scaleGameActive = false;
+      document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+      instracEl.innerHTML = 'Choose a<br>category';
+      clearScaleHighlights();
+      return;
+    }
+    exitScaleAutoMode();
+    scaleManualMode = true;
+    scaleGameActive = false;
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
     document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
     scaleSelector.classList.remove('has-open');
+    instracEl.innerHTML = 'Choose a<br>scale';
+    clearScaleHighlights();
+    return;
+  }
+  if (scaleManualMode) {
+    document.querySelectorAll('.scale-btn:not(.scale-btn-free)').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector('.scale-btn-free').classList.add('active');
+  } else {
+    exitScaleAutoMode();
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   }
   applyScaleHighlights(btn.dataset.scale);
 });
@@ -984,6 +1084,9 @@ let scaleGameFound = new Set();
 let scaleGameTimeout = null;
 let lastScaleName = null;
 let lastScaleData = null;
+let scaleAutoCategory = null;
+let scaleAutoLastScale = null;
+let scaleManualMode = false;
 
 document.getElementById('try-again-wrapper').addEventListener('click', () => {
   if (!lastScaleName || !lastScaleData) return;
@@ -1897,6 +2000,11 @@ function nextRound() {
     else if (chordMode === 'fourInverts') startFourInvertsRound();
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
+  } else if (gameMode === 'freeplay') {
+    if (scaleAutoCategory) {
+      const activeCatBtn = document.querySelector('.scale-category-btn.auto-active');
+      if (activeCatBtn) startAutoScaleRound(getScalesForCategoryBtn(activeCatBtn));
+    }
   } else {
     headLineEl.textContent = 'SINGLE NOTE';
     instracEl.innerHTML = 'Find (all)<br>Displayed notes';

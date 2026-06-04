@@ -170,9 +170,29 @@ header nav img {
 
 .basic-chords-btn {
   order: unset;
-  grid-column: 1 / -1;
   aspect-ratio: unset;
   height: 45px;
+}
+
+.free-playing-btn {
+  aspect-ratio: unset;
+  height: 45px;
+}
+
+.bottom-btn-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 7px;
+}
+
+.bottom-btn-row .main-btn {
+  flex: 1;
+  aspect-ratio: unset;
+  height: 45px;
+}
+
+.bass-mode .bottom-btn-row .free-playing-btn {
+  flex: 1 1 100%;
 }
 
 .scales-btn {
@@ -408,9 +428,6 @@ header nav img {
   flex-direction: row;
   gap: 12px;
   margin-top: 28px;
-}
-.bass-mode .buttons-row {
-  margin-top: 80px;
 }
 
 .greed-mode header,
@@ -827,16 +844,20 @@ header nav img {
   opacity: 0;
 }
 
-.free-play-mode .mute-wrapper:has(.next-btn) {
-  opacity: 0;
-  pointer-events: none;
+.free-playing-mode .noteD {
+  display: none;
+}
+.free-playing-mode .score-inline {
+  display: none;
+}
+.free-playing-mode .string-lock-section {
+  display: none;
+}
+.free-playing-mode .mute-wrapper:has(.mute-btn),
+.free-playing-mode .mute-wrapper:has(.next-btn) {
+  display: none;
 }
 
-
-.free-play-mode .mute-wrapper:has(.mute-btn) {
-  opacity: 0;
-  pointer-events: none;
-}
 
 .free-play-mode .string-lock-section {
   display: none;
@@ -855,22 +876,6 @@ header nav img {
 }
 
 
-.scale-back-btn {
-  display: none;
-  margin-top: -3px;
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.5);
-  font-size: 10px;
-  font-family: system-ui, sans-serif;
-  padding: 4px 0;
-  cursor: pointer;
-  text-align: left;
-}
-
-.scale-selector.has-open .scale-back-btn {
-  display: block;
-}
 
 .scales-mode .scale-selector {
   display: flex;
@@ -928,7 +933,19 @@ header nav img {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-color: rgba(255,255,255,0.45);
+}
 
+.scale-category-btn.auto-active {
+  color: darkorange;
+  border-color: darkorange;
+}
+
+.scale-manual-hint {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  font-family: system-ui, sans-serif;
+  margin: 2px 0 8px 0;
+  line-height: 1.4;
 }
 
 .scale-arrow {
@@ -1008,6 +1025,7 @@ header nav img {
 
 .scale-btn-free.active {
   color: darkorange !important;
+  border-color: darkorange !important;
 }
 
 .credit-text {
