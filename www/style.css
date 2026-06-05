@@ -261,7 +261,7 @@ header nav img {
   align-items: center;
   cursor: pointer;
   position: fixed;
-  top: 113px;
+  top: 120px;
   right: 12px;
   z-index: 100;
 }
@@ -269,6 +269,7 @@ header nav img {
   display: flex;
 }
 .try-again-wrapper:active { opacity: 0.6; }
+.try-again-wrapper .peek-icon { margin-top: -2px; margin-bottom: 3px; }
 .peek-btn {
   position: absolute;
   inset: 0;
