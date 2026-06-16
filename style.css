@@ -102,7 +102,7 @@ main {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 24px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -128,7 +128,7 @@ header nav {
 header nav img {
   width: 100%;
   max-width: 260px;
-  max-height: 55px;
+  max-height: clamp(216px, 37vh, 367px);
   height: auto;
   display: block;
   margin: auto;
@@ -150,7 +150,7 @@ header nav img {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-top: clamp(8px, 5vh, 55px);
+  margin-top: 0;
   padding-bottom: 16px;
   direction: ltr;
 }
@@ -499,7 +499,7 @@ header nav img {
 }
 
 .noteNameDisplay {
-  position: absolute;
+  position: fixed;
   opacity: 0;
   pointer-events: none;
   left: 20px;
@@ -979,10 +979,8 @@ header nav img {
   font-size: 15px;
   color: rgba(255,255,255,0.7);
   font-family: system-ui, sans-serif;
-  margin-bottom: -26px;
-  margin-top: -33px;
-  position: relative;
-  top: 28px;
+  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .scale-btn-try-again {
