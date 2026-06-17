@@ -235,14 +235,13 @@ header nav img {
   color: darkorange;
 }
 
-/* קיבוע הכפתורים בתוך ה-App ולא יחסית לדפדפן הכללי */
 .peek-wrapper {
   display: none;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  position: absolute; /* שונה מ-fixed */
-  top: 15px;
+  position: fixed;
+  top: 62px;
   right: 12px;
   z-index: 100;
 }
@@ -255,8 +254,8 @@ header nav img {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  position: absolute; /* שונה מ-fixed */
-  top: 85px;
+  position: fixed;
+  top: 132px;
   right: 12px;
   z-index: 100;
 }
@@ -669,10 +668,10 @@ header nav img {
   display: none;
   position: fixed;
   bottom: 12px;
-  left: max(24px, calc(50vw - 171px));
+  left: 24px;
   flex-direction: row;
   align-items: flex-end;
-  gap: 12px;
+  gap: 4px;
   z-index: 10;
   direction: ltr;
 }
@@ -720,6 +719,7 @@ header nav img {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 2px;
 }
 
 .mute-label {
