@@ -1,4 +1,3 @@
-
 :root {
   --font-1: 17px;
   --font-2: 15px;
@@ -7,7 +6,7 @@
   --font-5: 10px;
 }
 
-  /* ── Responsive for ALL screen sizes ── */
+/* ── Responsive for ALL screen sizes ── */
 
 * {
   box-sizing: border-box;
@@ -32,19 +31,18 @@ html, body {
   height: 100%;
   overflow: hidden;
   background-color: rgb(4, 4, 4);
-
 }
 
 body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   height: 100vh;
   height: 100dvh;
   background: #000000;
   position: relative;
-  padding: 0 32px;
-  max-width: 390px;
+  padding: 0 16px; /* ריפוד קל מהצדדים למובייל */
   margin: 0 auto;
 }
 
@@ -52,10 +50,10 @@ body {
   /* Fill full screen on mobile */
   width: 100%;
   height: 100vh;
-  height: 100dvh; /* ← modern fix for mobile browser bar */
+  height: 100dvh; /* modern fix for mobile browser bar */
 
   /* Cap width on tablets/desktop */
-  max-width: 250px;
+  max-width: 420px; /* רוחב אידיאלי ואחיד לכל הרכיבים */
 
   /* Layout */
   display: flex;
@@ -63,7 +61,6 @@ body {
   overflow: hidden;
   position: relative;
 }
-
 
 /* ── Make inner content scroll, not the whole app ── */
 .screen {
@@ -84,39 +81,32 @@ html {
   font-size: clamp(14px, 2.2vw, 18px);
 }
 
-/* ── Tablet: center the app with shadow ── */
+/* ── Tablet & Desktop: center the app with shadow ── */
 @media (min-width: 500px) {
   body {
-    
     align-items: center;
     min-height: 100vh;
     padding: 24px 0;
   }
 
   .app {
-    height: auto;
-    min-height: 80vh;
-    max-height: 920px;
+    height: 90vh; /* מונע הימתחות קורעת עיניים במסכי מחשב גבוהים */
+    max-height: 850px;
     border-radius: 24px;
     box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
-    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
-
-/* ── Large desktop ── */
-@media (min-width: 900px) {
-  .app {
-    max-width: 420px;
-  }
-}
-
-
 
 main {
   width: 100%;
-  max-width: 450px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
 }
 
 header {
@@ -124,7 +114,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
+  padding: 12px 0; /* ריפוד מאוזן */
   text-align: center;
 }
 
@@ -136,10 +126,13 @@ header nav {
 }
 
 header nav img {
-  width: 295px;
+  width: 100%;
+  max-width: 260px;
+  max-height: clamp(216px, 37vh, 367px);
   height: auto;
   display: block;
   margin: auto;
+  object-fit: contain;
 }
 
 .main-content {
@@ -149,19 +142,21 @@ header nav img {
   align-items: center;
   gap: 2px;
   padding: 0;
+  flex: 1;
 }
 
 .buttons-section {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 7px;
-  margin-top: 55px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 0;
+  padding-bottom: 16px;
   direction: ltr;
 }
 
 .bass-mode .buttons-section {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .bass-mode .basic-chords-btn {
@@ -182,7 +177,7 @@ header nav img {
 .bottom-btn-row {
   grid-column: 1 / -1;
   display: flex;
-  gap: 7px;
+  gap: 8px;
 }
 
 .bottom-btn-row .main-btn {
@@ -240,14 +235,13 @@ header nav img {
   color: darkorange;
 }
 
-
 .peek-wrapper {
   display: none;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   position: fixed;
-  top: 50px;
+  top: 62px;
   right: 12px;
   z-index: 100;
 }
@@ -261,7 +255,7 @@ header nav img {
   align-items: center;
   cursor: pointer;
   position: fixed;
-  top: 120px;
+  top: 132px;
   right: 12px;
   z-index: 100;
 }
@@ -422,7 +416,6 @@ header nav img {
 }
 .small-btn:active { opacity: 0.65; transform: translateY(0); }
 
-
 .buttons-row {
   width: 100%;
   display: flex;
@@ -442,10 +435,8 @@ header nav img {
 
 .greed-mode .noteNameDisplay {
   opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.3s ease;
+  pointer-events: all;
 }
-
 .guitar-wrapper {
   opacity: 0;
   pointer-events: none;
@@ -507,7 +498,7 @@ header nav img {
 }
 
 .noteNameDisplay {
-  position: absolute;
+  position: fixed;
   opacity: 0;
   pointer-events: none;
   left: 20px;
@@ -677,10 +668,10 @@ header nav img {
   display: none;
   position: fixed;
   bottom: 12px;
-  left: max(24px, calc(50vw - 171px));
+  left: 24px;
   flex-direction: row;
   align-items: flex-end;
-  gap: 12px;
+  gap: 4px;
   z-index: 10;
   direction: ltr;
 }
@@ -728,6 +719,7 @@ header nav img {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 2px;
 }
 
 .mute-label {
@@ -987,10 +979,8 @@ header nav img {
   font-size: 15px;
   color: rgba(255,255,255,0.7);
   font-family: system-ui, sans-serif;
-  margin-bottom: -26px;
-  margin-top: -33px;
-  position: relative;
-  top: 28px;
+  margin-top: 8px;
+  margin-bottom: 4px;
 }
 
 .scale-btn-try-again {
