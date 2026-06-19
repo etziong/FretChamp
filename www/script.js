@@ -475,6 +475,7 @@ document.getElementById('bass-btn').addEventListener('click', () => {
   document.getElementById('bass-btn').classList.toggle('active', bassMode);
   document.getElementById('bass-btn-img').src = bassMode ? 'guitarHead.png' : 'bassHead.png';
   document.getElementById('mode-label').textContent = bassMode ? 'Bass Mode Trainer' : 'Guitar Mode Trainer';
+  document.getElementById('bass-btn-label').textContent = bassMode ? 'Go Guitar' : 'Go Bass';
   const inSetMode = document.body.classList.contains('three-chord-mode') || document.body.classList.contains('four-inverts-mode');
   if (inSetMode) {
     lockedStrings.clear();
@@ -621,6 +622,46 @@ peekBtn.addEventListener('pointerleave', () => {
     return;
   }
   hidePeek();
+});
+
+const bassModeInstructions = {
+  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard and tap them. Use the string lock buttons to focus on specific strings.',
+  'three-chord-mode':  'Find the 3 notes of the displayed chord. For deeper practice, try placing the root note on a different string each time.',
+  'four-inverts-mode': 'Find the chord tones shown on screen. Challenge yourself by placing the root note on a different string each time.',
+};
+
+const modeInstructions = {
+  'three-chord-mode': 'Choose a string set, then find one triad inversion of the displayed chord. For deeper practice, try changing the string where the root note appears each time.',
+  'four-inverts-mode':'Choose a string set, then find one 7th chord inversion. For deeper practice, try changing the string where the root note appears each time.',
+  'slash-chord-mode': 'Play the chord shown, but place the note after the slash as the lowest bass note. Tap that bass note on the fretboard.',
+  'four-chord-mode':  'Find the chord with the tension shown. The 5th is optional — focus on root, 3rd, 7th and the tension note.',
+  'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
+  'basic-chord-mode': 'Choose open or barre chords, then select root on the 5th or 6th string. Use the Show Notes button if needed.',
+  'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.',
+  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard and tap them. Use the string lock buttons to focus on specific strings.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
+};
+
+const instructionsWrapper = document.getElementById('instructions-wrapper');
+const instructionsModal = document.getElementById('instructions-modal');
+const instructionsModalText = document.getElementById('instructions-modal-text');
+const instructionsModalClose = document.getElementById('instructions-modal-close');
+
+instructionsWrapper.addEventListener('click', () => {
+  const isBass = document.body.classList.contains('bass-mode');
+  const currentMode = Object.keys(modeInstructions).find(m => document.body.classList.contains(m));
+  const text = isBass && bassModeInstructions[currentMode]
+    ? bassModeInstructions[currentMode]
+    : (currentMode ? modeInstructions[currentMode] : '');
+  instructionsModalText.textContent = text;
+  instructionsModal.style.display = 'flex';
+});
+
+instructionsModalClose.addEventListener('click', () => {
+  instructionsModal.style.display = 'none';
+});
+
+instructionsModal.addEventListener('click', (e) => {
+  if (e.target === instructionsModal) instructionsModal.style.display = 'none';
 });
 
 let score = 0;
@@ -2268,7 +2309,8 @@ function renderInstructionsSection(body) {
     s('Please note:', false);
     s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre<br>chord shapes.', false);
   }
-  s('Have fun and good luck!', false);
+  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;'; p.textContent = 'Each page has a Guide button — tap it to learn what to do.'; body.appendChild(p); }
+  s('Have fun and good luck!', true);
 }
 
 function renderChordListSection(tab) {

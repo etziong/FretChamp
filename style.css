@@ -235,15 +235,45 @@ header nav img {
   color: darkorange;
 }
 
+.side-btns-container {
+  position: fixed;
+  top: 62px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+.instructions-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.greed-mode .instructions-wrapper,
+.three-chord-mode .instructions-wrapper,
+.four-inverts-mode .instructions-wrapper,
+.slash-chord-mode .instructions-wrapper,
+.four-chord-mode .instructions-wrapper,
+.scales-mode .instructions-wrapper,
+.basic-chord-mode .instructions-wrapper,
+.free-playing-mode .instructions-wrapper {
+  display: flex;
+}
+.instructions-wrapper:active { opacity: 0.6; }
+.instructions-label {
+  color: rgba(255,255,255,0.6);
+  font-size: var(--font-3);
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  line-height: 1.0;
+}
 .peek-wrapper {
   display: none;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  position: fixed;
-  top: 62px;
-  right: 12px;
-  z-index: 100;
+  position: relative;
 }
 .basic-chord-mode .peek-wrapper,
 .scales-mode .peek-wrapper {
@@ -254,10 +284,6 @@ header nav img {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  position: fixed;
-  top: 132px;
-  right: 12px;
-  z-index: 100;
 }
 .scales-mode .try-again-wrapper {
   display: flex;
@@ -321,6 +347,15 @@ header nav img {
 .greed-mode.four-inverts-mode .four-inverts-hint {
   display: block;
 }
+.four-inverts-hint-bass {
+  display: none;
+  font-size: var(--font-3);
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+}
+.greed-mode.four-inverts-mode.bass-mode .four-inverts-hint { display: none; }
+.greed-mode.four-inverts-mode.bass-mode .four-inverts-hint-bass { display: block; }
 .four-inverts-set-btn {
   background: transparent;
   color: white;
@@ -418,10 +453,19 @@ header nav img {
 
 .buttons-row {
   width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px 12px;
   margin-top: 28px;
+}
+.btn-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .greed-mode header,
@@ -564,18 +608,6 @@ header nav img {
   font-style: normal;
 }
 .basic-chord-mode .basic-chord-hint {
-  display: block;
-}
-.basic-chord-beginner-hint {
-  display: none;
-  font-size: 11px;
-  color: white;
-  opacity: 0.7;
-  font-family: system-ui, sans-serif;
-  font-style: normal;
-  margin-top: 10px;
-}
-.basic-chord-mode .basic-chord-beginner-hint {
   display: block;
 }
 .practice-56-btn {

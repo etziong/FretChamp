@@ -48,8 +48,12 @@
         <button class="small-btn" id="feedback-btn" style="padding:6px 8px;"><img src="feadBack.png" style="width:45px;height:43px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px) translateY(4px);"></button>
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
         <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:7px;"></button>
+        <span class="btn-label" id="bass-btn-label">Go Bass</span>
+        <span class="btn-label">Feedback</span>
+        <span class="btn-label">Share</span>
+        <span class="btn-label">Settings</span>
       </section>
-      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:7px;width:100%;font-family:system-ui,sans-serif;">Etzion Goel ©</p>
+      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:20px;width:100%;font-family:system-ui,sans-serif;">VitalApps ©</p>
       <div class="bottom-bar">
         <div class="mute-wrapper">
           <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
@@ -71,7 +75,8 @@
       <p class = "noteD"></p>
       <p class = "Instrac">Find all<br>displayed notes</p>
       <p class="four-inverts-hint">Choose a string set<br>and practice 7th<br>chord inversions</p>
-      <p class="three-chord-hint">Choose a string set<br>and practice<br>triad inversions</p>
+      <p class="four-inverts-hint-bass">Practice 7th<br>Chords Inversions</p>
+      <p class="three-chord-hint">Practice Triad<br>Inversions</p>
 
       <p class="basic-chord-hint">Choose open<br>or barre chords<br>and 5 or 6 Str.<br>(Tap the eye icon<br>if needed)</p>
       <p class="slash-instrac">Play the note<br>after the slash<br>as bass</p>
@@ -97,8 +102,7 @@
         <button class="basic-chord-cat-btn" data-cat="root6" style="margin-top:12px;">Root: 6th Str</button>
         <button class="basic-chord-cat-btn" data-cat="root5">Root: 5th Str</button>
       </div>
-      <p class="basic-chord-beginner-hint"><span style="color:darkorange">* Beginners:</span><br>first learn the notes<br>on strings 5 &amp; 6<br>in Single Note mode<br>(lock other strings)<br>and then come back
- </p>      <div class="scale-selector">
+      <div class="scale-selector">
 
 
         <div class="scale-group">
@@ -203,13 +207,26 @@
       </section>
 
     </div>
-  <div class="peek-wrapper">
-    <button class="peek-btn"></button>
-    <span class="peek-label"><img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>Notes</span>
+  <div class="side-btns-container">
+    <div class="instructions-wrapper" id="instructions-wrapper">
+      <span class="instructions-label"><img src="instructions.png" class="peek-icon" alt="instructions" /><br>How to</span>
+    </div>
+    <div class="peek-wrapper">
+      <button class="peek-btn"></button>
+      <span class="peek-label"><img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>Notes</span>
+    </div>
+    <div class="try-again-wrapper" id="try-again-wrapper">
+      <span class="peek-label"><img src="reload.png" class="peek-icon" alt="try again" /><br>Try<br>Again</span>
+    </div>
   </div>
-  <div class="try-again-wrapper" id="try-again-wrapper">
-    <span class="peek-label"><img src="reload.png" class="peek-icon" alt="try again" /><br>Try<br>Again</span>
+  <div id="instructions-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:flex-start;justify-content:center;padding-top:60px;">
+    <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
+      <h3 style="margin:0 0 14px;text-align:left;font-size:18px;letter-spacing:1px;">How to Play</h3>
+      <p id="instructions-modal-text" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.7;margin:0 0 20px;white-space:pre-line;text-align:left;direction:ltr;"></p>
+      <button id="instructions-modal-close" style="width:100%;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Got it</button>
+    </div>
   </div>
+
   </main>
 
   <footer>
@@ -242,11 +259,13 @@
     <div class="cl-content">
       <div class="cl-header">
         <span class="cl-title">Guide</span>
-        <button class="cl-close"><img src="homeIcon.png" style="width:26px;height:26px;object-fit:contain;opacity:0.7;"></button>
       </div>
       <img src="logo.png" alt="logo" style="width:295px;display:block;margin:12px auto 4px;">
 
       <div class="cl-body" id="cl-body"></div>
+      <div style="display:flex;justify-content:flex-start;padding:16px 16px 8px 4px;">
+        <button class="cl-close"><img src="homeIcon.png" style="width:26px;height:26px;object-fit:contain;opacity:0.7;"></button>
+      </div>
     </div>
   </div>
 
