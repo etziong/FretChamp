@@ -631,7 +631,7 @@ const bassModeInstructions = {
 };
 
 const modeInstructions = {
-  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.',
+  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
   'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.',
   'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
   'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
@@ -1644,7 +1644,7 @@ function startChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TRIADS';
   notesDisplay.innerHTML = formatNoteName(chordName);
-  instracEl.textContent = 'Find 3 notes';
+  instracEl.innerHTML = 'Find 3<br>chord tones';
   highlightChordNotes(chordNotes);
 }
 
