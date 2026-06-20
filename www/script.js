@@ -625,20 +625,20 @@ peekBtn.addEventListener('pointerleave', () => {
 });
 
 const bassModeInstructions = {
-  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard and tap them. Use the string lock buttons to focus on specific strings.',
+  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.',
   'three-chord-mode':  'Find the 3 notes of the displayed chord. For deeper practice, try placing the root note on a different string each time.',
-  'four-inverts-mode': 'Find the chord tones shown on screen. Challenge yourself by placing the root note on a different string each time.',
+  'four-inverts-mode': 'Find the chord tones shown on screen. For deeper practice, try placing the root note on a different string each time.',
 };
 
 const modeInstructions = {
-  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try changing the string where the root note appears each time.',
-  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try changing the string where the root note appears each time.',
-  'slash-chord-mode': 'Play the chord shown, but place the note after the slash as the lowest bass note. Tap that bass note on the fretboard.',
-  'four-chord-mode':  'Find the chord with the tension shown. The 5th is optional — focus on root, 3rd, 7th and the tension note.',
+  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.',
+  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.',
+  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
+  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
   'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
-  'basic-chord-mode': 'Choose open or barre chords, then select root on the 5th or 6th string. Use the Show Notes button if needed.',
-  'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.',
-  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
+  'basic-chord-mode': 'Choose open or barre chords, then select a root on the 5th or 6th string. Use the Show Notes button if needed.\n\nNot familiar with the notes on strings 5 & 6? Head to Single Note Trainer, lock all strings except 5 & 6, and practice finding each note\'s positions there first.',
+  'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.\n\nTry to play something nice :-)',
+  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -2309,7 +2309,8 @@ function renderInstructionsSection(body) {
     s('Please note:', false);
     s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre<br>chord shapes.', false);
   }
-  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button —\ntap it to learn what to do.'; body.appendChild(p); }
+  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
+  s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
   s('Have fun and good luck!', true);
 }
 
