@@ -632,7 +632,7 @@ const bassModeInstructions = {
 
 const modeInstructions = {
   'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
-  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.',
+  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
   'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
   'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
   'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
@@ -1914,7 +1914,11 @@ if (SHOW_ALL_CIRCLES) {
 window.addEventListener('load', () => {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     window.Capacitor.Plugins.App.addListener('backButton', () => {
-      if (document.body.classList.contains('greed-mode')) {
+      const guideModal = document.getElementById('chord-list-modal');
+      if (guideModal && guideModal.classList.contains('open')) {
+        guideModal.classList.remove('open');
+        homeBtn.click();
+      } else if (document.body.classList.contains('greed-mode')) {
         homeBtn.click();
       } else {
         if (confirm('Leave the app?')) {
@@ -2665,14 +2669,6 @@ window.addEventListener('popstate', e => {
   }
 });
 
-if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-  window.Capacitor.Plugins.App.addListener('backButton', () => {
-    if (clModal.classList.contains('open')) {
-      clModal.classList.remove('open');
-      homeBtn.click();
-    }
-  });
-}
 clModal.querySelectorAll('.cl-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     clModal.querySelectorAll('.cl-tab').forEach(t => t.classList.remove('active'));
