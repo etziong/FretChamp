@@ -1270,11 +1270,11 @@ const tensionChords = {
   "C11":["C","E","Bb","F"], "D11":["D","F#","C","G"], "E11":["E","G#","D","A"],
   "F11":["F","A","Eb","Bb"], "G11":["G","B","F","C"], "A11":["A","C#","G","D"], "B11":["B","D#","A","E"],
 
-  "C7sus4":["C","F","G","Bb"], "D7sus4":["D","G","A","C"], "E7sus4":["E","A","B","D"],
-  "F7sus4":["F","Bb","C","Eb"], "G7sus4":["G","C","D","F"], "A7sus4":["A","D","E","G"], "B7sus4":["B","E","F#","A"],
+  "Csus4":["C","F","G"], "Dsus4":["D","G","A"], "Esus4":["E","A","B"],
+  "Fsus4":["F","Bb","C"], "Gsus4":["G","C","D"], "Asus4":["A","D","E"], "Bsus4":["B","E","F#"],
 
-  "C7sus2":["C","D","G","Bb"], "D7sus2":["D","E","A","C"], "E7sus2":["E","F#","B","D"],
-  "F7sus2":["F","G","C","Eb"], "G7sus2":["G","A","D","F"], "A7sus2":["A","B","E","G"], "B7sus2":["B","C#","F#","A"],
+  "Csus2":["C","D","G"], "Dsus2":["D","E","A"], "Esus2":["E","F#","B"],
+  "Fsus2":["F","G","C"], "Gsus2":["G","A","D"], "Asus2":["A","B","E"], "Bsus2":["B","C#","F#"],
 
   "C7(b5)":["C","E","Gb","Bb"],  "D7(b5)":["D","F#","Ab","C"], "E7(b5)":["E","G#","Bb","D"],
   "F7(b5)":["F","A","B","Eb"],   "G7(b5)":["G","B","Db","F"],  "A7(b5)":["A","C#","Eb","G"], "B7(b5)":["B","D#","F","A"],
@@ -1634,8 +1634,6 @@ function startChordRound() {
     ...Object.keys(minorTriads),
     ...Object.keys(diminishedTriads),
     ...Object.keys(augmentedTriads),
-    ...Object.keys(sus2Chords),
-    ...Object.keys(sus4Chords),
   ];
   let chordName;
   do { chordName = weightedChords[Math.floor(Math.random() * weightedChords.length)]; } while (chordName === lastChordName && weightedChords.length > 1);
