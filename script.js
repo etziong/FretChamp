@@ -459,7 +459,41 @@ function handleFretClick(e) {
   }
 }
 
+const HIGH_SCORE_MODES = {
+  single: 'Single Note',
+  triads: 'Triads',
+  fourInverts: '7th Inversions',
+  slash: 'Slash Chords',
+  sevenths: '7th Chords',
+  freeplay: 'Scales',
+  basicchord: 'Beginners Trainer'
+};
+
+function getCurrentModeKey() {
+  if (gameMode === 'chord') return chordMode;
+  return gameMode;
+}
+
+function showScoreToast(scored, isNewRecord) {
+  const existing = document.getElementById('score-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'score-toast';
+  toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:16px 28px;border-radius:14px;font-family:system-ui,sans-serif;text-align:center;z-index:2000;box-shadow:0 4px 24px rgba(0,0,0,0.6);opacity:1;transition:opacity 0.4s;white-space:nowrap;';
+  toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}`;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+}
+
 homeBtn.addEventListener('click', () => {
+  const modeKey = getCurrentModeKey();
+  if (score > 0 && HIGH_SCORE_MODES[modeKey]) {
+    const storageKey = `hs_${modeKey}`;
+    const prev = parseInt(localStorage.getItem(storageKey) || '0');
+    const isNew = score > prev;
+    if (isNew) localStorage.setItem(storageKey, score);
+    showScoreToast(score, isNew);
+  }
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
@@ -2325,7 +2359,7 @@ function renderInstructionsSection(body) {
 
   s('This app helps you practice notes, chord tones and inversions — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
   if (!isBass) {
-    s('A Bass Guitar version is also available<br>within the app.', false);
+    { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-left of the screen.'; body.appendChild(p); }
     s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
   }
   { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }

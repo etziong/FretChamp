@@ -6,6 +6,24 @@ SRC="$DIR/deskT.png"
 RES="$DIR/android/app/src/main/res"
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ANDROID_HOME="$HOME/Library/Android/sdk"
+KEYSTORE="$DIR/FretChamp-release.keystore"
+KEYSTORE_FILE="$KEYSTORE"
+
+# ── Verify keystore exists ──────────────────────────────────
+if [ ! -f "$KEYSTORE" ]; then
+  echo "❌ Keystore not found at $KEYSTORE"
+  echo "   Create one with:"
+  echo "   keytool -genkey -v -keystore FretChamp-release.keystore -alias FretChamp-alias -keyalg RSA -keysize 2048 -validity 10000"
+  exit 1
+fi
+
+if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_PASSWORD" ]; then
+  echo "❌ Environment variables KEYSTORE_PASSWORD and KEY_PASSWORD must be set."
+  echo "   Add to ~/.zshrc:"
+  echo "   export KEYSTORE_PASSWORD=\"your-keystore-password\""
+  echo "   export KEY_PASSWORD=\"your-key-password\""
+  exit 1
+fi
 
 echo "→ Copying web assets to www..."
 cp "$DIR"/*.png "$DIR"/*.js "$DIR"/*.html "$DIR"/*.css "$DIR"/*.json "$DIR/www/" 2>/dev/null || true
@@ -24,41 +42,72 @@ echo "→ Syncing web assets..."
 cd "$DIR"
 npx cap sync android
 
-echo "→ Building APK..."
+# ── APK (signed) ────────────────────────────────────────────
+echo "→ Building signed APK..."
 cd "$DIR/android"
-JAVA_HOME="$JAVA_HOME" ANDROID_HOME="$ANDROID_HOME" ./gradlew assembleDebug
+JAVA_HOME="$JAVA_HOME" ANDROID_HOME="$ANDROID_HOME" \
+  KEYSTORE_FILE="$KEYSTORE_FILE" \
+  KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" KEY_PASSWORD="$KEY_PASSWORD" \
+  ./gradlew assembleRelease
 
-APK="$DIR/android/app/build/outputs/apk/debug/app-debug.apk"
+APK="$DIR/android/app/build/outputs/apk/release/app-release.apk"
 cp "$APK" "$DIR/FretChamp.apk"
 cp "$APK" "$HOME/Desktop/FretChamp.apk"
-echo "✓ FretChamp.apk ready on Desktop"
+echo "✓ Signed FretChamp.apk ready on Desktop"
 
+# ── AAB (signed, for Google Play) ───────────────────────────
 echo ""
-echo "→ Building AAB (for Google Play)..."
+echo "→ Building signed AAB (for Google Play)..."
 cd "$DIR/android"
-JAVA_HOME="$JAVA_HOME" ANDROID_HOME="$ANDROID_HOME" ./gradlew bundleDebug
+JAVA_HOME="$JAVA_HOME" ANDROID_HOME="$ANDROID_HOME" \
+  KEYSTORE_FILE="$KEYSTORE_FILE" \
+  KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" KEY_PASSWORD="$KEY_PASSWORD" \
+  ./gradlew bundleRelease
 
-AAB="$DIR/android/app/build/outputs/bundle/debug/app-debug.aab"
+AAB="$DIR/android/app/build/outputs/bundle/release/app-release.aab"
 cp "$AAB" "$DIR/FretChamp.aab"
 cp "$AAB" "$HOME/Desktop/FretChamp.aab"
-echo "✓ FretChamp.aab ready on Desktop"
+echo "✓ Signed FretChamp.aab ready on Desktop"
+
+# ── Also build universal APK from AAB for local testing ────
+echo ""
+echo "→ Building universal APK from AAB (for local device testing)..."
+java -jar "$DIR/bundletool.jar" build-apks \
+  --bundle="$AAB" \
+  --output="$DIR/FretChamp.apks" \
+  --mode=universal \
+  --ks="$KEYSTORE" \
+  --ks-pass="pass:$KEYSTORE_PASSWORD" \
+  --ks-key-alias="FretChamp-alias" \
+  --key-pass="pass:$KEY_PASSWORD"
+
+unzip -o "$DIR/FretChamp.apks" -d "$DIR/tmp_apks" 2>/dev/null
+cp "$DIR/tmp_apks/universal.apk" "$DIR/FretChamp.apk"
+cp "$DIR/FretChamp.apk" "$HOME/Desktop/FretChamp.apk"
+rm -rf "$DIR/tmp_apks" "$DIR/FretChamp.apks"
+echo "✓ Universal APK updated on Desktop (signed & ready to install)"
 
 echo ""
-echo "→ Done! Both files ready:"
-echo "   • APK (test on phone): $HOME/Desktop/FretChamp.apk"
-echo "   • AAB (Google Play):   $HOME/Desktop/FretChamp.aab"
+echo "→ Done! Signed files ready:"
+echo "   • APK (install on phone): $HOME/Desktop/FretChamp.apk"
+echo "   • AAB (Google Play):       $HOME/Desktop/FretChamp.aab"
 echo ""
-echo "→ How to install APK on your phone:"
+echo "→ Install APK on your phone:"
 echo "   1. Transfer FretChamp.apk to your phone (email / Google Drive / cable)"
 echo "   2. On your phone, open the file and allow 'Install from unknown apps'"
-echo "   3. That's it! The app will install."
+echo "   3. Done!"
 echo ""
-echo "→ How to upload AAB to Google Play:"
+echo "→ Upload AAB to Google Play:"
 echo "   1. Go to https://play.google.com/console"
 echo "   2. Go to your app → Production / Internal testing"
 echo "   3. Upload FretChamp.aab under 'App bundle'"
 echo "   4. Fill in the store listing and submit for review"
+
+# ── Commit and push APK + AAB ───────────────────────────────
 echo ""
-echo "→ To test AAB locally with bundletool:"
-echo "   java -jar $DIR/bundletool.jar build-apks --bundle=$AAB --output=$DIR/FretChamp.apks --mode=universal"
-echo "   (This converts AAB to a universal APK for local testing)"
+echo "→ Committing and pushing APK and AAB..."
+cd "$DIR"
+git add -f FretChamp.apk FretChamp.aab
+git commit -m "Build: update FretChamp APK and AAB"
+git push
+echo "✓ Pushed to remote"

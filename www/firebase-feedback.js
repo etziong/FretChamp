@@ -69,7 +69,30 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const settingsClose = document.getElementById('settings-close');
 
+function renderHighScores() {
+  const modes = {
+    single: 'Single Note',
+    triads: 'Triads',
+    fourInverts: '7th Inversions',
+    slash: 'Slash Chords',
+    sevenths: '7th Chords',
+    freeplay: 'Scales',
+    basicchord: 'Beginners Trainer'
+  };
+  const rows = Object.entries(modes).map(([key, name]) => {
+    const hs = localStorage.getItem(`hs_${key}`);
+    const val = hs ? hs : '—';
+    const color = hs ? '#ffd700' : 'rgba(255,255,255,0.35)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <span style="font-size:14px;color:rgba(255,255,255,0.85);">${name}</span>
+      <span style="font-size:15px;font-weight:bold;color:${color};">${val}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('hs-list').innerHTML = rows;
+}
+
 settingsBtn.addEventListener('click', () => {
+  renderHighScores();
   settingsModal.style.display = 'flex';
 });
 settingsClose.addEventListener('click', () => {

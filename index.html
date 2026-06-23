@@ -47,13 +47,13 @@
         <button class="small-btn" id="bass-btn"><img id="bass-btn-img" src="bassHead.png" alt="bass" style="width:50px;height:50px;object-fit:contain;margin-bottom:-8px;"></button>
         <button class="small-btn" id="feedback-btn" style="padding:6px 8px;"><img src="feadBack.png" style="width:45px;height:43px;object-fit:contain;margin-bottom:8px;transform:translateX(-2px) translateY(4px);"></button>
         <button class="small-btn" id="share-btn"><img src="share.png" style="width:30px;height:30px;object-fit:contain;transform:translateY(-10px);"></button>
-        <button class="small-btn" id="settings-btn"><img src="settings.png" alt="settings" style="width:34px;height:34px;object-fit:contain;margin-bottom:7px;"></button>
+        <button class="small-btn" id="settings-btn"><img src="hiScore.png" alt="high score" style="width:37px;height:37px;object-fit:contain;margin-bottom:7px;"></button>
         <span class="btn-label" id="bass-btn-label">Go Bass</span>
         <span class="btn-label">Feedback</span>
         <span class="btn-label">Share</span>
-        <span class="btn-label">Settings</span>
+        <span class="btn-label">Scores</span>
       </section>
-      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);text-align:left;margin-top:20px;width:100%;font-family:system-ui,sans-serif;">VitalApps ©</p>
+      <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:20px;width:100%;font-family:system-ui,sans-serif;display:flex;justify-content:space-between;"><span>v1.0</span><span>VitalApps ©</span></p>
       <div class="bottom-bar">
         <div class="mute-wrapper">
           <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
@@ -237,9 +237,9 @@
 
   <div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:14px;padding:28px 24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
-      <h3 style="margin:0 0 12px;text-align:center;font-size:18px;letter-spacing:1px;">Settings</h3>
-      <p style="margin:0 0 24px;text-align:center;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">This app is still in beta.</p>
-      <button id="settings-close" style="width:100%;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Close</button>
+      <h3 style="margin:0 0 16px;text-align:center;font-size:18px;letter-spacing:1px;">High Scores</h3>
+      <div id="hs-list" style="margin-bottom:8px;"></div>
+      <button id="settings-close" style="width:100%;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-top:8px;">Close</button>
     </div>
   </div>
 
