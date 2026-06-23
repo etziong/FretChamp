@@ -2305,11 +2305,28 @@ function renderScalesSection(body) {
 function renderInstructionsSection(body) {
   const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;text-wrap:balance;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
   const isBass = document.body.classList.contains('bass-mode');
-  s('This app helps users practice notes, chord tones,<br>and inversions, while improving fretboard visualization, navigation, and control of the guitar&nbsp;grid.<br>It is ideal for practicing when away from your guitar.', false);
+
+  { const box = document.createElement('div');
+    box.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:16px;';
+    const title = document.createElement('p');
+    title.style.cssText = 'font-size:13px;font-weight:bold;color:white;font-family:system-ui;margin:0 0 8px 0;';
+    title.textContent = '👉 New here? Start here:';
+    box.appendChild(title);
+    const steps = isBass
+      ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard']
+      : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. Beginners — practice open & barre chord shapes'];
+    steps.forEach(step => {
+      const p = document.createElement('p');
+      p.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);font-family:system-ui;margin:0 0 4px 0;line-height:1.5;';
+      p.textContent = step;
+      box.appendChild(p);
+    });
+    body.appendChild(box); }
+
+  s('This app helps you practice notes, chord tones and inversions — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
   if (!isBass) {
     s('A Bass Guitar version is also available<br>within the app.', false);
-    s('Please note:', false);
-    s('This app is not intended for teaching or memorizing chord shapes. However, it does include a beginner section for practicing basic open and barre<br>chord shapes.', false);
+    s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
   }
   { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
   s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
