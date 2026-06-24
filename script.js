@@ -2344,7 +2344,7 @@ function renderInstructionsSection(body) {
     box.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:16px;';
     const title = document.createElement('p');
     title.style.cssText = 'font-size:13px;font-weight:bold;color:white;font-family:system-ui;margin:0 0 8px 0;';
-    title.textContent = '👉 New here? Start here:';
+    title.textContent = '👉 How to use this app:';
     box.appendChild(title);
     const steps = isBass
       ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard']
@@ -2357,12 +2357,12 @@ function renderInstructionsSection(body) {
     });
     body.appendChild(box); }
 
-  s('This app helps you practice notes, chord tones and inversions — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
-  if (!isBass) {
-    { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-left of the screen.'; body.appendChild(p); }
-    s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
-  }
+  s('FretChamp helps you practice notes, chord tones and inversions — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
   { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
+  if (!isBass) {
+    s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
+    { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-left of the screen.'; body.appendChild(p); }
+  }
   s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
   s('Have fun and good luck!', true);
 }

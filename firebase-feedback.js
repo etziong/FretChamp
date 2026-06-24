@@ -40,7 +40,6 @@ submitBtn.addEventListener('click', async () => {
 
   try {
     await addDoc(collection(db, 'feedback'), {
-      name: nameInput.value.trim() || 'Anonymous',
       text,
       timestamp: serverTimestamp(),
       userAgent: navigator.userAgent
