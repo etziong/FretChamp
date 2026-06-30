@@ -175,7 +175,7 @@ function initSvgGrid() {
   const NS = 'http://www.w3.org/2000/svg';
   const barreLineEl = document.createElementNS(NS, 'line');
   barreLineEl.setAttribute('id', 'barre-peek-line');
-  barreLineEl.setAttribute('stroke', 'darkorange');
+  barreLineEl.setAttribute('stroke', 'rgb(180,180,180)');
   barreLineEl.setAttribute('stroke-width', '18');
   barreLineEl.setAttribute('stroke-linecap', 'round');
   barreLineEl.setAttribute('opacity', '0');
@@ -387,8 +387,7 @@ function handleFretClick(e) {
     if (document.body.classList.contains('basic-study-phase')) return;
     if (targetKeys.has(key)) {
       targetKeys.delete(key);
-      svgCells[key].circle.setAttribute('fill', 'darkorange');
-      svgCells[key].circle.setAttribute('opacity', '1');
+      applyDegreeToKey(key);
       const found = basicStudyKeys.length - targetKeys.size;
       instracEl.textContent = `Find: ${found} / ${basicStudyKeys.length}`;
       if (targetKeys.size === 0) {
@@ -417,7 +416,7 @@ function handleFretClick(e) {
   if (isCorrect) {
     if (!targetKeys.has(key)) return;
     targetKeys.delete(key);
-    svgCells[key].circle.setAttribute('opacity', '1');
+    if (!applyDegreeToKey(key)) svgCells[key].circle.setAttribute('opacity', '1');
     if (gameMode === 'chord') {
       const noteName = chordNotes.find(n => normalize(n) === normalize(neckNotes[key]));
       if (noteName && !foundChordNotes.has(noteName)) {
@@ -502,7 +501,7 @@ homeBtn.addEventListener('click', () => {
     if (isNew) localStorage.setItem(storageKey, score);
     showScoreToast(score, isNew);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -563,10 +562,64 @@ function getPeekKeys() {
   return Array.from(targetKeys);
 }
 
+function applyDegreeToKey(key) {
+  if (!svgCells[key] || !chordNotes || !chordNotes.length) return false;
+  const isTension = gameMode === 'chord' && document.body.classList.contains('four-chord-mode');
+  const isSlash   = gameMode === 'chord' && document.body.classList.contains('slash-chord-mode');
+  const isDegree  = (gameMode === 'chord' && (
+    document.body.classList.contains('three-chord-mode') ||
+    document.body.classList.contains('four-inverts-mode') ||
+    isTension
+  )) || gameMode === 'basicchord' || isSlash;
+  if (!isDegree) return false;
+
+  const degreeColors = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
+  const n = normalize(neckNotes[key]);
+  const rootSemitone = chromaticIdx[normalize(chordNotes[0])] ?? 0;
+  const semitones = (chromaticIdx[n] - rootSemitone + 12) % 12;
+  let fill, label;
+
+  if (isSlash) {
+    const idx = chordNotes.findIndex(cn => normalize(cn) === n);
+    if (idx === -1) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+    const bassNote = currentChordName.includes('/') ? normalize(currentChordName.slice(currentChordName.indexOf('/') + 1)) : null;
+    const strNum = parseInt(key.match(/string-(\d+)/)[1]);
+    if (n === bassNote) {
+      if (strNum !== 5 && strNum !== 6) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+      fill = 'rgb(30,80,180)'; label = 'B';
+    } else {
+      const di = chordNotes.length === 4 ? idx - 1 : idx;
+      fill = degreeColors[di] || 'darkorange';
+      label = intervalToDegreeLabel(semitones);
+    }
+  } else {
+    const idx = chordNotes.findIndex(cn => normalize(cn) === n);
+    if (idx === -1) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+    if (isTension && idx === 3) {
+      fill = 'rgb(120,40,180)'; label = getTensionLabel(currentChordName);
+    } else {
+      fill = degreeColors[idx] || 'darkorange';
+      label = intervalToDegreeLabel(semitones);
+    }
+  }
+
+  const fontSize = label.length >= 3 ? '22' : label.length === 2 ? '28' : '36';
+  svgCells[key].circle.setAttribute('fill', fill);
+  svgCells[key].circle.setAttribute('opacity', '1');
+  svgCells[key].text.textContent = label;
+  svgCells[key].text.setAttribute('font-size', fontSize);
+  svgCells[key].text.setAttribute('font-family', 'Arial, sans-serif');
+  svgCells[key].text.setAttribute('y', svgCells[key].circle.getAttribute('cy'));
+  svgCells[key].text.setAttribute('dominant-baseline', 'central');
+  svgCells[key].text.setAttribute('opacity', '1');
+  return true;
+}
+
 function showPeek() {
   const keys = getPeekKeys();
   keys.forEach(key => {
-    if (svgCells[key]) {
+    if (!svgCells[key]) return;
+    if (!applyDegreeToKey(key)) {
       svgCells[key].circle.setAttribute('fill', 'darkorange');
       svgCells[key].circle.setAttribute('opacity', '1');
     }
@@ -592,7 +645,16 @@ function showBarrePeekLine() {
 function hidePeek() {
   const keys = getPeekKeys();
   keys.forEach(key => {
-    if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
+    if (svgCells[key]) {
+      svgCells[key].circle.setAttribute('opacity', '0');
+      svgCells[key].circle.setAttribute('fill', 'darkorange');
+      svgCells[key].text.setAttribute('opacity', '0');
+      svgCells[key].text.setAttribute('font-size', '28');
+      svgCells[key].text.setAttribute('font-family', '');
+      svgCells[key].text.setAttribute('y', String(parseFloat(svgCells[key].circle.getAttribute('cy')) + 6));
+      svgCells[key].text.setAttribute('dominant-baseline', 'auto');
+      svgCells[key].text.textContent = 'X';
+    }
   });
   const barreEl = document.getElementById('barre-peek-line');
   if (barreEl) barreEl.setAttribute('opacity', '0');
@@ -825,6 +887,8 @@ mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
     document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+    lockedStrings.clear();
+    document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -1194,6 +1258,24 @@ const neckNotes = {
 
 const enharmonic = { "Ab":"G#", "Bb":"A#", "Cb":"B", "Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "B#":"C", "E#":"F" };
 const normalize = n => enharmonic[n] || n;
+
+const chromaticIdx = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
+function intervalToDegreeLabel(semitones) {
+  return ['1','b2','2','b3','3','4','b5','5','#5','6','b7','7'][((semitones % 12) + 12) % 12] || '';
+}
+function getTensionLabel(name) {
+  if (/\(b13\)|b13/.test(name)) return 'b13';
+  if (/\(#13\)|#13/.test(name)) return '#13';
+  if (/13/.test(name)) return '13';
+  if (/\(#11\)|#11/.test(name)) return '#11';
+  if (/\(b11\)|b11/.test(name)) return 'b11';
+  if (/11/.test(name)) return '11';
+  if (/\(b9\)|b9/.test(name)) return 'b9';
+  if (/\(#9\)|#9/.test(name)) return '#9';
+  if (/9/.test(name)) return '9';
+  if (/6/.test(name)) return '6';
+  return 'b7';
+}
 
 const noteFrequencies = {
   "E":329.63, "F":349.23, "F#":369.99, "G":392.00,
@@ -1575,6 +1657,7 @@ function startBasicChordPlay(chord) {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
   targetKeys = new Set(chord.keys);
+  chordNotes = allTriads[chord.name] || allSeventhChords[chord.name] || [];
   instracEl.innerHTML = `Find:<br>${chord.name}`;
 }
 
@@ -1598,6 +1681,7 @@ function startBasicChordRound() {
 let gameMode = 'single';
 let chordMode = 'triads';
 let chordNotes = [];
+let currentChordName = '';
 
 const notesArr = ["A","B","C","D","E","F","G"]
 const diesBemol = ["#","b","","","","",""]
@@ -1639,6 +1723,7 @@ function highlightChordNotes(notes) {
   Object.entries(svgCells).forEach(([key, cell]) => {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
+    if (bassMode && stringNum <= 2) return;
     if (lockedStrings.has(stringNum)) {
       cell.text.setAttribute('opacity', key.startsWith('btn1-') ? '1' : '0');
       return;
@@ -1660,6 +1745,7 @@ function startFourChordRound() {
   let chordName;
   do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastChordName && keys.length > 1);
   lastChordName = chordName;
+  currentChordName = chordName;
   chordNotes = tensionChords[chordName];
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TENSIONS';
@@ -1694,6 +1780,7 @@ function startSlashChordRound() {
   let chordName;
   do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastSlashChordName && keys.length > 1);
   lastSlashChordName = chordName;
+  currentChordName = chordName;
   chordNotes = slashChords[chordName];
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'SLASH CHORDS';
