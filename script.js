@@ -173,6 +173,14 @@ const bassOffsets = {
 function initSvgGrid() {
   const svg = document.getElementById('fret-svg');
   const NS = 'http://www.w3.org/2000/svg';
+  const barreLineEl = document.createElementNS(NS, 'line');
+  barreLineEl.setAttribute('id', 'barre-peek-line');
+  barreLineEl.setAttribute('stroke', 'darkorange');
+  barreLineEl.setAttribute('stroke-width', '18');
+  barreLineEl.setAttribute('stroke-linecap', 'round');
+  barreLineEl.setAttribute('opacity', '0');
+  barreLineEl.setAttribute('pointer-events', 'none');
+  svg.appendChild(barreLineEl);
   const rippleLayer = document.createElementNS(NS, 'g');
   rippleLayer.id = 'ripple-layer';
   svg.appendChild(rippleLayer);
@@ -563,6 +571,22 @@ function showPeek() {
       svgCells[key].circle.setAttribute('opacity', '1');
     }
   });
+  showBarrePeekLine();
+}
+
+function showBarrePeekLine() {
+  const lineEl = document.getElementById('barre-peek-line');
+  if (!lineEl || gameMode !== 'basicchord' || targetKeys.size === 0) return;
+  const minFret = Math.min(...Array.from(targetKeys).map(k => parseInt(k.match(/btn(\d+)/)[1])));
+  const barreKeys = Array.from(targetKeys).filter(k => parseInt(k.match(/btn(\d+)/)[1]) === minFret);
+  if (barreKeys.length < 2) return;
+  const xs = barreKeys.map(k => parseFloat(svgCells[k].circle.getAttribute('cx')));
+  const y = parseFloat(svgCells[barreKeys[0]].circle.getAttribute('cy'));
+  lineEl.setAttribute('x1', String(Math.min(...xs)));
+  lineEl.setAttribute('y1', String(y));
+  lineEl.setAttribute('x2', String(Math.max(...xs)));
+  lineEl.setAttribute('y2', String(y));
+  lineEl.setAttribute('opacity', '1');
 }
 
 function hidePeek() {
@@ -570,6 +594,8 @@ function hidePeek() {
   keys.forEach(key => {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
+  const lineEl = document.getElementById('barre-peek-line');
+  if (lineEl) lineEl.setAttribute('opacity', '0');
 }
 
 function updatePeekLabel() {
@@ -581,6 +607,7 @@ function updatePeekLabel() {
 let instracFlashTimeout = null;
 let hintFlashTimeout = null;
 const basicChordHintEl = document.querySelector('.basic-chord-hint');
+const chooseRootHintEl = document.querySelector('.choose-root-hint');
 
 
 function flashBasicChordHint() {
@@ -592,8 +619,10 @@ function flashBasicChordHint() {
 
 function bothCatGroupsSelected() {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  if (!g1) return false;
+  if (g1.dataset.cat === 'open') return true;
   const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
-  return !!(g1 && g2);
+  return !!(g2);
 }
 
 peekBtn.addEventListener('pointerdown', (e) => {
@@ -670,7 +699,7 @@ const modeInstructions = {
   'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
   'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
   'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
-  'basic-chord-mode': 'Choose open or barre chords, then select a root on the 5th or 6th string. Use the Show Notes button if needed.\n\nNot familiar with the notes on strings 5 & 6? Head to Single Note Trainer, lock all strings except 5 & 6, and practice finding each note\'s positions there first.',
+  'basic-chord-mode': 'Open Chords — Tap "Open Chords" to start. Find all the chord tones on the fretboard. Use Show Notes if you need a hint.\n\nBarre Chords — Tap "Barre Chords", then choose a root on string 5 or 6. Find the chord tones on the fretboard. Use Show Notes if you need a hint.',
   'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.\n\nTry to play something nice :-)',
   'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
 };
@@ -855,9 +884,12 @@ mainButtons.forEach((btn, index) => {
       updatePeekLabel();
       basicChordCategory = null;
       lastBasicChordName = null;
+      rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
+      basicChordHintEl.style.display = 'none';
+      chooseRootHintEl.style.display = 'none';
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
-      instracEl.innerHTML = 'Find the<br>displayed chord';
+      instracEl.innerHTML = 'Choose open<br>or barre chords';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -923,6 +955,8 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
 const group1Cats = ['open', 'barre'];
 const group2Cats = ['root6', 'root5'];
 
+const rootCatBtns = document.querySelectorAll('.basic-chord-cat-btn[data-cat="root6"], .basic-chord-cat-btn[data-cat="root5"]');
+
 document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
   catBtn.addEventListener('click', () => {
     const cat = catBtn.dataset.cat;
@@ -932,6 +966,22 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
     });
     catBtn.classList.add('active');
     basicChordCategory = cat;
+    if (cat === 'open') {
+      rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
+      chooseRootHintEl.style.display = 'none';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Find chord tones<br>(tap eye icon<br>if needed)';
+    } else if (cat === 'barre') {
+      rootCatBtns.forEach(b => { b.style.display = 'block'; });
+      instracEl.innerHTML = 'Choose a root<br>on string 5 or 6';
+      chooseRootHintEl.style.display = 'block';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Choose root<br>on string 5 or 6';
+    } else if (cat === 'root6' || cat === 'root5') {
+      chooseRootHintEl.style.display = 'none';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Find chord tones<br>(tap eye icon<br>if needed)';
+    }
     startBasicChordRound();
   });
 });
