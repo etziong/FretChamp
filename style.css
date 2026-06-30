@@ -334,7 +334,12 @@ header nav img {
   position: relative;
 }
 .basic-chord-mode .peek-wrapper,
-.scales-mode .peek-wrapper {
+.scales-mode .peek-wrapper,
+.single-note-mode .peek-wrapper,
+.three-chord-mode .peek-wrapper,
+.four-inverts-mode .peek-wrapper,
+.slash-chord-mode .peek-wrapper,
+.four-chord-mode .peek-wrapper {
   display: flex;
 }
 .try-again-wrapper {

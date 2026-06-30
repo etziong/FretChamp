@@ -594,8 +594,8 @@ function hidePeek() {
   keys.forEach(key => {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
-  const lineEl = document.getElementById('barre-peek-line');
-  if (lineEl) lineEl.setAttribute('opacity', '0');
+  const barreEl = document.getElementById('barre-peek-line');
+  if (barreEl) barreEl.setAttribute('opacity', '0');
 }
 
 function updatePeekLabel() {
@@ -640,19 +640,17 @@ peekBtn.addEventListener('pointerdown', (e) => {
     return;
   }
 
-  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
-  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
-
-  if (!bothCatGroupsSelected()) {
-    flashBasicChordHint();
-    return;
+  if (gameMode === 'basicchord') {
+    const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+    if (!bothCatGroupsSelected()) { flashBasicChordHint(); return; }
+    if (!g1 || targetKeys.size === 0) {
+      instracEl.style.color = 'darkorange';
+      clearTimeout(instracFlashTimeout);
+      instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
+      return;
+    }
   }
-  if (!g1 || targetKeys.size === 0) {
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
-    return;
-  }
+  if (targetKeys.size === 0) return;
   showPeek();
 });
 
@@ -694,14 +692,14 @@ const bassModeInstructions = {
 };
 
 const modeInstructions = {
-  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
-  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
-  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
-  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
+  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
+  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
+  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord. Tap Show Notes if needed.',
+  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional. Tap Show Notes if needed.',
   'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
   'basic-chord-mode': 'Open Chords — Tap "Open Chords" to start. Find all the chord tones on the fretboard. Use Show Notes if you need a hint.\n\nBarre Chords — Tap "Barre Chords", then choose a root on string 5 or 6. Find the chord tones on the fretboard. Use Show Notes if you need a hint.',
   'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.\n\nTry to play something nice :-)',
-  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
+  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed. Tap the Show Notes button if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -826,7 +824,7 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -909,6 +907,7 @@ mainButtons.forEach((btn, index) => {
       });
     } else {
       gameMode = 'single';
+      document.body.classList.add('single-note-mode');
       updatePeekLabel();
       headLineEl.innerHTML = 'SINGLE NOTE';
       instracEl.innerHTML = 'Find all<br>displayed notes';
