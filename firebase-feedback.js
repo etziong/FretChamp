@@ -1,17 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDWxI2W7D5gSN4mobZfmqsWT0HCLH0aJ6g",
-  authDomain: "fretchamp.firebaseapp.com",
-  projectId: "fretchamp",
-  storageBucket: "fretchamp.firebasestorage.app",
-  messagingSenderId: "2970188550",
-  appId: "1:2970188550:web:bc34e1c5699c184e0c3c87"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/projects/fretchamp/databases/(default)/documents/feedback?key=AIzaSyDWxI2W7D5gSN4mobZfmqsWT0HCLH0aJ6g';
 
 const btn = document.getElementById('feedback-btn');
 const modal = document.getElementById('feedback-modal');
@@ -39,11 +26,18 @@ submitBtn.addEventListener('click', async () => {
   submitBtn.textContent = 'Sending...';
 
   try {
-    await addDoc(collection(db, 'feedback'), {
-      text,
-      timestamp: serverTimestamp(),
-      userAgent: navigator.userAgent
+    const res = await fetch(FIRESTORE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          text:      { stringValue: text },
+          userAgent: { stringValue: navigator.userAgent },
+          timestamp: { stringValue: new Date().toISOString() }
+        }
+      })
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     modal.style.display = 'none';
     textarea.value = '';
     nameInput.value = '';
