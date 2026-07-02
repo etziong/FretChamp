@@ -243,11 +243,16 @@ header nav img {
   flex-direction: column;
   gap: 6px;
   margin-top: 4px;
-  width: 95px;
+  width: fit-content;
 }
 
 .basic-chord-mode .basic-chord-selector {
   display: flex;
+}
+
+.basic-chord-mode .basic-chord-cat-btn[data-cat="root6"],
+.basic-chord-mode .basic-chord-cat-btn[data-cat="root5"] {
+  display: none;
 }
 
 .basic-chord-cat-btn {
@@ -272,6 +277,20 @@ header nav img {
 .basic-chord-cat-btn.active {
   border-color: darkorange;
   color: darkorange;
+}
+
+@keyframes blink-orange {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.choose-root-hint {
+  display: none;
+  color: darkorange;
+  font-size: var(--font-3);
+  font-family: system-ui, sans-serif;
+  text-align: left;
+  margin-top: 6px;
+  animation: blink-orange 1s infinite;
 }
 
 .side-btns-container {
@@ -315,7 +334,12 @@ header nav img {
   position: relative;
 }
 .basic-chord-mode .peek-wrapper,
-.scales-mode .peek-wrapper {
+.scales-mode .peek-wrapper,
+.single-note-mode .peek-wrapper,
+.three-chord-mode .peek-wrapper,
+.four-inverts-mode .peek-wrapper,
+.slash-chord-mode .peek-wrapper,
+.four-chord-mode .peek-wrapper {
   display: flex;
 }
 .try-again-wrapper {
@@ -648,7 +672,7 @@ header nav img {
   font-style: normal;
 }
 .basic-chord-mode .basic-chord-hint {
-  display: block;
+  display: none;
 }
 .practice-56-btn {
   display: none;

@@ -951,7 +951,7 @@ mainButtons.forEach((btn, index) => {
       chooseRootHintEl.style.display = 'none';
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
-      instracEl.innerHTML = 'Choose open<br>or barre chords';
+      instracEl.innerHTML = '<span style="color:darkorange">Choose open<br>or barre chords</span>';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -1507,7 +1507,7 @@ const basicOpenChords = [
   { name: 'E',   keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn2-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'Em',  keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn1-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'E7',  keys: ['btn1-string-6','btn3-string-5','btn1-string-4','btn2-string-3','btn1-string-2','btn1-string-1'] },
-  { name: 'Em7', keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn1-string-3','btn4-string-2','btn1-string-1'] },
+  { name: 'Em7', keys: ['btn1-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'G',   keys: ['btn4-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn4-string-1'] },
   { name: 'G7',  keys: ['btn4-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn2-string-1'] },
 ];

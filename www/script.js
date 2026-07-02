@@ -173,6 +173,14 @@ const bassOffsets = {
 function initSvgGrid() {
   const svg = document.getElementById('fret-svg');
   const NS = 'http://www.w3.org/2000/svg';
+  const barreLineEl = document.createElementNS(NS, 'line');
+  barreLineEl.setAttribute('id', 'barre-peek-line');
+  barreLineEl.setAttribute('stroke', 'rgb(180,180,180)');
+  barreLineEl.setAttribute('stroke-width', '18');
+  barreLineEl.setAttribute('stroke-linecap', 'round');
+  barreLineEl.setAttribute('opacity', '0');
+  barreLineEl.setAttribute('pointer-events', 'none');
+  svg.appendChild(barreLineEl);
   const rippleLayer = document.createElementNS(NS, 'g');
   rippleLayer.id = 'ripple-layer';
   svg.appendChild(rippleLayer);
@@ -379,8 +387,7 @@ function handleFretClick(e) {
     if (document.body.classList.contains('basic-study-phase')) return;
     if (targetKeys.has(key)) {
       targetKeys.delete(key);
-      svgCells[key].circle.setAttribute('fill', 'darkorange');
-      svgCells[key].circle.setAttribute('opacity', '1');
+      applyDegreeToKey(key);
       const found = basicStudyKeys.length - targetKeys.size;
       instracEl.textContent = `Find: ${found} / ${basicStudyKeys.length}`;
       if (targetKeys.size === 0) {
@@ -409,7 +416,7 @@ function handleFretClick(e) {
   if (isCorrect) {
     if (!targetKeys.has(key)) return;
     targetKeys.delete(key);
-    svgCells[key].circle.setAttribute('opacity', '1');
+    if (!applyDegreeToKey(key)) svgCells[key].circle.setAttribute('opacity', '1');
     if (gameMode === 'chord') {
       const noteName = chordNotes.find(n => normalize(n) === normalize(neckNotes[key]));
       if (noteName && !foundChordNotes.has(noteName)) {
@@ -494,7 +501,7 @@ homeBtn.addEventListener('click', () => {
     if (isNew) localStorage.setItem(storageKey, score);
     showScoreToast(score, isNew);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
@@ -555,21 +562,102 @@ function getPeekKeys() {
   return Array.from(targetKeys);
 }
 
+function applyDegreeToKey(key) {
+  if (!svgCells[key] || !chordNotes || !chordNotes.length) return false;
+  const isTension = gameMode === 'chord' && document.body.classList.contains('four-chord-mode');
+  const isSlash   = gameMode === 'chord' && document.body.classList.contains('slash-chord-mode');
+  const isDegree  = (gameMode === 'chord' && (
+    document.body.classList.contains('three-chord-mode') ||
+    document.body.classList.contains('four-inverts-mode') ||
+    isTension
+  )) || gameMode === 'basicchord' || isSlash;
+  if (!isDegree) return false;
+
+  const degreeColors = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
+  const n = normalize(neckNotes[key]);
+  const rootSemitone = chromaticIdx[normalize(chordNotes[0])] ?? 0;
+  const semitones = (chromaticIdx[n] - rootSemitone + 12) % 12;
+  let fill, label;
+
+  if (isSlash) {
+    const idx = chordNotes.findIndex(cn => normalize(cn) === n);
+    if (idx === -1) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+    const bassNote = currentChordName.includes('/') ? normalize(currentChordName.slice(currentChordName.indexOf('/') + 1)) : null;
+    const strNum = parseInt(key.match(/string-(\d+)/)[1]);
+    if (n === bassNote) {
+      if (strNum !== 5 && strNum !== 6) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+      fill = 'rgb(30,80,180)'; label = 'B';
+    } else {
+      const di = chordNotes.length === 4 ? idx - 1 : idx;
+      fill = degreeColors[di] || 'darkorange';
+      label = intervalToDegreeLabel(semitones);
+    }
+  } else {
+    const idx = chordNotes.findIndex(cn => normalize(cn) === n);
+    if (idx === -1) { svgCells[key].circle.setAttribute('opacity', '0'); return true; }
+    if (isTension && idx === 3) {
+      fill = 'rgb(120,40,180)'; label = getTensionLabel(currentChordName);
+    } else {
+      fill = degreeColors[idx] || 'darkorange';
+      label = intervalToDegreeLabel(semitones);
+    }
+  }
+
+  const fontSize = label.length >= 3 ? '22' : label.length === 2 ? '28' : '36';
+  svgCells[key].circle.setAttribute('fill', fill);
+  svgCells[key].circle.setAttribute('opacity', '1');
+  svgCells[key].text.textContent = label;
+  svgCells[key].text.setAttribute('font-size', fontSize);
+  svgCells[key].text.setAttribute('font-family', 'Arial, sans-serif');
+  svgCells[key].text.setAttribute('y', svgCells[key].circle.getAttribute('cy'));
+  svgCells[key].text.setAttribute('dominant-baseline', 'central');
+  svgCells[key].text.setAttribute('opacity', '1');
+  return true;
+}
+
 function showPeek() {
   const keys = getPeekKeys();
   keys.forEach(key => {
-    if (svgCells[key]) {
+    if (!svgCells[key]) return;
+    if (!applyDegreeToKey(key)) {
       svgCells[key].circle.setAttribute('fill', 'darkorange');
       svgCells[key].circle.setAttribute('opacity', '1');
     }
   });
+  showBarrePeekLine();
+}
+
+function showBarrePeekLine() {
+  const lineEl = document.getElementById('barre-peek-line');
+  if (!lineEl || gameMode !== 'basicchord' || targetKeys.size === 0) return;
+  const minFret = Math.min(...Array.from(targetKeys).map(k => parseInt(k.match(/btn(\d+)/)[1])));
+  const barreKeys = Array.from(targetKeys).filter(k => parseInt(k.match(/btn(\d+)/)[1]) === minFret);
+  if (barreKeys.length < 2) return;
+  const xs = barreKeys.map(k => parseFloat(svgCells[k].circle.getAttribute('cx')));
+  const y = parseFloat(svgCells[barreKeys[0]].circle.getAttribute('cy'));
+  lineEl.setAttribute('x1', String(Math.min(...xs)));
+  lineEl.setAttribute('y1', String(y));
+  lineEl.setAttribute('x2', String(Math.max(...xs)));
+  lineEl.setAttribute('y2', String(y));
+  lineEl.setAttribute('opacity', '1');
 }
 
 function hidePeek() {
   const keys = getPeekKeys();
   keys.forEach(key => {
-    if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
+    if (svgCells[key]) {
+      svgCells[key].circle.setAttribute('opacity', '0');
+      svgCells[key].circle.setAttribute('fill', 'darkorange');
+      svgCells[key].text.setAttribute('opacity', '0');
+      svgCells[key].text.setAttribute('font-size', '28');
+      svgCells[key].text.setAttribute('font-family', '');
+      svgCells[key].text.setAttribute('y', String(parseFloat(svgCells[key].circle.getAttribute('cy')) + 6));
+      svgCells[key].text.setAttribute('dominant-baseline', 'auto');
+      svgCells[key].text.textContent = 'X';
+    }
   });
+  const barreEl = document.getElementById('barre-peek-line');
+  if (barreEl) barreEl.setAttribute('opacity', '0');
 }
 
 function updatePeekLabel() {
@@ -581,6 +669,7 @@ function updatePeekLabel() {
 let instracFlashTimeout = null;
 let hintFlashTimeout = null;
 const basicChordHintEl = document.querySelector('.basic-chord-hint');
+const chooseRootHintEl = document.querySelector('.choose-root-hint');
 
 
 function flashBasicChordHint() {
@@ -592,8 +681,10 @@ function flashBasicChordHint() {
 
 function bothCatGroupsSelected() {
   const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+  if (!g1) return false;
+  if (g1.dataset.cat === 'open') return true;
   const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
-  return !!(g1 && g2);
+  return !!(g2);
 }
 
 peekBtn.addEventListener('pointerdown', (e) => {
@@ -611,19 +702,17 @@ peekBtn.addEventListener('pointerdown', (e) => {
     return;
   }
 
-  const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
-  const g2 = document.querySelector('.basic-chord-cat-btn[data-cat="root6"].active, .basic-chord-cat-btn[data-cat="root5"].active');
-
-  if (!bothCatGroupsSelected()) {
-    flashBasicChordHint();
-    return;
+  if (gameMode === 'basicchord') {
+    const g1 = document.querySelector('.basic-chord-cat-btn[data-cat="open"].active, .basic-chord-cat-btn[data-cat="barre"].active');
+    if (!bothCatGroupsSelected()) { flashBasicChordHint(); return; }
+    if (!g1 || targetKeys.size === 0) {
+      instracEl.style.color = 'darkorange';
+      clearTimeout(instracFlashTimeout);
+      instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
+      return;
+    }
   }
-  if (!g1 || targetKeys.size === 0) {
-    instracEl.style.color = 'darkorange';
-    clearTimeout(instracFlashTimeout);
-    instracFlashTimeout = setTimeout(() => { instracEl.style.color = ''; }, 3000);
-    return;
-  }
+  if (targetKeys.size === 0) return;
   showPeek();
 });
 
@@ -665,14 +754,14 @@ const bassModeInstructions = {
 };
 
 const modeInstructions = {
-  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
-  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
-  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord.',
-  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional.',
+  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
+  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.',
+  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord. Tap Show Notes if needed.',
+  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional. Tap Show Notes if needed.',
   'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
-  'basic-chord-mode': 'Choose open or barre chords, then select a root on the 5th or 6th string. Use the Show Notes button if needed.\n\nNot familiar with the notes on strings 5 & 6? Head to Single Note Trainer, lock all strings except 5 & 6, and practice finding each note\'s positions there first.',
+  'basic-chord-mode': 'Open Chords — Tap "Open Chords" to start. Find all the chord tones on the fretboard. Use Show Notes if you need a hint.\n\nBarre Chords — Tap "Barre Chords", then choose a root on string 5 or 6. Find the chord tones on the fretboard. Use Show Notes if you need a hint.',
   'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.\n\nTry to play something nice :-)',
-  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
+  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed. Tap the Show Notes button if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -797,7 +886,9 @@ function playBigSuccess() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+    lockedStrings.clear();
+    document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
@@ -855,9 +946,12 @@ mainButtons.forEach((btn, index) => {
       updatePeekLabel();
       basicChordCategory = null;
       lastBasicChordName = null;
+      rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
+      basicChordHintEl.style.display = 'none';
+      chooseRootHintEl.style.display = 'none';
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
-      instracEl.innerHTML = 'Find the<br>displayed chord';
+      instracEl.innerHTML = '<span style="color:darkorange">Choose open<br>or barre chords</span>';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -877,6 +971,7 @@ mainButtons.forEach((btn, index) => {
       });
     } else {
       gameMode = 'single';
+      document.body.classList.add('single-note-mode');
       updatePeekLabel();
       headLineEl.innerHTML = 'SINGLE NOTE';
       instracEl.innerHTML = 'Find all<br>displayed notes';
@@ -923,6 +1018,8 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
 const group1Cats = ['open', 'barre'];
 const group2Cats = ['root6', 'root5'];
 
+const rootCatBtns = document.querySelectorAll('.basic-chord-cat-btn[data-cat="root6"], .basic-chord-cat-btn[data-cat="root5"]');
+
 document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
   catBtn.addEventListener('click', () => {
     const cat = catBtn.dataset.cat;
@@ -932,6 +1029,22 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
     });
     catBtn.classList.add('active');
     basicChordCategory = cat;
+    if (cat === 'open') {
+      rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
+      chooseRootHintEl.style.display = 'none';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Find chord tones<br>(tap eye icon<br>if needed)';
+    } else if (cat === 'barre') {
+      rootCatBtns.forEach(b => { b.style.display = 'block'; });
+      instracEl.innerHTML = 'Choose a root<br>on string 5 or 6';
+      chooseRootHintEl.style.display = 'block';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Choose root<br>on string 5 or 6';
+    } else if (cat === 'root6' || cat === 'root5') {
+      chooseRootHintEl.style.display = 'none';
+      basicChordHintEl.style.display = 'block';
+      basicChordHintEl.innerHTML = 'Find chord tones<br>(tap eye icon<br>if needed)';
+    }
     startBasicChordRound();
   });
 });
@@ -1145,6 +1258,24 @@ const neckNotes = {
 
 const enharmonic = { "Ab":"G#", "Bb":"A#", "Cb":"B", "Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "B#":"C", "E#":"F" };
 const normalize = n => enharmonic[n] || n;
+
+const chromaticIdx = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
+function intervalToDegreeLabel(semitones) {
+  return ['1','b2','2','b3','3','4','b5','5','#5','6','b7','7'][((semitones % 12) + 12) % 12] || '';
+}
+function getTensionLabel(name) {
+  if (/\(b13\)|b13/.test(name)) return 'b13';
+  if (/\(#13\)|#13/.test(name)) return '#13';
+  if (/13/.test(name)) return '13';
+  if (/\(#11\)|#11/.test(name)) return '#11';
+  if (/\(b11\)|b11/.test(name)) return 'b11';
+  if (/11/.test(name)) return '11';
+  if (/\(b9\)|b9/.test(name)) return 'b9';
+  if (/\(#9\)|#9/.test(name)) return '#9';
+  if (/9/.test(name)) return '9';
+  if (/6/.test(name)) return '6';
+  return 'b7';
+}
 
 const noteFrequencies = {
   "E":329.63, "F":349.23, "F#":369.99, "G":392.00,
@@ -1376,7 +1507,7 @@ const basicOpenChords = [
   { name: 'E',   keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn2-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'Em',  keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn1-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'E7',  keys: ['btn1-string-6','btn3-string-5','btn1-string-4','btn2-string-3','btn1-string-2','btn1-string-1'] },
-  { name: 'Em7', keys: ['btn1-string-6','btn3-string-5','btn3-string-4','btn1-string-3','btn4-string-2','btn1-string-1'] },
+  { name: 'Em7', keys: ['btn1-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn1-string-1'] },
   { name: 'G',   keys: ['btn4-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn4-string-1'] },
   { name: 'G7',  keys: ['btn4-string-6','btn3-string-5','btn1-string-4','btn1-string-3','btn1-string-2','btn2-string-1'] },
 ];
@@ -1526,6 +1657,7 @@ function startBasicChordPlay(chord) {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
   targetKeys = new Set(chord.keys);
+  chordNotes = allTriads[chord.name] || allSeventhChords[chord.name] || [];
   instracEl.innerHTML = `Find:<br>${chord.name}`;
 }
 
@@ -1549,6 +1681,7 @@ function startBasicChordRound() {
 let gameMode = 'single';
 let chordMode = 'triads';
 let chordNotes = [];
+let currentChordName = '';
 
 const notesArr = ["A","B","C","D","E","F","G"]
 const diesBemol = ["#","b","","","","",""]
@@ -1590,6 +1723,7 @@ function highlightChordNotes(notes) {
   Object.entries(svgCells).forEach(([key, cell]) => {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
+    if (bassMode && stringNum <= 2) return;
     if (lockedStrings.has(stringNum)) {
       cell.text.setAttribute('opacity', key.startsWith('btn1-') ? '1' : '0');
       return;
@@ -1611,6 +1745,7 @@ function startFourChordRound() {
   let chordName;
   do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastChordName && keys.length > 1);
   lastChordName = chordName;
+  currentChordName = chordName;
   chordNotes = tensionChords[chordName];
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TENSIONS';
@@ -1645,6 +1780,7 @@ function startSlashChordRound() {
   let chordName;
   do { chordName = keys[Math.floor(Math.random() * keys.length)]; } while (chordName === lastSlashChordName && keys.length > 1);
   lastSlashChordName = chordName;
+  currentChordName = chordName;
   chordNotes = slashChords[chordName];
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'SLASH CHORDS';
