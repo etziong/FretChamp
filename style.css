@@ -283,6 +283,9 @@ header nav img {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+.instrac-blink {
+  animation: blink-orange 0.9s ease-in-out infinite;
+}
 .choose-root-hint {
   display: none;
   color: darkorange;

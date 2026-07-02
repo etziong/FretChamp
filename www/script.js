@@ -952,6 +952,7 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('basic-chord-mode');
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
       instracEl.innerHTML = '<span style="color:darkorange">Choose open<br>or barre chords</span>';
+      instracEl.classList.add('instrac-blink');
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -1028,6 +1029,7 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
       if (sameGroup.includes(b.dataset.cat)) b.classList.remove('active');
     });
     catBtn.classList.add('active');
+    instracEl.classList.remove('instrac-blink');
     basicChordCategory = cat;
     if (cat === 'open') {
       rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
