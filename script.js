@@ -502,6 +502,7 @@ homeBtn.addEventListener('click', () => {
     showScoreToast(score, isNew);
   }
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+  instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
