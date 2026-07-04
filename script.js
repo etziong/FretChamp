@@ -766,6 +766,13 @@ const modeInstructions = {
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
+
+function blinkHowTo() {
+  instructionsWrapper.classList.remove('how-to-blink');
+  void instructionsWrapper.offsetWidth; // force reflow to restart animation
+  instructionsWrapper.classList.add('how-to-blink');
+  setTimeout(() => instructionsWrapper.classList.remove('how-to-blink'), 3000);
+}
 const instructionsModal = document.getElementById('instructions-modal');
 const instructionsModalText = document.getElementById('instructions-modal-text');
 const instructionsModalClose = document.getElementById('instructions-modal-close');
@@ -888,6 +895,7 @@ mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
     document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+    blinkHowTo();
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
