@@ -1,5 +1,7 @@
 const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/projects/fretchamp/databases/(default)/documents/feedback?key=AIzaSyDWxI2W7D5gSN4mobZfmqsWT0HCLH0aJ6g';
 
+document.addEventListener('DOMContentLoaded', () => {
+
 const btn = document.getElementById('feedback-btn');
 const modal = document.getElementById('feedback-modal');
 const closeBtn = document.getElementById('feedback-close');
@@ -110,7 +112,13 @@ shareBtn.addEventListener('click', async () => {
       // user cancelled — do nothing
     }
   } else {
-    await navigator.clipboard.writeText(SHARE_URL);
-    alert('Link copied to clipboard!');
+    try {
+      await navigator.clipboard.writeText(SHARE_URL);
+      alert('Link copied to clipboard!');
+    } catch (e) {
+      alert('Copy this link: ' + SHARE_URL);
+    }
   }
+});
+
 });
