@@ -751,6 +751,49 @@ header nav img {
   overflow: hidden;
 }
 
+.noteD.noteD--staff {
+  height: auto;
+  overflow: visible;
+}
+
+.note-display-toggle-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0 0 8px 0;
+}
+
+.single-note-mode .note-display-toggle-wrapper {
+  display: flex;
+}
+
+.note-display-toggle {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  text-align: center;
+  line-height: 32px;
+}
+
+.note-display-toggle.ndt-note-icon {
+  font-size: 20px;
+}
+
+.note-display-toggle-label {
+  font-size: 10px;
+  color: white;
+  opacity: 0.7;
+  font-family: system-ui, sans-serif;
+}
+
 .note-suffix {
   font-size: 0.38em;
   vertical-align: baseline;
