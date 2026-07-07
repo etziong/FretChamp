@@ -547,6 +547,13 @@ document.getElementById('bass-btn').addEventListener('click', () => {
       }
     });
   }
+  if (gameMode === 'single') {
+    // Switching bass/guitar changes which clef and which frets are reachable —
+    // re-pick a valid octave tier and redraw so the round stays winnable.
+    randomizeStaffOctaveChoice(note);
+    renderSingleNoteDisplay(note);
+    highlightNotes(note);
+  }
 });
 
 nextBtn.addEventListener('click', () => {
