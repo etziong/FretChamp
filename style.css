@@ -769,6 +769,9 @@ header nav img {
 }
 
 .note-display-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.4);
   color: white;
@@ -779,12 +782,6 @@ header nav img {
   width: 32px;
   height: 32px;
   padding: 0;
-  text-align: center;
-  line-height: 32px;
-}
-
-.note-display-toggle.ndt-note-icon {
-  font-size: 20px;
 }
 
 .note-display-toggle-label {

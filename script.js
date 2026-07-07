@@ -1450,11 +1450,18 @@ function updateSingleNoteInstrac() {
 
 const noteDisplayToggleLabel = document.querySelector('.note-display-toggle-label');
 
+const NOTE_ICON_SVG = '<svg viewBox="0 0 16 20" width="16" height="20" style="display:block"><line x1="11" y1="2" x2="11" y2="15" stroke="white" stroke-width="1.6"/><ellipse cx="7.5" cy="15.5" rx="4.2" ry="3.2" fill="white" transform="rotate(-20 7.5 15.5)"/></svg>';
+
 function updateNoteDisplayToggleButton() {
   if (!noteDisplayToggleBtn) return;
   const isStaff = noteDisplayMode === 'staff';
-  noteDisplayToggleBtn.textContent = isStaff ? 'T' : '♪︎'; // ︎ forces plain text glyph so it stays white, not a colored emoji
-  noteDisplayToggleBtn.classList.toggle('ndt-note-icon', !isStaff);
+  if (isStaff) {
+    noteDisplayToggleBtn.textContent = 'Aa';
+    noteDisplayToggleBtn.style.fontSize = '14px';
+  } else {
+    noteDisplayToggleBtn.innerHTML = NOTE_ICON_SVG;
+    noteDisplayToggleBtn.style.fontSize = '';
+  }
   if (noteDisplayToggleLabel) noteDisplayToggleLabel.textContent = isStaff ? 'Letters' : 'Notes';
 }
 updateNoteDisplayToggleButton();

@@ -6,6 +6,7 @@ const header = document.querySelector('header');
 const buttonsSection = document.querySelector('.buttons-section');
 const buttonsRow = document.querySelector('.buttons-row');
 const notesDisplay = document.querySelector(".noteD");
+const noteDisplayToggleBtn = document.querySelector('.note-display-toggle');
 const feedbackEl = document.querySelector('.feedback');
 const homeBtn = document.querySelector('.home-btn');
 const nextBtn = document.querySelector('.next-btn');
@@ -546,6 +547,13 @@ document.getElementById('bass-btn').addEventListener('click', () => {
       }
     });
   }
+  if (gameMode === 'single') {
+    // Switching bass/guitar changes which clef and which frets are reachable —
+    // re-pick a valid octave tier and redraw so the round stays winnable.
+    randomizeStaffOctaveChoice(note);
+    renderSingleNoteDisplay(note);
+    highlightNotes(note);
+  }
 });
 
 nextBtn.addEventListener('click', () => {
@@ -751,7 +759,7 @@ peekBtn.addEventListener('pointerleave', () => {
 });
 
 const bassModeInstructions = {
-  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.',
+  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nIn Bass mode, notes are shown on the F clef.',
   'three-chord-mode':  'Find the 3 notes of the displayed chord. For deeper practice, try placing the root note on a different string each time.',
   'four-inverts-mode': 'Find the chord tones shown on screen. For deeper practice, try placing the root note on a different string each time.',
 };
@@ -979,9 +987,13 @@ mainButtons.forEach((btn, index) => {
       document.body.classList.add('single-note-mode');
       updatePeekLabel();
       headLineEl.innerHTML = 'SINGLE NOTE';
-      instracEl.innerHTML = 'Find all<br>displayed notes';
+      noteDisplayMode = 'letter';
+      localStorage.setItem('noteDisplayMode', 'letter');
+      updateNoteDisplayToggleButton();
+      updateSingleNoteInstrac();
       note = randomNote();
-      notesDisplay.innerHTML = formatNoteName(note);
+      randomizeStaffOctaveChoice(note);
+      renderSingleNoteDisplay(note);
       highlightNotes(note);
     }
   });
@@ -1270,6 +1282,193 @@ const neckNotes = {
 
 const enharmonic = { "Ab":"G#", "Bb":"A#", "Cb":"B", "Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "B#":"C", "E#":"F" };
 const normalize = n => enharmonic[n] || n;
+
+// ── Staff notation display (Single Note mode) ───────────────────────────────
+const naturalIndex = { C:0, D:1, E:2, F:3, G:4, A:5, B:6 };
+const openStringPitch = {
+  1: { idx: 4, octave: 4 },  // E4
+  2: { idx: 11, octave: 3 }, // B3
+  3: { idx: 7, octave: 3 },  // G3
+  4: { idx: 2, octave: 3 },  // D3
+  5: { idx: 9, octave: 2 },  // A2
+  6: { idx: 4, octave: 2 },  // E2
+};
+
+function neckKeyAbsPitch(key) {
+  const m = key.match(/^btn(\d+)-string-(\d+)$/);
+  if (!m) return null;
+  const fret = parseInt(m[1], 10) - 1;
+  const open = openStringPitch[parseInt(m[2], 10)];
+  return open.octave * 12 + open.idx + fret;
+}
+
+function isKeyPlayable(key) {
+  const stringNum = parseInt(key.match(/string-(\d+)/)[1], 10);
+  return !(bassMode && stringNum <= 2);
+}
+
+function findAllAtLowestPitch(name) {
+  const target = normalize(name);
+  let minAbs = null;
+  let keys = [];
+  for (const key in neckNotes) {
+    if (neckNotes[key] !== target || !isKeyPlayable(key)) continue;
+    const abs = neckKeyAbsPitch(key);
+    if (minAbs === null || abs < minAbs) {
+      minAbs = abs;
+      keys = [key];
+    } else if (abs === minAbs) {
+      keys.push(key);
+    }
+  }
+  return { keys, abs: minAbs };
+}
+
+function findAllKeysAtPitch(name, abs) {
+  const target = normalize(name);
+  const keys = [];
+  for (const key in neckNotes) {
+    if (neckNotes[key] !== target || !isKeyPlayable(key)) continue;
+    if (neckKeyAbsPitch(key) === abs) keys.push(key);
+  }
+  return keys;
+}
+
+function getDisplayOctave(name) {
+  const { abs } = findAllAtLowestPitch(name);
+  let realOctave = abs === null ? 4 : Math.floor(abs / 12);
+  // B# and Cb are found on the neck via their normalized spelling (C / B), which
+  // crosses the B/C octave seam — correct the octave back to the written letter's own.
+  const base = name[0];
+  const normalizedBase = normalize(name)[0];
+  if (base === 'B' && normalizedBase === 'C') realOctave -= 1;
+  else if (base === 'C' && normalizedBase === 'B') realOctave += 1;
+  // Bass mode plays the fretboard pitch an octave lower (real sounding = neck octave - 1).
+  // Both guitar (treble) and bass (bass clef) are written one octave above sounding pitch,
+  // so the two shifts cancel out for bass: display octave = neck octave, unchanged.
+  return bassMode ? realOctave : realOctave + 1;
+}
+
+const CLEF_REF = {
+  treble: { letter: 'E', octave: 4 }, // bottom line
+  bass:   { letter: 'G', octave: 2 }, // bottom line
+};
+
+function diatonicStep(base, octave, clef) {
+  const ref = CLEF_REF[clef] || CLEF_REF.treble;
+  return (octave * 7 + naturalIndex[base]) - (ref.octave * 7 + naturalIndex[ref.letter]);
+}
+
+function ledgerStepsFor(step) {
+  const steps = [];
+  if (step < 0) {
+    const n = Math.floor(-step / 2);
+    for (let i = 1; i <= n; i++) steps.push(-2 * i);
+  } else if (step > 8) {
+    const n = Math.floor((step - 8) / 2);
+    for (let i = 1; i <= n; i++) steps.push(8 + 2 * i);
+  }
+  return steps;
+}
+
+let staffOctaveOffset = 0; // 0 = lowest, 1 = one octave up, 2 = two octaves up
+function randomizeStaffOctaveChoice(name) {
+  const { abs } = findAllAtLowestPitch(name);
+  const validOffsets = [0];
+  if (abs !== null) {
+    for (let o = 1; o <= 2; o++) {
+      if (findAllKeysAtPitch(name, abs + o * 12).length > 0) validOffsets.push(o);
+    }
+  }
+  staffOctaveOffset = validOffsets[Math.floor(Math.random() * validOffsets.length)];
+}
+
+function getChosenOctave(name) {
+  const baseOctave = getDisplayOctave(name);
+  return baseOctave + staffOctaveOffset;
+}
+
+function renderStaffNote(name) {
+  const m = name.match(/^([A-G])(.*)$/);
+  const base = m ? m[1] : name;
+  const accidental = m ? m[2] : '';
+  const clef = bassMode ? 'bass' : 'treble';
+  const octave = getChosenOctave(name);
+  const step = diatonicStep(base, octave, clef);
+
+  const width = 40;
+  const lineGap = 8;
+  const stepGap = lineGap / 2;
+  // Bass clef only ever needs up to 3 ledger lines above and 1 below (offsets with no
+  // reachable fret are excluded before a round starts); treble needs up to 3 above, 3 below.
+  const staffTopY = 38;   // top staff line — same headroom covers both clefs' worst case
+  const staffBottomY = staffTopY + lineGap * 4;  // bottom staff line
+  const height = clef === 'bass' ? 90 : 106;
+  const noteX = 22;
+  const noteY = staffBottomY - step * stepGap;
+
+  let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="display:block;overflow:visible">`;
+  for (let i = 0; i < 5; i++) {
+    const y = staffTopY + i * lineGap;
+    svg += `<line x1="1" y1="${y}" x2="${width - 1}" y2="${y}" stroke="darkorange" stroke-width="1"/>`;
+  }
+
+  ledgerStepsFor(step).forEach(s => {
+    const y = staffBottomY - s * stepGap;
+    svg += `<line x1="${noteX - 9}" y1="${y}" x2="${noteX + 9}" y2="${y}" stroke="darkorange" stroke-width="1"/>`;
+  });
+
+  if (accidental === '#') {
+    svg += `<text x="0" y="${noteY + 6}" font-size="20" fill="darkorange">&#9839;</text>`;
+  } else if (accidental === 'b') {
+    svg += `<text x="1" y="${noteY + 6}" font-size="20" fill="darkorange">&#9837;</text>`;
+  }
+
+  svg += `<ellipse cx="${noteX}" cy="${noteY}" rx="6" ry="4.5" fill="darkorange" transform="rotate(-20 ${noteX} ${noteY})"/>`;
+
+  const stemUp = step < 4;
+  if (stemUp) {
+    svg += `<line x1="${noteX + 5.5}" y1="${noteY}" x2="${noteX + 5.5}" y2="${noteY - 32}" stroke="darkorange" stroke-width="1.4"/>`;
+  } else {
+    svg += `<line x1="${noteX - 5.5}" y1="${noteY}" x2="${noteX - 5.5}" y2="${noteY + 32}" stroke="darkorange" stroke-width="1.4"/>`;
+  }
+
+  svg += `</svg>`;
+  return svg;
+}
+
+let noteDisplayMode = localStorage.getItem('noteDisplayMode') === 'staff' ? 'staff' : 'letter';
+
+function renderSingleNoteDisplay(n) {
+  notesDisplay.classList.toggle('noteD--staff', noteDisplayMode === 'staff');
+  notesDisplay.innerHTML = noteDisplayMode === 'staff' ? renderStaffNote(n) : formatNoteName(n);
+}
+
+function updateSingleNoteInstrac() {
+  instracEl.innerHTML = noteDisplayMode === 'staff' ? 'Find all positions<br>of this note' : 'Find all<br>displayed notes';
+}
+
+const noteDisplayToggleLabel = document.querySelector('.note-display-toggle-label');
+
+function updateNoteDisplayToggleButton() {
+  if (!noteDisplayToggleBtn) return;
+  const isStaff = noteDisplayMode === 'staff';
+  noteDisplayToggleBtn.textContent = isStaff ? 'T' : '♪︎'; // ︎ forces plain text glyph so it stays white, not a colored emoji
+  noteDisplayToggleBtn.classList.toggle('ndt-note-icon', !isStaff);
+  if (noteDisplayToggleLabel) noteDisplayToggleLabel.textContent = isStaff ? 'Letters' : 'Notes';
+}
+updateNoteDisplayToggleButton();
+
+if (noteDisplayToggleBtn) {
+  noteDisplayToggleBtn.addEventListener('click', () => {
+    noteDisplayMode = noteDisplayMode === 'staff' ? 'letter' : 'staff';
+    localStorage.setItem('noteDisplayMode', noteDisplayMode);
+    renderSingleNoteDisplay(note);
+    updateSingleNoteInstrac();
+    updateNoteDisplayToggleButton();
+    highlightNotes(note);
+  });
+}
 
 const chromaticIdx = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
 function intervalToDegreeLabel(semitones) {
@@ -1710,10 +1909,18 @@ function randomNote() {
 
 let note = null;
 note = randomNote();
-notesDisplay.innerHTML = formatNoteName(note);
+renderSingleNoteDisplay(note);
 
 function highlightNotes(note) {
   targetKeys.clear();
+  let staffOnlyKeys = null;
+  if (noteDisplayMode === 'staff') {
+    const { keys: lowKeys, abs } = findAllAtLowestPitch(note);
+    const keys = (staffOctaveOffset > 0 && abs !== null)
+      ? findAllKeysAtPitch(note, abs + staffOctaveOffset * 12)
+      : lowKeys;
+    staffOnlyKeys = new Set(keys);
+  }
   Object.entries(svgCells).forEach(([key, cell]) => {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
@@ -1723,7 +1930,9 @@ function highlightNotes(note) {
     }
     if (bassMode && stringNum <= 2) return;
     cell.text.setAttribute('opacity', '0');
-    if (neckNotes[key] === normalize(note)) {
+    if (staffOnlyKeys !== null) {
+      if (staffOnlyKeys.has(key)) targetKeys.add(key);
+    } else if (neckNotes[key] === normalize(note)) {
       targetKeys.add(key);
     }
   });
@@ -2123,9 +2332,10 @@ function nextRound() {
     else startChordRound();
   } else {
     headLineEl.textContent = 'SINGLE NOTE';
-    instracEl.innerHTML = 'Find all<br>displayed notes';
+    updateSingleNoteInstrac();
     note = randomNote();
-    notesDisplay.innerHTML = formatNoteName(note);
+    randomizeStaffOctaveChoice(note);
+    renderSingleNoteDisplay(note);
     highlightNotes(note);
   }
 }
@@ -2505,7 +2715,7 @@ function renderInstructionsSection(body) {
     });
     body.appendChild(box); }
 
-  s('FretChamp helps you practice notes, chord tones and inversions — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
+  s('FretChamp helps you practice notes, chord tones, inversions, arpeggios and scales — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
   { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
   if (!isBass) {
     s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
