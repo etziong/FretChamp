@@ -752,7 +752,7 @@ peekBtn.addEventListener('pointerleave', () => {
 });
 
 const bassModeInstructions = {
-  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.',
+  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nIn Bass mode, notes are shown on the F clef.',
   'three-chord-mode':  'Find the 3 notes of the displayed chord. For deeper practice, try placing the root note on a different string each time.',
   'four-inverts-mode': 'Find the chord tones shown on screen. For deeper practice, try placing the root note on a different string each time.',
 };
@@ -985,7 +985,7 @@ mainButtons.forEach((btn, index) => {
       updateNoteDisplayToggleButton();
       updateSingleNoteInstrac();
       note = randomNote();
-      randomizeStaffOctaveChoice();
+      randomizeStaffOctaveChoice(note);
       renderSingleNoteDisplay(note);
       highlightNotes(note);
     }
@@ -1295,12 +1295,17 @@ function neckKeyAbsPitch(key) {
   return open.octave * 12 + open.idx + fret;
 }
 
+function isKeyPlayable(key) {
+  const stringNum = parseInt(key.match(/string-(\d+)/)[1], 10);
+  return !(bassMode && stringNum <= 2);
+}
+
 function findAllAtLowestPitch(name) {
   const target = normalize(name);
   let minAbs = null;
   let keys = [];
   for (const key in neckNotes) {
-    if (neckNotes[key] !== target) continue;
+    if (neckNotes[key] !== target || !isKeyPlayable(key)) continue;
     const abs = neckKeyAbsPitch(key);
     if (minAbs === null || abs < minAbs) {
       minAbs = abs;
@@ -1316,7 +1321,7 @@ function findAllKeysAtPitch(name, abs) {
   const target = normalize(name);
   const keys = [];
   for (const key in neckNotes) {
-    if (neckNotes[key] !== target) continue;
+    if (neckNotes[key] !== target || !isKeyPlayable(key)) continue;
     if (neckKeyAbsPitch(key) === abs) keys.push(key);
   }
   return keys;
@@ -1331,11 +1336,20 @@ function getDisplayOctave(name) {
   const normalizedBase = normalize(name)[0];
   if (base === 'B' && normalizedBase === 'C') realOctave -= 1;
   else if (base === 'C' && normalizedBase === 'B') realOctave += 1;
-  return realOctave + 1; // guitar notation convention: written one octave above sounding pitch
+  // Bass mode plays the fretboard pitch an octave lower (real sounding = neck octave - 1).
+  // Both guitar (treble) and bass (bass clef) are written one octave above sounding pitch,
+  // so the two shifts cancel out for bass: display octave = neck octave, unchanged.
+  return bassMode ? realOctave : realOctave + 1;
 }
 
-function diatonicStep(base, octave) {
-  return (octave * 7 + naturalIndex[base]) - (4 * 7 + naturalIndex['E']); // 0 = bottom line (E4)
+const CLEF_REF = {
+  treble: { letter: 'E', octave: 4 }, // bottom line
+  bass:   { letter: 'G', octave: 2 }, // bottom line
+};
+
+function diatonicStep(base, octave, clef) {
+  const ref = CLEF_REF[clef] || CLEF_REF.treble;
+  return (octave * 7 + naturalIndex[base]) - (ref.octave * 7 + naturalIndex[ref.letter]);
 }
 
 function ledgerStepsFor(step) {
@@ -1351,8 +1365,15 @@ function ledgerStepsFor(step) {
 }
 
 let staffOctaveOffset = 0; // 0 = lowest, 1 = one octave up, 2 = two octaves up
-function randomizeStaffOctaveChoice() {
-  staffOctaveOffset = Math.floor(Math.random() * 3);
+function randomizeStaffOctaveChoice(name) {
+  const { abs } = findAllAtLowestPitch(name);
+  const validOffsets = [0];
+  if (abs !== null) {
+    for (let o = 1; o <= 2; o++) {
+      if (findAllKeysAtPitch(name, abs + o * 12).length > 0) validOffsets.push(o);
+    }
+  }
+  staffOctaveOffset = validOffsets[Math.floor(Math.random() * validOffsets.length)];
 }
 
 function getChosenOctave(name) {
@@ -1364,15 +1385,18 @@ function renderStaffNote(name) {
   const m = name.match(/^([A-G])(.*)$/);
   const base = m ? m[1] : name;
   const accidental = m ? m[2] : '';
+  const clef = bassMode ? 'bass' : 'treble';
   const octave = getChosenOctave(name);
-  const step = diatonicStep(base, octave);
+  const step = diatonicStep(base, octave, clef);
 
   const width = 40;
   const lineGap = 8;
   const stepGap = lineGap / 2;
-  const staffTopY = 38;              // F5 (leaves headroom for a sharp/flat sign on the highest notes)
-  const staffBottomY = staffTopY + lineGap * 4; // E4
-  const height = 106; // fits the lowest note (E, 3 ledger lines below) with no extra blank space
+  // Bass clef only ever needs up to 3 ledger lines above and 1 below (offsets with no
+  // reachable fret are excluded before a round starts); treble needs up to 3 above, 3 below.
+  const staffTopY = 38;   // top staff line — same headroom covers both clefs' worst case
+  const staffBottomY = staffTopY + lineGap * 4;  // bottom staff line
+  const height = clef === 'bass' ? 90 : 106;
   const noteX = 22;
   const noteY = staffBottomY - step * stepGap;
 
@@ -2303,7 +2327,7 @@ function nextRound() {
     headLineEl.textContent = 'SINGLE NOTE';
     updateSingleNoteInstrac();
     note = randomNote();
-    randomizeStaffOctaveChoice();
+    randomizeStaffOctaveChoice(note);
     renderSingleNoteDisplay(note);
     highlightNotes(note);
   }
