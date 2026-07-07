@@ -759,20 +759,20 @@ peekBtn.addEventListener('pointerleave', () => {
 });
 
 const bassModeInstructions = {
-  'greed-mode':        'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed.\n\nIn Bass mode, notes are shown on the F clef.',
-  'three-chord-mode':  'Find the 3 notes of the displayed chord. For deeper practice, try placing the root note on a different string each time.',
-  'four-inverts-mode': 'Find the chord tones shown on screen. For deeper practice, try placing the root note on a different string each time.',
+  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.',
+  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.',
+  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.',
 };
 
 const modeInstructions = {
-  'three-chord-mode': 'Choose a string set, then find a triad inversion of the displayed chord. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.\n\nFor open string notes, tap the top of the grid.',
-  'four-inverts-mode':'Choose a string set, then find a 7th chord inversion. For deeper practice, try placing the root on a different string each time. Tap Show Notes if needed.\n\nUse the "Free Grid" button to practice inversions freely across the entire fretboard.\n\nFor open string notes, tap the top of the grid.',
-  'slash-chord-mode': 'Find the chord tones on the fretboard. Place the note after the slash as the lowest bass note of the chord. Tap Show Notes if needed.\n\nFor open string notes, tap the top of the grid.',
-  'four-chord-mode':  'Find the chord tones. Use the string lock buttons to practice on a specific string set if needed. The 5th is optional. Tap Show Notes if needed.\n\nFor open string notes, tap the top of the grid.',
-  'scales-mode':      'Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear. Try to remember and find them. If you\'re struggling, use the Show Notes button.',
-  'basic-chord-mode': 'Open Chords — Tap "Open Chords" to start. Find all the chord tones on the fretboard. Use Show Notes if you need a hint.\n\nBarre Chords — Tap "Barre Chords", then choose a root on string 5 or 6. Find the chord tones on the fretboard. Use Show Notes if you need a hint.\n\nFor open string notes, tap the top of the grid.',
-  'free-playing-mode':'Tap any fret to hear the note. Explore freely with no scoring or goals.\n\nTry to play something nice :-)',
-  'greed-mode':       'A note name appears on screen. Find all its positions on the fretboard. Use the string lock buttons to focus on specific strings if needed. Tap the Show Notes button if needed.\n\nBeginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\nFor open string notes, tap the top of the grid.',
+  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\nTap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
+  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
+  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
+  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
+  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.',
+  'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.',
+  'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
+  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff, tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -787,7 +787,7 @@ instructionsWrapper.addEventListener('click', () => {
   const text = isBass && bassModeInstructions[currentMode]
     ? bassModeInstructions[currentMode]
     : (currentMode ? modeInstructions[currentMode] : '');
-  instructionsModalText.textContent = text;
+  instructionsModalText.innerHTML = text.split('\n\n').map(part => `<p style="margin:0 0 8px;">${part.replace(/\n/g, '<br>')}</p>`).join('');
   instructionsModal.style.display = 'flex';
 });
 
@@ -1450,11 +1450,18 @@ function updateSingleNoteInstrac() {
 
 const noteDisplayToggleLabel = document.querySelector('.note-display-toggle-label');
 
+const NOTE_ICON_SVG = '<svg viewBox="0 0 16 20" width="16" height="20" style="display:block"><line x1="11" y1="2" x2="11" y2="15" stroke="white" stroke-width="1.6"/><ellipse cx="7.5" cy="15.5" rx="4.2" ry="3.2" fill="white" transform="rotate(-20 7.5 15.5)"/></svg>';
+
 function updateNoteDisplayToggleButton() {
   if (!noteDisplayToggleBtn) return;
   const isStaff = noteDisplayMode === 'staff';
-  noteDisplayToggleBtn.textContent = isStaff ? 'T' : '♪︎'; // ︎ forces plain text glyph so it stays white, not a colored emoji
-  noteDisplayToggleBtn.classList.toggle('ndt-note-icon', !isStaff);
+  if (isStaff) {
+    noteDisplayToggleBtn.textContent = 'Aa';
+    noteDisplayToggleBtn.style.fontSize = '14px';
+  } else {
+    noteDisplayToggleBtn.innerHTML = NOTE_ICON_SVG;
+    noteDisplayToggleBtn.style.fontSize = '';
+  }
   if (noteDisplayToggleLabel) noteDisplayToggleLabel.textContent = isStaff ? 'Letters' : 'Notes';
 }
 updateNoteDisplayToggleButton();
