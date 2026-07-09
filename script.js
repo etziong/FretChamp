@@ -397,7 +397,7 @@ function handleFretClick(e) {
         showWellDone();
         playChordTogether(basicStudyKeys.map(k => neckNotes[k]).filter(Boolean));
         setTimeout(playBigSuccess, 1300);
-        nextRoundTimeout = setTimeout(startBasicChordRound, 2200);
+        basicChordContinueBtn.classList.add('show');
       } else {
         playSuccess();
       }
@@ -508,6 +508,7 @@ homeBtn.addEventListener('click', () => {
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
   instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+  basicChordContinueBtn.classList.remove('show');
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
   clearScaleHighlights();
@@ -681,6 +682,13 @@ function updatePeekLabel() {
 let instracFlashTimeout = null;
 let hintFlashTimeout = null;
 const basicChordHintEl = document.querySelector('.basic-chord-hint');
+const basicChordContinueBtn = document.querySelector('.basic-chord-continue-btn');
+
+basicChordContinueBtn.addEventListener('click', () => {
+  basicChordContinueBtn.classList.remove('show');
+  playContinueClick();
+  startBasicChordRound();
+});
 
 
 function flashBasicChordHint() {
@@ -772,7 +780,7 @@ const modeInstructions = {
   'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.',
   'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
-  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff, tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.',
+  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -894,6 +902,21 @@ function playBigSuccess() {
 
 }
 
+function playContinueClick() {
+  const ctx = audioCtx;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(300, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.18);
+}
+
 
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
@@ -905,6 +928,7 @@ mainButtons.forEach((btn, index) => {
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+    basicChordContinueBtn.classList.remove('show');
     if (index === 0) {
       const modal = document.getElementById('chord-list-modal');
       modal.classList.add('open');
@@ -1881,6 +1905,7 @@ function startBasicChordPlay(chord) {
 
 function startBasicChordRound() {
   if (!basicChordCategory) return;
+  basicChordContinueBtn.classList.remove('show');
   const pool = basicChordCategory === 'open' ? basicOpenChords :
                basicChordCategory === 'root6' ? basicRoot6Chords :
                basicChordCategory === 'root5' ? basicRoot5Chords :
