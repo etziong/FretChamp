@@ -340,7 +340,7 @@ function showTapRipple(key) {
   ripple.setAttribute('cx', cell.circle.getAttribute('cx'));
   ripple.setAttribute('cy', cell.circle.getAttribute('cy'));
   ripple.setAttribute('r', '30');
-  ripple.setAttribute('fill', 'rgba(100,180,255,0.25)');
+  ripple.setAttribute('fill', 'rgba(100,180,255,0.75)');
   ripple.setAttribute('pointer-events', 'none');
   document.getElementById('ripple-layer').appendChild(ripple);
   setTimeout(() => ripple.remove(), 300);
@@ -773,11 +773,11 @@ const bassModeInstructions = {
 };
 
 const modeInstructions = {
-  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\nTap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
-  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
+  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
+  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
   'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
   'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
-  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.',
+  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.\n\n• For convenience, the scale root is set on the note G.',
   'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
   'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.',
