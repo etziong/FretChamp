@@ -904,17 +904,18 @@ function playBigSuccess() {
 
 function playContinueClick() {
   const ctx = audioCtx;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(300, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.18);
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.05 + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + i * 0.05);
+    osc.stop(ctx.currentTime + i * 0.05 + 0.5);
+  });
 }
 
 
@@ -1077,6 +1078,11 @@ document.querySelectorAll('.basic-chord-cat-btn').forEach(catBtn => {
       rootHintText.style.display = 'none';
       basicChordHintEl.style.display = 'block';
       basicChordHintEl.innerHTML = 'Find chord tones<br>(tap eye icon<br>if needed)';
+      basicChordHintEl.classList.remove('hint-blink-orange');
+      void basicChordHintEl.offsetWidth;
+      basicChordHintEl.classList.add('hint-blink-orange');
+      clearTimeout(hintFlashTimeout);
+      hintFlashTimeout = setTimeout(() => basicChordHintEl.classList.remove('hint-blink-orange'), 3000);
     } else if (cat === 'barre') {
       rootCatBtns.forEach(b => {
         b.style.display = 'block';
