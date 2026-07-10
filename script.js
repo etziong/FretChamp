@@ -242,18 +242,23 @@ function initSvgGrid() {
       // scale highlight circles
       const scaleNoteCircle = document.createElementNS(NS, 'circle');
       scaleNoteCircle.setAttribute('cx', xCtr); scaleNoteCircle.setAttribute('cy', yCtr2);
-      scaleNoteCircle.setAttribute('r', '30'); scaleNoteCircle.setAttribute('fill', 'rgb(130,40,210)');
+      scaleNoteCircle.setAttribute('r', '30'); scaleNoteCircle.setAttribute('fill', 'rgb(230,126,34)');
       scaleNoteCircle.setAttribute('opacity', '0'); scaleNoteCircle.setAttribute('pointer-events', 'none');
 
       const rootHlCircle = document.createElementNS(NS, 'circle');
       rootHlCircle.setAttribute('cx', xCtr); rootHlCircle.setAttribute('cy', yCtr2);
-      rootHlCircle.setAttribute('r', '30'); rootHlCircle.setAttribute('fill', 'rgb(210,40,40)');
+      rootHlCircle.setAttribute('r', '30'); rootHlCircle.setAttribute('fill', 'rgb(139,0,0)');
       rootHlCircle.setAttribute('opacity', '0'); rootHlCircle.setAttribute('pointer-events', 'none');
 
       const bluesHlCircle = document.createElementNS(NS, 'circle');
       bluesHlCircle.setAttribute('cx', xCtr); bluesHlCircle.setAttribute('cy', yCtr2);
       bluesHlCircle.setAttribute('r', '30'); bluesHlCircle.setAttribute('fill', 'rgb(15,45,140)');
       bluesHlCircle.setAttribute('opacity', '0'); bluesHlCircle.setAttribute('pointer-events', 'none');
+
+      const extraHlCircle = document.createElementNS(NS, 'circle');
+      extraHlCircle.setAttribute('cx', xCtr); extraHlCircle.setAttribute('cy', yCtr2);
+      extraHlCircle.setAttribute('r', '30'); extraHlCircle.setAttribute('fill', 'rgb(216,190,0)');
+      extraHlCircle.setAttribute('opacity', '0'); extraHlCircle.setAttribute('pointer-events', 'none');
 
       const rootHlText = document.createElementNS(NS, 'text');
       rootHlText.setAttribute('x', xCtr); rootHlText.setAttribute('y', yCtr2 + 13);
@@ -271,18 +276,27 @@ function initSvgGrid() {
       bluesHlText.setAttribute('pointer-events', 'none'); bluesHlText.setAttribute('opacity', '0');
       bluesHlText.textContent = 'B';
 
-      svg.appendChild(scaleNoteCircle); svg.appendChild(rootHlCircle); svg.appendChild(bluesHlCircle);
-      svg.appendChild(rootHlText); svg.appendChild(bluesHlText);
+      const extraHlText = document.createElementNS(NS, 'text');
+      extraHlText.setAttribute('x', xCtr); extraHlText.setAttribute('y', yCtr2 + 12);
+      extraHlText.setAttribute('text-anchor', 'middle'); extraHlText.setAttribute('fill', 'white');
+      extraHlText.setAttribute('font-size', '32'); extraHlText.setAttribute('font-weight', 'bold');
+      extraHlText.setAttribute('font-family', 'system-ui, sans-serif');
+      extraHlText.setAttribute('pointer-events', 'none'); extraHlText.setAttribute('opacity', '0');
+      extraHlText.textContent = 'B';
+
+      svg.appendChild(scaleNoteCircle); svg.appendChild(rootHlCircle); svg.appendChild(bluesHlCircle); svg.appendChild(extraHlCircle);
+      svg.appendChild(rootHlText); svg.appendChild(bluesHlText); svg.appendChild(extraHlText);
       svg.appendChild(rect); svg.appendChild(circle); svg.appendChild(text);
-      svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, rootHlText, bluesHlText };
+      svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, rootHlText, bluesHlText, extraHlText };
       rect.addEventListener('click', handleFretClick);
       rect.addEventListener('pointerdown', () => {
         if (!document.body.classList.contains('scales-mode')) return;
         const cell = svgCells[key];
         const dotMap = [
-          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
-          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
-          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+          { el: cell.scaleNoteCircle, orig: 'rgb(230,126,34)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(139,0,0)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' },
+          { el: cell.extraHlCircle,   orig: 'rgb(216,190,0)' }
         ];
         for (const { el } of dotMap) {
           if (el.getAttribute('opacity') === '1') {
@@ -295,9 +309,10 @@ function initSvgGrid() {
         if (!document.body.classList.contains('scales-mode')) return;
         const cell = svgCells[key];
         const dotMap = [
-          { el: cell.scaleNoteCircle, orig: 'rgb(130,40,210)' },
-          { el: cell.rootHlCircle,    orig: 'rgb(210,40,40)' },
-          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' }
+          { el: cell.scaleNoteCircle, orig: 'rgb(230,126,34)' },
+          { el: cell.rootHlCircle,    orig: 'rgb(139,0,0)' },
+          { el: cell.bluesHlCircle,   orig: 'rgb(15,45,140)' },
+          { el: cell.extraHlCircle,   orig: 'rgb(216,190,0)' }
         ];
         setTimeout(() => {
           for (const { el, orig } of dotMap) {
@@ -718,6 +733,7 @@ peekBtn.addEventListener('pointerdown', (e) => {
     (d.notes||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
     (d.roots||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].rootHlCircle.setAttribute('opacity','1'); svgCells[k].rootHlText.setAttribute('opacity','1'); } });
     (d.blues||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].bluesHlCircle.setAttribute('opacity','1'); svgCells[k].bluesHlText.setAttribute('opacity','1'); } });
+    (d.extra||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].extraHlCircle.setAttribute('opacity','1'); svgCells[k].extraHlText.setAttribute('opacity','1'); } });
     return;
   }
 
@@ -744,6 +760,8 @@ peekBtn.addEventListener('pointerup', () => {
         svgCells[k].rootHlText.setAttribute('opacity','0');
         svgCells[k].bluesHlCircle.setAttribute('opacity','0');
         svgCells[k].bluesHlText.setAttribute('opacity','0');
+        svgCells[k].extraHlCircle.setAttribute('opacity','0');
+        svgCells[k].extraHlText.setAttribute('opacity','0');
       }
     });
     return;
@@ -759,6 +777,8 @@ peekBtn.addEventListener('pointerleave', () => {
         svgCells[k].rootHlText.setAttribute('opacity','0');
         svgCells[k].bluesHlCircle.setAttribute('opacity','0');
         svgCells[k].bluesHlText.setAttribute('opacity','0');
+        svgCells[k].extraHlCircle.setAttribute('opacity','0');
+        svgCells[k].extraHlText.setAttribute('opacity','0');
       }
     });
     return;
@@ -1162,7 +1182,7 @@ document.querySelector('.scale-selector').addEventListener('click', e => {
 });
 
 
-const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor":{"notes":["btn4-string-6","btn6-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn5-string-4","btn6-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn4-string-2","btn5-string-2","btn8-string-2","btn4-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor Pos.5":{"notes":["btn11-string-6","btn12-string-6","btn11-string-5","btn13-string-5","btn14-string-5","btn11-string-4","btn13-string-4","btn12-string-3","btn13-string-3","btn11-string-2","btn12-string-2","btn11-string-1","btn12-string-1"],"roots":["btn11-string-5","btn13-string-3"],"blues":[]}};
+const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor":{"notes":["btn4-string-6","btn6-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn5-string-4","btn6-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn4-string-2","btn5-string-2","btn8-string-2","btn4-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor Pos.5":{"notes":["btn11-string-6","btn12-string-6","btn11-string-5","btn13-string-5","btn14-string-5","btn11-string-4","btn13-string-4","btn12-string-3","btn13-string-3","btn11-string-2","btn12-string-2","btn11-string-1","btn12-string-1"],"roots":["btn11-string-5","btn13-string-3"],"blues":[]},"Major Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn8-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn7-string-5","btn5-string-2"]},"Dorian Bebop":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn7-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn8-string-6","btn5-string-3","btn8-string-1"]},"Mixolydian Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn5-string-4","btn8-string-2"]}};
 
 function repositionCell(key, dx, dy) {
   const base = baseCellPositions[key];
@@ -1178,10 +1198,10 @@ function repositionCell(key, dx, dy) {
   cell.rect.setAttribute('y', yCtr2 - rectH / 2);
   cell.text.setAttribute('x', xCtr);
   cell.text.setAttribute('y', yCtr2 + 6);
-  [cell.scaleNoteCircle, cell.rootHlCircle, cell.bluesHlCircle].forEach(el => {
+  [cell.scaleNoteCircle, cell.rootHlCircle, cell.bluesHlCircle, cell.extraHlCircle].forEach(el => {
     if (el) { el.setAttribute('cx', xCtr); el.setAttribute('cy', yCtr2); }
   });
-  [cell.rootHlText, cell.bluesHlText].forEach(el => {
+  [cell.rootHlText, cell.bluesHlText, cell.extraHlText].forEach(el => {
     if (el) { el.setAttribute('x', xCtr); el.setAttribute('y', yCtr2 + 13); }
   });
 }
@@ -1215,6 +1235,12 @@ function applyScaleHighlights(scaleName) {
       svgCells[k].bluesHlText.setAttribute('opacity','1');
     }
   });
+  (d.extra || []).forEach(k => {
+    if (svgCells[k] && !skipKey(k)) {
+      svgCells[k].extraHlCircle.setAttribute('opacity','1');
+      svgCells[k].extraHlText.setAttribute('opacity','1');
+    }
+  });
   startScaleGame(scaleName, d);
 }
 
@@ -1242,7 +1268,8 @@ function startScaleGame(scaleName, d) {
   const noteKeys  = new Set((d.notes||[]).filter(k => !skipKey(k)));
   const rootKeys  = new Set((d.roots||[]).filter(k => !skipKey(k)));
   const bluesKeys = new Set((d.blues||[]).filter(k => !skipKey(k)));
-  scaleGameNotes = new Set([...noteKeys, ...rootKeys, ...bluesKeys]);
+  const extraKeys = new Set((d.extra||[]).filter(k => !skipKey(k)));
+  scaleGameNotes = new Set([...noteKeys, ...rootKeys, ...bluesKeys, ...extraKeys]);
 
   instracEl.innerHTML = '<span style="color:darkorange">Watch the scale<br>note positions!</span>';
 
@@ -1250,6 +1277,7 @@ function startScaleGame(scaleName, d) {
     noteKeys.forEach(k  => { if (svgCells[k]) { svgCells[k].scaleNoteCircle.setAttribute('opacity', op); } });
     rootKeys.forEach(k  => { if (svgCells[k]) { svgCells[k].rootHlCircle.setAttribute('opacity', op); svgCells[k].rootHlText.setAttribute('opacity', op); } });
     bluesKeys.forEach(k => { if (svgCells[k]) { svgCells[k].bluesHlCircle.setAttribute('opacity', op); svgCells[k].bluesHlText.setAttribute('opacity', op); } });
+    extraKeys.forEach(k => { if (svgCells[k]) { svgCells[k].extraHlCircle.setAttribute('opacity', op); svgCells[k].extraHlText.setAttribute('opacity', op); } });
   };
 
   // Phase 1: 4 blinks before display
@@ -1279,18 +1307,23 @@ function showScaleNoteFound(key, d) {
   } else if ((d.blues||[]).includes(key)) {
     svgCells[key].bluesHlCircle.setAttribute('opacity','1');
     svgCells[key].bluesHlText.setAttribute('opacity','1');
+  } else if ((d.extra||[]).includes(key)) {
+    svgCells[key].extraHlCircle.setAttribute('opacity','1');
+    svgCells[key].extraHlText.setAttribute('opacity','1');
   } else {
     svgCells[key].scaleNoteCircle.setAttribute('opacity','1');
   }
 }
 
 function clearScaleHighlights() {
-  Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, rootHlText, bluesHlText }) => {
+  Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, rootHlText, bluesHlText, extraHlText }) => {
     if (scaleNoteCircle) scaleNoteCircle.setAttribute('opacity','0');
     if (rootHlCircle)    rootHlCircle.setAttribute('opacity','0');
     if (bluesHlCircle)   bluesHlCircle.setAttribute('opacity','0');
+    if (extraHlCircle)   extraHlCircle.setAttribute('opacity','0');
     if (rootHlText)      rootHlText.setAttribute('opacity','0');
     if (bluesHlText)     bluesHlText.setAttribute('opacity','0');
+    if (extraHlText)     extraHlText.setAttribute('opacity','0');
   });
 }
 
