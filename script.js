@@ -556,7 +556,7 @@ function showScoreToast(scored, isNewRecord, avgSeconds) {
   const avgLine = avgSeconds != null ? `<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:6px;">Avg time per round: ${formatTimerSeconds(avgSeconds)}</div>` : '';
   toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}${avgLine}`;
   document.body.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 5000);
 }
 
 homeBtn.addEventListener('click', () => {
