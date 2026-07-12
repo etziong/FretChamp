@@ -11,6 +11,55 @@ const feedbackEl = document.querySelector('.feedback');
 const homeBtn = document.querySelector('.home-btn');
 const nextBtn = document.querySelector('.next-btn');
 
+const timerWrapper = document.getElementById('timer-wrapper');
+const timerStatusEl = document.getElementById('timer-status');
+const timerSecondsEl = document.getElementById('timer-seconds');
+let timerOn = false;
+let timerSeconds = 0;
+let timerCarryover = 0;
+let timerIntervalId = null;
+let timerRoundTotal = 0;
+let timerRoundCount = 0;
+
+function formatTimerSeconds(total) {
+  if (total < 60) return total + 's';
+  const m = Math.floor(total / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return m + 'm' + s + 's';
+}
+
+function resetRoundTimer() {
+  if (timerOn && (timerSeconds > 0 || timerCarryover > 0)) {
+    timerRoundTotal += timerCarryover + timerSeconds;
+    timerRoundCount++;
+  }
+  timerSeconds = 0;
+  timerCarryover = 0;
+  if (timerOn && timerSecondsEl) timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
+}
+
+if (timerWrapper) {
+  timerWrapper.addEventListener('click', () => {
+    timerOn = !timerOn;
+    timerWrapper.classList.toggle('timer-active', timerOn);
+    if (timerOn) {
+      timerSeconds = 0;
+      timerCarryover = 0;
+      timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
+      timerStatusEl.textContent = 'Off';
+      timerIntervalId = setInterval(() => {
+        timerSeconds++;
+        if (timerSeconds >= 600) { timerCarryover += 600; timerSeconds = 0; }
+        timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
+      }, 1000);
+    } else {
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      timerStatusEl.textContent = 'On';
+    }
+  });
+}
+
 const svgCells = {};
 let targetKeys = new Set();
 
@@ -500,15 +549,17 @@ function getCurrentModeKey() {
   return gameMode;
 }
 
-function showScoreToast(scored, isNewRecord) {
+function showScoreToast(scored, isNewRecord, avgSeconds) {
   const existing = document.getElementById('score-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
   toast.id = 'score-toast';
+  toast.dir = 'ltr';
   toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:16px 28px;border-radius:14px;font-family:system-ui,sans-serif;text-align:center;z-index:2000;box-shadow:0 4px 24px rgba(0,0,0,0.6);opacity:1;transition:opacity 0.4s;white-space:nowrap;';
-  toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}`;
+  const avgLine = avgSeconds != null ? `<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:6px;">Avg time per round: ${formatTimerSeconds(avgSeconds)}</div>` : '';
+  toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}${avgLine}`;
   document.body.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 5000);
 }
 
 homeBtn.addEventListener('click', () => {
@@ -518,7 +569,8 @@ homeBtn.addEventListener('click', () => {
     const prev = parseInt(localStorage.getItem(storageKey) || '0');
     const isNew = score > prev;
     if (isNew) localStorage.setItem(storageKey, score);
-    showScoreToast(score, isNew);
+    const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
+    showScoreToast(score, isNew, avgSeconds);
   }
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
   instracEl.classList.remove('instrac-blink');
@@ -528,6 +580,10 @@ homeBtn.addEventListener('click', () => {
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
   clearScaleHighlights();
   score = 0;
+  timerRoundTotal = 0;
+  timerRoundCount = 0;
+  timerSeconds = 0;
+  timerCarryover = 0;
   scoreNumberEl.textContent = 0;
 });
 
@@ -787,20 +843,20 @@ peekBtn.addEventListener('pointerleave', () => {
 });
 
 const bassModeInstructions = {
-  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.',
-  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.',
-  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.',
+  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.\n\n• Tap the Timer button to time how long each round takes you.',
+  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const modeInstructions = {
-  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
-  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.',
-  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
-  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.',
-  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.\n\n• For convenience, the scale root is set on the note G.',
-  'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.',
+  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
+  'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
-  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.',
+  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
@@ -1039,6 +1095,7 @@ mainButtons.forEach((btn, index) => {
       note = randomNote();
       randomizeStaffOctaveChoice(note);
       renderSingleNoteDisplay(note);
+      resetRoundTimer();
       highlightNotes(note);
     }
   });
@@ -1221,6 +1278,7 @@ function applyScaleHighlights(scaleName) {
   clearScaleHighlights();
   const d = scaleData[scaleName];
   if (!d) return;
+  resetRoundTimer();
   const skipKey = k => bassMode && parseInt(k.match(/string-(\d+)/)[1]) <= 2;
   (d.notes || []).forEach(k => { if (svgCells[k] && !skipKey(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
   (d.roots || []).forEach(k => {
@@ -1923,6 +1981,7 @@ let basicStudyKeys = [];
 function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
+  resetRoundTimer();
   headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
@@ -2042,6 +2101,7 @@ function startFourChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TENSIONS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   const no5thSuffixes = ['7(b9)','7(#9)','(#11)','11','maj9','13','(b13)','m9','9'];
   no5thNote.style.display = no5thSuffixes.some(s => chordName.endsWith(s)) ? 'block' : 'none';
@@ -2062,6 +2122,7 @@ function startFourInvertsRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = '7TH CHORD';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
@@ -2077,6 +2138,7 @@ function startSlashChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'SLASH CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
@@ -2104,6 +2166,7 @@ function startChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TRIADS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.innerHTML = 'Find 3<br>chord tones';
   highlightChordNotes(chordNotes);
 }
@@ -2407,6 +2470,7 @@ function nextRound() {
     note = randomNote();
     randomizeStaffOctaveChoice(note);
     renderSingleNoteDisplay(note);
+    resetRoundTimer();
     highlightNotes(note);
   }
 }
