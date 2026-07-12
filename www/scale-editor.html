@@ -205,22 +205,22 @@
       transition: background 0.15s;
     }
     .paint-btn.note {
-      background: rgba(160,80,220,0.15);
-      color: #c080ff;
-      border-color: rgba(160,80,220,0.35);
+      background: rgba(230,126,34,0.15);
+      color: #e8a05c;
+      border-color: rgba(230,126,34,0.35);
     }
     .paint-btn.root {
-      background: rgba(255,80,80,0.15);
-      color: #ff8080;
-      border-color: rgba(255,80,80,0.35);
+      background: rgba(139,0,0,0.2);
+      color: #d95c5c;
+      border-color: rgba(139,0,0,0.45);
     }
     .paint-btn.note.active {
-      background: rgba(160,80,220,0.45);
-      border-color: #c080ff;
+      background: rgba(230,126,34,0.45);
+      border-color: #e8a05c;
     }
     .paint-btn.root.active {
-      background: rgba(255,80,80,0.45);
-      border-color: #ff8080;
+      background: rgba(139,0,0,0.5);
+      border-color: #d95c5c;
     }
     .paint-btn.blues {
       background: rgba(20,60,160,0.2);
@@ -230,6 +230,15 @@
     .paint-btn.blues.active {
       background: rgba(20,60,160,0.55);
       border-color: #5588ff;
+    }
+    .paint-btn.extra {
+      background: rgba(216,190,0,0.2);
+      color: #e8d200;
+      border-color: rgba(216,190,0,0.5);
+    }
+    .paint-btn.extra.active {
+      background: rgba(216,190,0,0.55);
+      border-color: #e8d200;
     }
   </style>
 </head>
@@ -260,6 +269,7 @@
       <button class="paint-btn note active" id="btnNote" onclick="setPaintMode('note')">● Scale note</button>
       <button class="paint-btn root" id="btnRoot" onclick="setPaintMode('root')">● Root</button>
       <button class="paint-btn blues" id="btnBlues" onclick="setPaintMode('blues')">● Blues</button>
+      <button class="paint-btn extra" id="btnExtra" onclick="setPaintMode('extra')">● Extra (Bebop)</button>
     </div>
     <div class="instructions">
       <b>1.</b> Select a scale on the left<br>
@@ -346,12 +356,18 @@ const scaleCategories = [
   { label: 'Blues',         scales: ['Minor Blues 1','Minor Blues 2','Minor Blues 3','Minor Blues 4','Minor Blues 5'] },
   { label: 'Diminished',    scales: ['Diminished','Dim b9'] },
   { label: 'Whole Tone',    scales: ['Whole Tone'] },
+  { label: 'Bebop',         scales: ['Major Bebop','Dorian Bebop','Mixolydian Bebop'] },
 ];
 
 // ── State ──
 let activeScale = null;
 let paintMode = 'note'; // 'note' | 'root'
-let scaleData = {};     // { scaleName: { notes: [], roots: [] } }
+// Seeded with the current (in-app) Bebop scale data so existing positions show up for review/fixing
+let scaleData = {
+  "Major Bebop": {"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn8-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn7-string-5","btn5-string-2"]},
+  "Dorian Bebop": {"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn7-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn8-string-6","btn5-string-3","btn8-string-1"]},
+  "Mixolydian Bebop": {"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn5-string-4","btn8-string-2"]}
+};
 const svgCells = {};
 
 // Load from localStorage
@@ -359,8 +375,9 @@ const saved = localStorage.getItem('scaleData');
 if (saved) scaleData = JSON.parse(saved);
 
 function getScaleData(name) {
-  if (!scaleData[name]) scaleData[name] = { notes: [], roots: [], blues: [] };
+  if (!scaleData[name]) scaleData[name] = { notes: [], roots: [], blues: [], extra: [] };
   if (!scaleData[name].blues) scaleData[name].blues = [];
+  if (!scaleData[name].extra) scaleData[name].extra = [];
   return scaleData[name];
 }
 
@@ -370,6 +387,7 @@ function setPaintMode(mode) {
   document.getElementById('btnNote').classList.toggle('active', mode === 'note');
   document.getElementById('btnRoot').classList.toggle('active', mode === 'root');
   document.getElementById('btnBlues').classList.toggle('active', mode === 'blues');
+  document.getElementById('btnExtra').classList.toggle('active', mode === 'extra');
 }
 
 // ── Build scale panel ──
@@ -393,7 +411,7 @@ function buildScalePanel() {
       item.className = 'scale-item';
       item.dataset.scale = scaleName;
       const d = scaleData[scaleName];
-      const count = d ? (d.notes.length + d.roots.length) : 0;
+      const count = d ? (d.notes.length + d.roots.length + (d.blues ? d.blues.length : 0) + (d.extra ? d.extra.length : 0)) : 0;
       item.innerHTML = `${scaleName} <span class="dot-count">${count > 0 ? count : ''}</span>`;
       item.addEventListener('click', () => selectScale(scaleName));
       list.appendChild(item);
@@ -455,7 +473,7 @@ function initSvgGrid() {
       const noteCircle = document.createElementNS(NS, 'circle');
       noteCircle.setAttribute('cx', xCtr); noteCircle.setAttribute('cy', yCtr2);
       noteCircle.setAttribute('r', '28');
-      noteCircle.setAttribute('fill', 'rgba(130,40,210,0.92)');
+      noteCircle.setAttribute('fill', 'rgba(230,126,34,0.92)');
       noteCircle.setAttribute('opacity', '0');
       noteCircle.setAttribute('pointer-events', 'none');
 
@@ -463,7 +481,7 @@ function initSvgGrid() {
       const rootCircle = document.createElementNS(NS, 'circle');
       rootCircle.setAttribute('cx', xCtr); rootCircle.setAttribute('cy', yCtr2);
       rootCircle.setAttribute('r', '28');
-      rootCircle.setAttribute('fill', 'rgba(220,50,50,0.75)');
+      rootCircle.setAttribute('fill', 'rgba(139,0,0,0.85)');
       rootCircle.setAttribute('opacity', '0');
       rootCircle.setAttribute('pointer-events', 'none');
 
@@ -475,25 +493,36 @@ function initSvgGrid() {
       bluesCircle.setAttribute('opacity', '0');
       bluesCircle.setAttribute('pointer-events', 'none');
 
+      // gold — extra (bebop passing tone)
+      const extraCircle = document.createElementNS(NS, 'circle');
+      extraCircle.setAttribute('cx', xCtr); extraCircle.setAttribute('cy', yCtr2);
+      extraCircle.setAttribute('r', '28');
+      extraCircle.setAttribute('fill', 'rgba(216,190,0,0.9)');
+      extraCircle.setAttribute('opacity', '0');
+      extraCircle.setAttribute('pointer-events', 'none');
+
       svg.appendChild(ghost);
       svg.appendChild(noteCircle);
       svg.appendChild(rootCircle);
       svg.appendChild(bluesCircle);
+      svg.appendChild(extraCircle);
       svg.appendChild(rect);
-      svgCells[key] = { noteCircle, rootCircle, bluesCircle };
+      svgCells[key] = { noteCircle, rootCircle, bluesCircle, extraCircle };
     }
   }
 }
 
 function refreshGrid() {
-  const d = activeScale ? getScaleData(activeScale) : { notes: [], roots: [], blues: [] };
+  const d = activeScale ? getScaleData(activeScale) : { notes: [], roots: [], blues: [], extra: [] };
   const noteSet = new Set(d.notes);
   const rootSet = new Set(d.roots);
   const bluesSet = new Set(d.blues || []);
-  Object.entries(svgCells).forEach(([key, { noteCircle, rootCircle, bluesCircle }]) => {
+  const extraSet = new Set(d.extra || []);
+  Object.entries(svgCells).forEach(([key, { noteCircle, rootCircle, bluesCircle, extraCircle }]) => {
     noteCircle.setAttribute('opacity', noteSet.has(key) ? '1' : '0');
     rootCircle.setAttribute('opacity', rootSet.has(key) ? '1' : '0');
     bluesCircle.setAttribute('opacity', bluesSet.has(key) ? '1' : '0');
+    extraCircle.setAttribute('opacity', extraSet.has(key) ? '1' : '0');
   });
   updateDotCounts();
 }
@@ -501,8 +530,8 @@ function refreshGrid() {
 function toggleCell(key) {
   if (!activeScale) { showStatus('Select a scale first!', '#ff6b6b'); return; }
   const d = getScaleData(activeScale);
-  const arr = paintMode === 'root' ? d.roots : paintMode === 'blues' ? d.blues : d.notes;
-  const others = [d.notes, d.roots, d.blues].filter(a => a !== arr);
+  const arr = paintMode === 'root' ? d.roots : paintMode === 'blues' ? d.blues : paintMode === 'extra' ? d.extra : d.notes;
+  const others = [d.notes, d.roots, d.blues, d.extra].filter(a => a !== arr);
   // remove from other lists
   others.forEach(a => { const i = a.indexOf(key); if (i !== -1) a.splice(i, 1); });
   // toggle in current list
@@ -515,14 +544,14 @@ function toggleCell(key) {
 function updateDotCounts() {
   document.querySelectorAll('.scale-item').forEach(el => {
     const d = scaleData[el.dataset.scale];
-    const count = d ? (d.notes.length + d.roots.length) : 0;
+    const count = d ? (d.notes.length + d.roots.length + (d.blues ? d.blues.length : 0) + (d.extra ? d.extra.length : 0)) : 0;
     el.querySelector('.dot-count').textContent = count > 0 ? count : '';
   });
 }
 
 function clearCurrentScale() {
   if (!activeScale) return;
-  scaleData[activeScale] = { notes: [], roots: [], blues: [] };
+  scaleData[activeScale] = { notes: [], roots: [], blues: [], extra: [] };
   refreshGrid();
   showStatus(`Cleared ${activeScale}`);
 }
