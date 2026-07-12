@@ -11,6 +11,36 @@ const feedbackEl = document.querySelector('.feedback');
 const homeBtn = document.querySelector('.home-btn');
 const nextBtn = document.querySelector('.next-btn');
 
+const timerWrapper = document.getElementById('timer-wrapper');
+const timerStatusEl = document.getElementById('timer-status');
+let timerOn = false;
+let timerSeconds = 0;
+let timerIntervalId = null;
+
+function resetRoundTimer() {
+  timerSeconds = 0;
+  if (timerOn && timerStatusEl) timerStatusEl.textContent = '0s';
+}
+
+if (timerWrapper) {
+  timerWrapper.addEventListener('click', () => {
+    timerOn = !timerOn;
+    timerWrapper.classList.toggle('timer-active', timerOn);
+    if (timerOn) {
+      timerSeconds = 0;
+      timerStatusEl.textContent = '0s';
+      timerIntervalId = setInterval(() => {
+        timerSeconds++;
+        timerStatusEl.textContent = timerSeconds + 's';
+      }, 1000);
+    } else {
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      timerStatusEl.textContent = 'Off';
+    }
+  });
+}
+
 const svgCells = {};
 let targetKeys = new Set();
 
@@ -1221,6 +1251,7 @@ function applyScaleHighlights(scaleName) {
   clearScaleHighlights();
   const d = scaleData[scaleName];
   if (!d) return;
+  resetRoundTimer();
   const skipKey = k => bassMode && parseInt(k.match(/string-(\d+)/)[1]) <= 2;
   (d.notes || []).forEach(k => { if (svgCells[k] && !skipKey(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
   (d.roots || []).forEach(k => {
@@ -1505,6 +1536,7 @@ let noteDisplayMode = localStorage.getItem('noteDisplayMode') === 'staff' ? 'sta
 function renderSingleNoteDisplay(n) {
   notesDisplay.classList.toggle('noteD--staff', noteDisplayMode === 'staff');
   notesDisplay.innerHTML = noteDisplayMode === 'staff' ? renderStaffNote(n) : formatNoteName(n);
+  resetRoundTimer();
 }
 
 function updateSingleNoteInstrac() {
@@ -1923,6 +1955,7 @@ let basicStudyKeys = [];
 function showBasicChordStudy(chord) {
   basicStudyKeys = chord.keys;
   notesDisplay.innerHTML = formatNoteName(chord.name);
+  resetRoundTimer();
   headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
@@ -2042,6 +2075,7 @@ function startFourChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TENSIONS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   const no5thSuffixes = ['7(b9)','7(#9)','(#11)','11','maj9','13','(b13)','m9','9'];
   no5thNote.style.display = no5thSuffixes.some(s => chordName.endsWith(s)) ? 'block' : 'none';
@@ -2062,6 +2096,7 @@ function startFourInvertsRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = '7TH CHORD';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
@@ -2077,6 +2112,7 @@ function startSlashChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'SLASH CHORDS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.textContent = 'Find chord tones';
   no5thNote.style.display = 'none';
   highlightChordNotes(chordNotes);
@@ -2104,6 +2140,7 @@ function startChordRound() {
   foundChordNotes = new Set();
   headLineEl.innerHTML = 'TRIADS';
   notesDisplay.innerHTML = formatNoteName(chordName);
+  resetRoundTimer();
   instracEl.innerHTML = 'Find 3<br>chord tones';
   highlightChordNotes(chordNotes);
 }

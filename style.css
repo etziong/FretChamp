@@ -395,6 +395,25 @@ header nav img {
 }
 .try-again-wrapper:active { opacity: 0.6; }
 .try-again-wrapper .peek-icon { margin-top: -2px; margin-bottom: 3px; }
+.timer-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+.greed-mode .timer-wrapper,
+.three-chord-mode .timer-wrapper,
+.four-inverts-mode .timer-wrapper,
+.slash-chord-mode .timer-wrapper,
+.four-chord-mode .timer-wrapper,
+.scales-mode .timer-wrapper,
+.basic-chord-mode .timer-wrapper,
+.free-playing-mode .timer-wrapper,
+.single-note-mode .timer-wrapper {
+  display: flex;
+}
+.timer-wrapper:active { opacity: 0.6; }
+.timer-wrapper.timer-active .peek-label { color: darkorange; }
 .peek-btn {
   position: absolute;
   inset: 0;
