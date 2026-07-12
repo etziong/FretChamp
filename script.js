@@ -16,6 +16,7 @@ const timerStatusEl = document.getElementById('timer-status');
 const timerSecondsEl = document.getElementById('timer-seconds');
 let timerOn = false;
 let timerSeconds = 0;
+let timerCarryover = 0;
 let timerIntervalId = null;
 let timerRoundTotal = 0;
 let timerRoundCount = 0;
@@ -28,11 +29,12 @@ function formatTimerSeconds(total) {
 }
 
 function resetRoundTimer() {
-  if (timerOn && timerSeconds > 0) {
-    timerRoundTotal += timerSeconds;
+  if (timerOn && (timerSeconds > 0 || timerCarryover > 0)) {
+    timerRoundTotal += timerCarryover + timerSeconds;
     timerRoundCount++;
   }
   timerSeconds = 0;
+  timerCarryover = 0;
   if (timerOn && timerSecondsEl) timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
 }
 
@@ -42,11 +44,12 @@ if (timerWrapper) {
     timerWrapper.classList.toggle('timer-active', timerOn);
     if (timerOn) {
       timerSeconds = 0;
+      timerCarryover = 0;
       timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
       timerStatusEl.textContent = 'Off';
       timerIntervalId = setInterval(() => {
         timerSeconds++;
-        if (timerSeconds >= 600) timerSeconds = 0;
+        if (timerSeconds >= 600) { timerCarryover += 600; timerSeconds = 0; }
         timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
       }, 1000);
     } else {
@@ -579,6 +582,8 @@ homeBtn.addEventListener('click', () => {
   score = 0;
   timerRoundTotal = 0;
   timerRoundCount = 0;
+  timerSeconds = 0;
+  timerCarryover = 0;
   scoreNumberEl.textContent = 0;
 });
 
@@ -1090,6 +1095,7 @@ mainButtons.forEach((btn, index) => {
       note = randomNote();
       randomizeStaffOctaveChoice(note);
       renderSingleNoteDisplay(note);
+      resetRoundTimer();
       highlightNotes(note);
     }
   });
@@ -1557,7 +1563,6 @@ let noteDisplayMode = localStorage.getItem('noteDisplayMode') === 'staff' ? 'sta
 function renderSingleNoteDisplay(n) {
   notesDisplay.classList.toggle('noteD--staff', noteDisplayMode === 'staff');
   notesDisplay.innerHTML = noteDisplayMode === 'staff' ? renderStaffNote(n) : formatNoteName(n);
-  resetRoundTimer();
 }
 
 function updateSingleNoteInstrac() {
@@ -2465,6 +2470,7 @@ function nextRound() {
     note = randomNote();
     randomizeStaffOctaveChoice(note);
     renderSingleNoteDisplay(note);
+    resetRoundTimer();
     highlightNotes(note);
   }
 }
