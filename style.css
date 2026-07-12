@@ -409,9 +409,11 @@ header nav img {
 .four-chord-mode .timer-wrapper,
 .scales-mode .timer-wrapper,
 .basic-chord-mode .timer-wrapper,
-.free-playing-mode .timer-wrapper,
 .single-note-mode .timer-wrapper {
   display: flex;
+}
+.free-playing-mode .timer-wrapper {
+  display: none;
 }
 .timer-wrapper:active { opacity: 0.6; }
 .timer-seconds-display {

@@ -40,6 +40,7 @@ if (timerWrapper) {
       timerStatusEl.textContent = 'Off';
       timerIntervalId = setInterval(() => {
         timerSeconds++;
+        if (timerSeconds >= 600) timerSeconds = 0;
         timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
       }, 1000);
     } else {
