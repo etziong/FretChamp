@@ -13,13 +13,21 @@ const nextBtn = document.querySelector('.next-btn');
 
 const timerWrapper = document.getElementById('timer-wrapper');
 const timerStatusEl = document.getElementById('timer-status');
+const timerSecondsEl = document.getElementById('timer-seconds');
 let timerOn = false;
 let timerSeconds = 0;
 let timerIntervalId = null;
 
+function formatTimerSeconds(total) {
+  if (total < 60) return total + 's';
+  const m = Math.floor(total / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return m + 'm' + s + 's';
+}
+
 function resetRoundTimer() {
   timerSeconds = 0;
-  if (timerOn && timerStatusEl) timerStatusEl.textContent = '0s';
+  if (timerOn && timerSecondsEl) timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
 }
 
 if (timerWrapper) {
@@ -28,15 +36,16 @@ if (timerWrapper) {
     timerWrapper.classList.toggle('timer-active', timerOn);
     if (timerOn) {
       timerSeconds = 0;
-      timerStatusEl.textContent = '0s';
+      timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
+      timerStatusEl.textContent = 'Off';
       timerIntervalId = setInterval(() => {
         timerSeconds++;
-        timerStatusEl.textContent = timerSeconds + 's';
+        timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
       }, 1000);
     } else {
       clearInterval(timerIntervalId);
       timerIntervalId = null;
-      timerStatusEl.textContent = 'Off';
+      timerStatusEl.textContent = 'On';
     }
   });
 }
