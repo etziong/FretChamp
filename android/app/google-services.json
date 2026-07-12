@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "2970188550",
+    "project_id": "fretchamp",
+    "storage_bucket": "fretchamp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:2970188550:android:c3c93909c2a878ff0c3c87",
+        "android_client_info": {
+          "package_name": "com.guitarapp.knowyourneck"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6B09m4UQpKaZwQMP3QZDFmYH6-enl3Oc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
