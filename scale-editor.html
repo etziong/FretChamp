@@ -205,22 +205,22 @@
       transition: background 0.15s;
     }
     .paint-btn.note {
-      background: rgba(160,80,220,0.15);
-      color: #c080ff;
-      border-color: rgba(160,80,220,0.35);
+      background: rgba(230,126,34,0.15);
+      color: #e8a05c;
+      border-color: rgba(230,126,34,0.35);
     }
     .paint-btn.root {
-      background: rgba(255,80,80,0.15);
-      color: #ff8080;
-      border-color: rgba(255,80,80,0.35);
+      background: rgba(139,0,0,0.2);
+      color: #d95c5c;
+      border-color: rgba(139,0,0,0.45);
     }
     .paint-btn.note.active {
-      background: rgba(160,80,220,0.45);
-      border-color: #c080ff;
+      background: rgba(230,126,34,0.45);
+      border-color: #e8a05c;
     }
     .paint-btn.root.active {
-      background: rgba(255,80,80,0.45);
-      border-color: #ff8080;
+      background: rgba(139,0,0,0.5);
+      border-color: #d95c5c;
     }
     .paint-btn.blues {
       background: rgba(20,60,160,0.2);
@@ -411,7 +411,7 @@ function buildScalePanel() {
       item.className = 'scale-item';
       item.dataset.scale = scaleName;
       const d = scaleData[scaleName];
-      const count = d ? (d.notes.length + d.roots.length) : 0;
+      const count = d ? (d.notes.length + d.roots.length + (d.blues ? d.blues.length : 0) + (d.extra ? d.extra.length : 0)) : 0;
       item.innerHTML = `${scaleName} <span class="dot-count">${count > 0 ? count : ''}</span>`;
       item.addEventListener('click', () => selectScale(scaleName));
       list.appendChild(item);
@@ -473,7 +473,7 @@ function initSvgGrid() {
       const noteCircle = document.createElementNS(NS, 'circle');
       noteCircle.setAttribute('cx', xCtr); noteCircle.setAttribute('cy', yCtr2);
       noteCircle.setAttribute('r', '28');
-      noteCircle.setAttribute('fill', 'rgba(130,40,210,0.92)');
+      noteCircle.setAttribute('fill', 'rgba(230,126,34,0.92)');
       noteCircle.setAttribute('opacity', '0');
       noteCircle.setAttribute('pointer-events', 'none');
 
@@ -481,7 +481,7 @@ function initSvgGrid() {
       const rootCircle = document.createElementNS(NS, 'circle');
       rootCircle.setAttribute('cx', xCtr); rootCircle.setAttribute('cy', yCtr2);
       rootCircle.setAttribute('r', '28');
-      rootCircle.setAttribute('fill', 'rgba(220,50,50,0.75)');
+      rootCircle.setAttribute('fill', 'rgba(139,0,0,0.85)');
       rootCircle.setAttribute('opacity', '0');
       rootCircle.setAttribute('pointer-events', 'none');
 
@@ -544,7 +544,7 @@ function toggleCell(key) {
 function updateDotCounts() {
   document.querySelectorAll('.scale-item').forEach(el => {
     const d = scaleData[el.dataset.scale];
-    const count = d ? (d.notes.length + d.roots.length + (d.extra ? d.extra.length : 0)) : 0;
+    const count = d ? (d.notes.length + d.roots.length + (d.blues ? d.blues.length : 0) + (d.extra ? d.extra.length : 0)) : 0;
     el.querySelector('.dot-count').textContent = count > 0 ? count : '';
   });
 }
