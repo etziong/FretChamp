@@ -17,6 +17,8 @@ const timerSecondsEl = document.getElementById('timer-seconds');
 let timerOn = false;
 let timerSeconds = 0;
 let timerIntervalId = null;
+let timerRoundTotal = 0;
+let timerRoundCount = 0;
 
 function formatTimerSeconds(total) {
   if (total < 60) return total + 's';
@@ -26,6 +28,10 @@ function formatTimerSeconds(total) {
 }
 
 function resetRoundTimer() {
+  if (timerOn && timerSeconds > 0) {
+    timerRoundTotal += timerSeconds;
+    timerRoundCount++;
+  }
   timerSeconds = 0;
   if (timerOn && timerSecondsEl) timerSecondsEl.textContent = formatTimerSeconds(timerSeconds);
 }
@@ -540,13 +546,14 @@ function getCurrentModeKey() {
   return gameMode;
 }
 
-function showScoreToast(scored, isNewRecord) {
+function showScoreToast(scored, isNewRecord, avgSeconds) {
   const existing = document.getElementById('score-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
   toast.id = 'score-toast';
   toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:white;padding:16px 28px;border-radius:14px;font-family:system-ui,sans-serif;text-align:center;z-index:2000;box-shadow:0 4px 24px rgba(0,0,0,0.6);opacity:1;transition:opacity 0.4s;white-space:nowrap;';
-  toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}`;
+  const avgLine = avgSeconds != null ? `<div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:6px;">Avg time per round: ${formatTimerSeconds(avgSeconds)}</div>` : '';
+  toast.innerHTML = `<div style="font-size:20px;font-weight:bold;margin-bottom:${isNewRecord ? 6 : 0}px;">You scored ${scored} points!</div>${isNewRecord ? '<div style="font-size:14px;color:#ffd700;letter-spacing:1px;">NEW HIGH SCORE!</div>' : ''}${avgLine}`;
   document.body.appendChild(toast);
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
 }
@@ -558,7 +565,8 @@ homeBtn.addEventListener('click', () => {
     const prev = parseInt(localStorage.getItem(storageKey) || '0');
     const isNew = score > prev;
     if (isNew) localStorage.setItem(storageKey, score);
-    showScoreToast(score, isNew);
+    const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
+    showScoreToast(score, isNew, avgSeconds);
   }
   document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
   instracEl.classList.remove('instrac-blink');
@@ -568,6 +576,8 @@ homeBtn.addEventListener('click', () => {
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
   clearScaleHighlights();
   score = 0;
+  timerRoundTotal = 0;
+  timerRoundCount = 0;
   scoreNumberEl.textContent = 0;
 });
 
