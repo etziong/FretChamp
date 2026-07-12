@@ -401,6 +401,7 @@ header nav img {
   align-items: center;
   cursor: pointer;
 }
+.timer-wrapper .peek-icon { margin-bottom: 4px; }
 .greed-mode .timer-wrapper,
 .three-chord-mode .timer-wrapper,
 .four-inverts-mode .timer-wrapper,
