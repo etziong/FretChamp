@@ -205,7 +205,19 @@ function createZoneOverlays() {
     rect.setAttribute('fill', 'transparent');
     rect.setAttribute('pointer-events', 'all');
 
+    const text = document.createElementNS(NS, 'text');
+    text.setAttribute('x', 355);
+    text.setAttribute('y', (zone.yStart + zone.yEnd) / 2);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'middle');
+    text.setAttribute('fill', 'rgba(200,200,200,0.85)');
+    text.setAttribute('font-size', '22');
+    text.setAttribute('font-family', 'system-ui, sans-serif');
+    text.setAttribute('pointer-events', 'none');
+    text.textContent = 'Tap to activate';
+
     g.appendChild(rect);
+    g.appendChild(text);
     g.addEventListener('click', () => { activeZoneIndex = i; refreshZoneOverlays(); });
     svg.appendChild(g);
     zoneOverlays.push(g);
@@ -217,9 +229,11 @@ function refreshZoneOverlays() {
   zoneOverlays.forEach((g, i) => {
     g.style.display = shouldShow ? '' : 'none';
     const rect = g.querySelector('rect');
+    const text = g.querySelector('text');
     const isActive = i === activeZoneIndex;
-    rect.setAttribute('fill', isActive ? 'rgba(0,0,0,0.5)' : 'transparent');
+    rect.setAttribute('fill', isActive ? 'transparent' : 'rgba(0,0,0,0.5)');
     rect.setAttribute('pointer-events', isActive ? 'none' : 'all');
+    text.setAttribute('opacity', isActive ? '0' : '1');
   });
 }
 
