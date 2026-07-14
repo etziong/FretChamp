@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neck Zone Boundary Picker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f1a;
+    color: white;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 { font-size: 18px; color: #7ec8e3; margin-bottom: 4px; }
+  p.instructions { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 16px; text-align: center; max-width: 480px; }
+  .wrapper { position: relative; width: 300px; }
+  .wrapper img { width: 100%; display: block; }
+  svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; }
+  .result {
+    margin-top: 16px;
+    background: #1a1a2e;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    min-width: 300px;
+    max-width: 480px;
+  }
+  .result b { color: #7ec8e3; }
+  button {
+    margin-top: 12px;
+    background: #4a9eff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button:hover { background: #3a8eef; }
+  .status { font-size: 12px; color: #4aff9e; margin-top: 8px; min-height: 16px; }
+</style>
+</head>
+<body>
+
+<h1>Neck Zone Boundary Picker</h1>
+<p class="instructions">Click on the image to mark the two boundary lines that split the neck into three zones.
+First click = boundary between zone 1 &amp; 2. Second click = boundary between zone 2 &amp; 3.
+Click again to redo either marker (resets both).</p>
+
+<div class="wrapper">
+  <img src="greed.png" alt="guitar neck" />
+  <svg id="overlay" viewBox="0 0 761 1904" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+
+<div class="result" id="result">Click the image to place the first boundary.</div>
+<button onclick="copyResult()">Copy result</button>
+<div class="status" id="status"></div>
+
+<script>
+// btnN spans fretBoundaries[N-1] to fretBoundaries[N]; btn1 = fret 0 (open), so real fret = btnN - 1
+const fretBoundaries = [0, 72, 198, 378, 502, 597, 699, 807, 900, 1000, 1105, 1193, 1286, 1387, 1904];
+const svg = document.getElementById('overlay');
+const NS = 'http://www.w3.org/2000/svg';
+const resultEl = document.getElementById('result');
+const statusEl = document.getElementById('status');
+let markers = [];
+
+function fretLabelForY(y) {
+  for (let i = 0; i < fretBoundaries.length - 1; i++) {
+    if (y >= fretBoundaries[i] && y < fretBoundaries[i + 1]) {
+      const realFret = i; // btn(i+1) => real fret i
+      return { btn: i + 1, realFret, rowStart: fretBoundaries[i], rowEnd: fretBoundaries[i + 1] };
+    }
+  }
+  return { btn: 13, realFret: 12, rowStart: fretBoundaries[13], rowEnd: fretBoundaries[14] };
+}
+
+// Draw reference lines + fret number labels
+for (let i = 1; i < fretBoundaries.length - 1; i++) {
+  const y = fretBoundaries[i];
+  const line = document.createElementNS(NS, 'line');
+  line.setAttribute('x1', 0); line.setAttribute('x2', 761);
+  line.setAttribute('y1', y); line.setAttribute('y2', y);
+  line.setAttribute('stroke', 'rgba(255,200,0,0.5)');
+  line.setAttribute('stroke-width', '2');
+  line.setAttribute('pointer-events', 'none');
+  svg.appendChild(line);
+
+  const label = document.createElementNS(NS, 'text');
+  label.setAttribute('x', 10);
+  label.setAttribute('y', y - 6);
+  label.setAttribute('fill', 'rgba(255,220,100,0.9)');
+  label.setAttribute('font-size', '22');
+  label.setAttribute('font-family', 'system-ui, sans-serif');
+  label.setAttribute('pointer-events', 'none');
+  label.textContent = 'fret ' + i;
+  svg.appendChild(label);
+}
+
+const markerLines = [];
+for (let i = 0; i < 2; i++) {
+  const line = document.createElementNS(NS, 'line');
+  line.setAttribute('x1', 0); line.setAttribute('x2', 761);
+  line.setAttribute('stroke', i === 0 ? '#ff5555' : '#55ff99');
+  line.setAttribute('stroke-width', '5');
+  line.setAttribute('opacity', '0');
+  line.setAttribute('pointer-events', 'none');
+  svg.appendChild(line);
+  markerLines.push(line);
+}
+
+svg.addEventListener('click', (e) => {
+  const rect = svg.getBoundingClientRect();
+  const relY = (e.clientY - rect.top) / rect.height;
+  const y = relY * 1904;
+
+  if (markers.length >= 2) markers = [];
+  markers.push(y);
+
+  markers.forEach((my, i) => {
+    markerLines[i].setAttribute('y1', my);
+    markerLines[i].setAttribute('y2', my);
+    markerLines[i].setAttribute('opacity', '1');
+  });
+  if (markers.length < 2) {
+    markerLines[1].setAttribute('opacity', '0');
+  }
+
+  renderResult();
+});
+
+function renderResult() {
+  if (markers.length === 0) {
+    resultEl.innerHTML = 'Click the image to place the first boundary.';
+    return;
+  }
+  if (markers.length === 1) {
+    const f1 = fretLabelForY(markers[0]);
+    resultEl.innerHTML = `<b>Boundary 1</b> near fret ${f1.realFret} (y=${Math.round(markers[0])}).<br>Now click the second boundary.`;
+    return;
+  }
+  const sorted = [...markers].sort((a, b) => a - b);
+  const f1 = fretLabelForY(sorted[0]);
+  const f2 = fretLabelForY(sorted[1]);
+  resultEl.innerHTML = `
+    <b>Zone 1 (top):</b> frets 0–${f1.realFret}<br>
+    <b>Zone 2 (middle):</b> frets ${f1.realFret + 1}–${f2.realFret}<br>
+    <b>Zone 3 (bottom):</b> frets ${f2.realFret + 1}–12<br>
+    <br>
+    <b>y boundaries:</b> ${Math.round(sorted[0])}, ${Math.round(sorted[1])}
+  `;
+}
+
+function copyResult() {
+  const text = resultEl.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    statusEl.textContent = 'Copied! Paste it back in the chat.';
+    setTimeout(() => statusEl.textContent = '', 3000);
+  }).catch(() => {
+    statusEl.textContent = 'Could not copy automatically — select the text manually.';
+  });
+}
+</script>
+</body>
+</html>
