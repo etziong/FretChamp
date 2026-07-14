@@ -102,6 +102,12 @@ function noteNameFromFreq(freq) {
 }
 
 function completeSingleNoteViaListen() {
+  targetKeys.forEach(key => {
+    if (svgCells[key]) {
+      svgCells[key].circle.setAttribute('fill', 'darkorange');
+      svgCells[key].circle.setAttribute('opacity', '1');
+    }
+  });
   targetKeys.clear();
   showWellDone();
   playBigSuccess();
