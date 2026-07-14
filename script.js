@@ -198,26 +198,14 @@ function createZoneOverlays() {
     g.style.cursor = 'pointer';
 
     const rect = document.createElementNS(NS, 'rect');
-    rect.setAttribute('x', 0);
+    rect.setAttribute('x', 150);
     rect.setAttribute('y', zone.yStart);
-    rect.setAttribute('width', 761);
+    rect.setAttribute('width', 410);
     rect.setAttribute('height', zone.yEnd - zone.yStart);
-    rect.setAttribute('fill', 'rgba(0,0,0,0.6)');
+    rect.setAttribute('fill', 'transparent');
     rect.setAttribute('pointer-events', 'all');
 
-    const text = document.createElementNS(NS, 'text');
-    text.setAttribute('x', 380.5);
-    text.setAttribute('y', (zone.yStart + zone.yEnd) / 2);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('dominant-baseline', 'middle');
-    text.setAttribute('fill', 'white');
-    text.setAttribute('font-size', '32');
-    text.setAttribute('font-family', 'system-ui, sans-serif');
-    text.setAttribute('pointer-events', 'none');
-    text.textContent = 'Tap to unlock';
-
     g.appendChild(rect);
-    g.appendChild(text);
     g.addEventListener('click', () => { activeZoneIndex = i; refreshZoneOverlays(); });
     svg.appendChild(g);
     zoneOverlays.push(g);
@@ -227,7 +215,11 @@ function createZoneOverlays() {
 function refreshZoneOverlays() {
   const shouldShow = listenOn && gameMode !== 'chord';
   zoneOverlays.forEach((g, i) => {
-    g.style.display = (shouldShow && i !== activeZoneIndex) ? '' : 'none';
+    g.style.display = shouldShow ? '' : 'none';
+    const rect = g.querySelector('rect');
+    const isActive = i === activeZoneIndex;
+    rect.setAttribute('fill', isActive ? 'rgba(130,190,255,0.3)' : 'transparent');
+    rect.setAttribute('pointer-events', isActive ? 'none' : 'all');
   });
 }
 
