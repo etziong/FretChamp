@@ -1005,7 +1005,7 @@ header nav img {
 
 .feedback.correct {
   opacity: 1;
-  color: rgb(255, 255, 255);
+  color: darkorange;
 }
 
 .feedback.incorrect {
