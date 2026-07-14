@@ -92,6 +92,22 @@ function computeRMS(buf) {
   return Math.sqrt(sum / buf.length);
 }
 
+const LISTEN_NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteNameFromFreq(freq) {
+  const noteNum = 12 * Math.log2(freq / 440) + 69;
+  const rounded = Math.round(noteNum);
+  const cents = (noteNum - rounded) * 100;
+  const pitchClass = ((rounded % 12) + 12) % 12;
+  return { name: LISTEN_NOTE_NAMES[pitchClass], cents };
+}
+
+function completeSingleNoteViaListen() {
+  targetKeys.clear();
+  showWellDone();
+  playBigSuccess();
+  nextRoundTimeout = setTimeout(nextRound, 2200);
+}
+
 // Classic autocorrelation pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch)
 function autoCorrelate(buf, sampleRate) {
   const SIZE = buf.length;
@@ -182,6 +198,50 @@ function processListenFrame() {
       }
     } else {
       chordMatchStreak = 0;
+    }
+  } else if (gameMode === 'single') {
+    // Audio alone can never tell WHICH physical position produced a note (only which
+    // note), so "find all positions" doesn't map to Listen input. Instead: any correct
+    // pluck of the target note, in any octave, completes the round outright.
+    const timeData = new Float32Array(listenAnalyser.fftSize);
+    listenAnalyser.getFloatTimeDomainData(timeData);
+    const rms = computeRMS(timeData);
+
+    if (noteIsActive) {
+      if (rms < ONSET_RELEASE_THRESHOLD) releaseStreak++;
+      else releaseStreak = 0;
+      if (releaseStreak >= RELEASE_FRAMES_NEEDED && performance.now() >= listenCooldownUntil) {
+        noteIsActive = false;
+        releaseStreak = 0;
+      }
+    } else if (rms >= ONSET_RMS_THRESHOLD) {
+      const freq = autoCorrelate(timeData, audioCtx.sampleRate);
+      if (freq > 0) {
+        const detected = noteNameFromFreq(freq);
+        if (Math.abs(detected.cents) <= PITCH_MATCH_CENTS) {
+          if (detected.name === lastPitchMatchKey) pitchMatchStreak++;
+          else { lastPitchMatchKey = detected.name; pitchMatchStreak = 1; }
+          if (pitchMatchStreak >= PITCH_MATCH_FRAMES_NEEDED) {
+            pitchMatchStreak = 0;
+            lastPitchMatchKey = null;
+            noteIsActive = true;
+            listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
+            if (detected.name === normalize(note)) {
+              completeSingleNoteViaListen();
+            } else {
+              feedbackEl.textContent = 'Try again';
+              feedbackEl.className = 'feedback incorrect';
+              setTimeout(() => { if (feedbackEl.textContent === 'Try again') feedbackEl.className = 'feedback'; }, 1500);
+            }
+          }
+        } else {
+          pitchMatchStreak = 0;
+          lastPitchMatchKey = null;
+        }
+      } else {
+        pitchMatchStreak = 0;
+        lastPitchMatchKey = null;
+      }
     }
   } else {
     let remainingKeys;
