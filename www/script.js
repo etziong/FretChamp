@@ -66,6 +66,7 @@ const listenStatusEl = document.getElementById('listen-status');
 let listenOn = false;
 let listenStream = null;
 let listenAnalyser = null;
+let listenChordAnalyser = null;
 let listenRafId = null;
 let pitchMatchStreak = 0;
 let lastPitchMatchKey = null;
@@ -199,7 +200,7 @@ function completeChordViaListen() {
 function processListenFrame() {
   if (!listenOn) return;
   if (gameMode === 'chord') {
-    const chroma = computeChroma(listenAnalyser, audioCtx.sampleRate);
+    const chroma = computeChroma(listenChordAnalyser, audioCtx.sampleRate);
     const targetPitchClasses = new Set(chordNotes.map(n => chromaticIdx[normalize(n)]));
     const sim = chordChromaSimilarity(chroma, targetPitchClasses);
     if (sim >= CHORD_MATCH_THRESHOLD) {
@@ -320,6 +321,15 @@ async function startListening() {
     listenAnalyser = audioCtx.createAnalyser();
     listenAnalyser.fftSize = 2048;
     source.connect(listenAnalyser);
+    // Separate, much higher-resolution analyser just for chord chroma detection:
+    // at 2048 the FFT bin width (~21Hz) is wider than the gap between adjacent low
+    // guitar notes (~5Hz around E2/F2), smearing energy across the wrong pitch
+    // classes. Kept as a second node so the monophonic autocorrelation (which reads
+    // a time-domain buffer sized off fftSize too) doesn't get a much bigger, slower
+    // buffer it doesn't need.
+    listenChordAnalyser = audioCtx.createAnalyser();
+    listenChordAnalyser.fftSize = 16384;
+    source.connect(listenChordAnalyser);
     listenOn = true;
     pitchMatchStreak = 0;
     lastPitchMatchKey = null;
@@ -349,6 +359,7 @@ function stopListening() {
   if (listenStream) listenStream.getTracks().forEach(t => t.stop());
   listenStream = null;
   listenAnalyser = null;
+  listenChordAnalyser = null;
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
 }
