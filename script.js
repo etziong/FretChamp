@@ -173,9 +173,9 @@ function completeChordViaListen() {
 // produced it, so when several target positions share a pitch, only one third of
 // the neck is "live" at a time — the other two are dimmed and tap-to-unlock.
 const NECK_ZONES = [
-  { minFret: 1, maxFret: 6,   yStart: 0,    yEnd: 699 },
-  { minFret: 7, maxFret: 11,  yStart: 699,  yEnd: 1193 },
-  { minFret: 12, maxFret: 13, yStart: 1193, yEnd: 1904 },
+  { minFret: 0, maxFret: 5,   yStart: 0,    yEnd: 627 },
+  { minFret: 6, maxFret: 12,  yStart: 627,  yEnd: 1362 },
+  { minFret: 13, maxFret: 13, yStart: 1362, yEnd: 1904 },
 ];
 let activeZoneIndex = 1;
 const zoneOverlays = [];
@@ -183,7 +183,7 @@ const zoneOverlays = [];
 function zoneIndexForKey(key) {
   const fret = parseInt(key.match(/btn(\d+)/)[1]);
   if (fret <= 6) return 0;
-  if (fret <= 11) return 1;
+  if (fret <= 13) return 1;
   return 2;
 }
 
