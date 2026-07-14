@@ -286,7 +286,8 @@ function processListenFrame() {
           remainingKeys.forEach(key => {
             const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
             if (lockedStrings.has(stringNum)) return;
-            const cents = Math.abs(centsOff(freq, freqFromKey(key)));
+            const keyFreq = bassMode ? freqFromKey(key) / 2 : freqFromKey(key);
+            const cents = Math.abs(centsOff(freq, keyFreq));
             if (cents < bestCents) { bestCents = cents; bestKey = key; }
           });
         }
