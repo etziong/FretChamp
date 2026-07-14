@@ -455,11 +455,25 @@ header nav img {
 .listen-wrapper.listen-error .peek-label { color: #ff5555; }
 .listen-mic-indicator {
   pointer-events: none;
+}
+.listen-mic-indicator > g {
   animation: listen-mic-pulse 1.2s ease-in-out infinite;
 }
 @keyframes listen-mic-pulse {
   0%, 100% { opacity: 0.35; }
   50% { opacity: 1; }
+}
+.listen-mic-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: listen-mic-ripple 2.4s ease-out infinite;
+}
+.listen-mic-ripple:nth-of-type(2) { animation-delay: 0.8s; }
+.listen-mic-ripple:nth-of-type(3) { animation-delay: 1.6s; }
+@keyframes listen-mic-ripple {
+  0% { transform: scale(0.4); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 .peek-btn {
   position: absolute;
