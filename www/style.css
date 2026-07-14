@@ -457,16 +457,14 @@ header nav img {
   pointer-events: none;
 }
 .listen-mic-ripple {
-  transform-box: fill-box;
-  transform-origin: center;
   opacity: 0;
   animation: listen-mic-ripple 2.4s ease-out infinite;
 }
 .listen-mic-ripple:nth-of-type(2) { animation-delay: 0.8s; }
 .listen-mic-ripple:nth-of-type(3) { animation-delay: 1.6s; }
 @keyframes listen-mic-ripple {
-  0% { transform: scale(0.4); opacity: 0.7; }
-  100% { transform: scale(3.2); opacity: 0; }
+  0% { r: 40px; stroke-width: 20px; opacity: 0.7; }
+  100% { r: 320px; stroke-width: 2px; opacity: 0; }
 }
 .peek-btn {
   position: absolute;
