@@ -168,78 +168,8 @@ function completeChordViaListen() {
   });
 }
 
-// ── Neck zones (disambiguate same-pitch positions while Listening) ─────────
-// Audio alone can tell which NOTE was played but never which physical string/fret
-// produced it, so when several target positions share a pitch, only one third of
-// the neck is "live" at a time — the other two are dimmed and tap-to-unlock.
-const NECK_ZONES = [
-  { minFret: 0, maxFret: 6,   yStart: 0,    yEnd: 783 },
-  { minFret: 7, maxFret: 12,  yStart: 783,  yEnd: 1363 },
-  { minFret: 13, maxFret: 13, yStart: 1363, yEnd: 1904 },
-];
-let activeZoneIndex = 0;
-const zoneOverlays = [];
-
-function zoneIndexForKey(key) {
-  const fret = parseInt(key.match(/btn(\d+)/)[1]);
-  if (fret <= 7) return 0;
-  if (fret <= 13) return 1;
-  return 2;
-}
-
-function createZoneOverlays() {
-  const svg = document.getElementById('fret-svg');
-  if (!svg) return;
-  const NS = 'http://www.w3.org/2000/svg';
-  NECK_ZONES.forEach((zone, i) => {
-    const g = document.createElementNS(NS, 'g');
-    g.classList.add('neck-zone-overlay');
-    g.style.display = 'none';
-    g.style.cursor = 'pointer';
-
-    const rect = document.createElementNS(NS, 'rect');
-    rect.setAttribute('x', 130);
-    rect.setAttribute('y', zone.yStart);
-    rect.setAttribute('width', 480);
-    rect.setAttribute('height', zone.yEnd - zone.yStart);
-    rect.setAttribute('fill', 'transparent');
-    rect.setAttribute('pointer-events', 'all');
-
-    const text = document.createElementNS(NS, 'text');
-    text.setAttribute('x', 355);
-    text.setAttribute('y', (zone.yStart + zone.yEnd) / 2);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('dominant-baseline', 'middle');
-    text.setAttribute('fill', 'rgba(160,160,160,0.9)');
-    text.setAttribute('font-size', '36');
-    text.setAttribute('font-family', 'system-ui, sans-serif');
-    text.setAttribute('pointer-events', 'none');
-    text.textContent = 'Tap to activate';
-
-    g.appendChild(rect);
-    g.appendChild(text);
-    g.addEventListener('click', () => { activeZoneIndex = i; refreshZoneOverlays(); });
-    svg.appendChild(g);
-    zoneOverlays.push(g);
-  });
-}
-
-function refreshZoneOverlays() {
-  const shouldShow = listenOn && gameMode !== 'chord';
-  zoneOverlays.forEach((g, i) => {
-    g.style.display = shouldShow ? '' : 'none';
-    const rect = g.querySelector('rect');
-    const text = g.querySelector('text');
-    const isActive = i === activeZoneIndex;
-    rect.setAttribute('fill', isActive ? 'transparent' : 'rgba(0,0,0,0.5)');
-    rect.setAttribute('pointer-events', isActive ? 'none' : 'all');
-    text.setAttribute('opacity', isActive ? '0' : '1');
-  });
-}
-
 function processListenFrame() {
   if (!listenOn) return;
-  refreshZoneOverlays();
   if (gameMode === 'chord') {
     const chroma = computeChroma(listenAnalyser, audioCtx.sampleRate);
     const targetPitchClasses = new Set(chordNotes.map(n => chromaticIdx[normalize(n)]));
@@ -260,7 +190,6 @@ function processListenFrame() {
     } else {
       remainingKeys = [...targetKeys];
     }
-    remainingKeys = remainingKeys.filter(k => zoneIndexForKey(k) === activeZoneIndex);
     if (remainingKeys.length > 0) {
       const timeData = new Float32Array(listenAnalyser.fftSize);
       listenAnalyser.getFloatTimeDomainData(timeData);
@@ -326,7 +255,6 @@ async function startListening() {
     noteIsActive = false;
     listenCooldownUntil = 0;
     releaseStreak = 0;
-    activeZoneIndex = 0;
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
@@ -351,7 +279,6 @@ function stopListening() {
   listenAnalyser = null;
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
-  refreshZoneOverlays();
 }
 
 if (listenWrapper) {
@@ -2474,7 +2401,6 @@ function startChordRound() {
 }
 
 initSvgGrid();
-createZoneOverlays();
 if (!SHOW_ALL_CIRCLES) highlightNotes(note);
 
 let scaleMarkMode = 'position';
