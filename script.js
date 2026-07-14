@@ -198,9 +198,9 @@ function createZoneOverlays() {
     g.style.cursor = 'pointer';
 
     const rect = document.createElementNS(NS, 'rect');
-    rect.setAttribute('x', 150);
+    rect.setAttribute('x', 130);
     rect.setAttribute('y', zone.yStart);
-    rect.setAttribute('width', 410);
+    rect.setAttribute('width', 480);
     rect.setAttribute('height', zone.yEnd - zone.yStart);
     rect.setAttribute('fill', 'transparent');
     rect.setAttribute('pointer-events', 'all');
