@@ -122,9 +122,9 @@ function createListenMicIndicator() {
   // Center of the icon (icon group is translated+scaled below; this point matches its middle).
   const cx = 360, cy = 970;
   g.innerHTML = `
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="18"/>
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="18"/>
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="18"/>
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
     <g transform="translate(240, 850) scale(10)">
       <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M5 10v1a7 7 0 0 0 14 0v-1" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
