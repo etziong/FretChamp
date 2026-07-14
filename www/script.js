@@ -125,7 +125,7 @@ function createListenMicIndicator() {
     <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
     <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
     <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="100" fill="none" stroke="white" stroke-width="15"/>
-    <g transform="translate(240, 850) scale(10)">
+    <g transform="translate(264, 874) scale(8)">
       <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M5 10v1a7 7 0 0 0 14 0v-1" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
