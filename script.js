@@ -207,23 +207,32 @@ function processListenFrame() {
 
 async function startListening() {
   try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
+    }
     listenStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    const source = audioCtx.createMediaStreamSource(listenStream);
+    listenAnalyser = audioCtx.createAnalyser();
+    listenAnalyser.fftSize = 2048;
+    source.connect(listenAnalyser);
+    listenOn = true;
+    pitchMatchStreak = 0;
+    lastPitchMatchKey = null;
+    chordMatchStreak = 0;
+    listenWrapper.classList.remove('listen-error');
+    listenWrapper.classList.add('listen-active');
+    listenStatusEl.textContent = 'Off';
+    processListenFrame();
   } catch (err) {
-    console.error('Microphone access denied or unavailable:', err);
-    return;
+    console.error('Listen failed to start:', err);
+    if (listenStream) { listenStream.getTracks().forEach(t => t.stop()); listenStream = null; }
+    listenOn = false;
+    listenWrapper.classList.remove('listen-active');
+    listenWrapper.classList.add('listen-error');
+    listenStatusEl.textContent = 'On';
+    alert('Listen error: ' + (err.name || 'Error') + ': ' + (err.message || err));
   }
-  if (audioCtx.state === 'suspended') await audioCtx.resume();
-  const source = audioCtx.createMediaStreamSource(listenStream);
-  listenAnalyser = audioCtx.createAnalyser();
-  listenAnalyser.fftSize = 2048;
-  source.connect(listenAnalyser);
-  listenOn = true;
-  pitchMatchStreak = 0;
-  lastPitchMatchKey = null;
-  chordMatchStreak = 0;
-  listenWrapper.classList.add('listen-active');
-  listenStatusEl.textContent = 'Off';
-  processListenFrame();
 }
 
 function stopListening() {

@@ -451,6 +451,8 @@ header nav img {
 .listen-wrapper:active { opacity: 0.6; }
 .listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
 .listen-wrapper.listen-active .peek-label { color: #4aff9e; }
+.listen-wrapper.listen-error .listen-icon { stroke: #ff5555; }
+.listen-wrapper.listen-error .peek-label { color: #ff5555; }
 .peek-btn {
   position: absolute;
   inset: 0;
