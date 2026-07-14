@@ -60,6 +60,190 @@ if (timerWrapper) {
   });
 }
 
+// ── Listen (microphone note/chord detection) ────────────────────────────────
+const listenWrapper = document.getElementById('listen-wrapper');
+const listenStatusEl = document.getElementById('listen-status');
+let listenOn = false;
+let listenStream = null;
+let listenAnalyser = null;
+let listenRafId = null;
+let pitchMatchStreak = 0;
+let lastPitchMatchKey = null;
+let chordMatchStreak = 0;
+const PITCH_MATCH_FRAMES_NEEDED = 3;
+const PITCH_MATCH_CENTS = 50;
+const CHORD_MATCH_FRAMES_NEEDED = 4;
+const CHORD_MATCH_THRESHOLD = 0.85;
+
+function centsOff(freqA, freqB) {
+  return 1200 * Math.log2(freqA / freqB);
+}
+
+// Classic autocorrelation pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch)
+function autoCorrelate(buf, sampleRate) {
+  const SIZE = buf.length;
+  let rms = 0;
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.01) return -1;
+
+  let r1 = 0, r2 = SIZE - 1;
+  const threshold = 0.2;
+  for (let i = 0; i < SIZE / 2; i++) { if (Math.abs(buf[i]) < threshold) { r1 = i; break; } }
+  for (let i = 1; i < SIZE / 2; i++) { if (Math.abs(buf[SIZE - i]) < threshold) { r2 = SIZE - i; break; } }
+  const trimmed = buf.slice(r1, r2);
+  const newSize = trimmed.length;
+  if (newSize < 2) return -1;
+
+  const c = new Array(newSize).fill(0);
+  for (let i = 0; i < newSize; i++) {
+    for (let j = 0; j < newSize - i; j++) c[i] += trimmed[j] * trimmed[j + i];
+  }
+
+  let d = 0;
+  while (d < newSize - 1 && c[d] > c[d + 1]) d++;
+  let maxval = -1, maxpos = -1;
+  for (let i = d; i < newSize; i++) {
+    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  }
+  let T0 = maxpos;
+  if (T0 <= 0 || T0 >= newSize - 1) return -1;
+
+  const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+  const a = (x1 + x3 - 2 * x2) / 2;
+  const b = (x3 - x1) / 2;
+  if (a) T0 = T0 - b / (2 * a);
+
+  return T0 > 0 ? sampleRate / T0 : -1;
+}
+
+// Frequency-domain chroma vector (12 pitch classes), normalized to unit length
+function computeChroma(analyser, sampleRate) {
+  const freqData = new Float32Array(analyser.frequencyBinCount);
+  analyser.getFloatFrequencyData(freqData);
+  const chroma = new Array(12).fill(0);
+  const nyquist = sampleRate / 2;
+  const binHz = nyquist / freqData.length;
+  for (let i = 1; i < freqData.length; i++) {
+    const db = freqData[i];
+    if (db < -70) continue;
+    const freq = i * binHz;
+    if (freq < 70 || freq > 1200) continue;
+    const amplitude = Math.pow(10, db / 20);
+    const noteNum = 12 * Math.log2(freq / 440) + 69;
+    const pitchClass = ((Math.round(noteNum) % 12) + 12) % 12;
+    chroma[pitchClass] += amplitude;
+  }
+  const mag = Math.sqrt(chroma.reduce((s, v) => s + v * v, 0)) || 1;
+  return chroma.map(v => v / mag);
+}
+
+function chordChromaSimilarity(liveChroma, pitchClassSet) {
+  const target = new Array(12).fill(0);
+  pitchClassSet.forEach(pc => { target[pc] = 1; });
+  const mag = Math.sqrt(target.reduce((s, v) => s + v * v, 0)) || 1;
+  let dot = 0;
+  for (let i = 0; i < 12; i++) dot += liveChroma[i] * (target[i] / mag);
+  return dot;
+}
+
+function completeChordViaListen() {
+  const remaining = chordNotes.filter(n => !foundChordNotes.has(n));
+  remaining.forEach(noteName => {
+    const key = [...targetKeys].find(k => normalize(neckNotes[k]) === normalize(noteName));
+    if (key) handleFretClick({ currentTarget: { dataset: { key } } });
+  });
+}
+
+function processListenFrame() {
+  if (!listenOn) return;
+  if (gameMode === 'chord') {
+    const chroma = computeChroma(listenAnalyser, audioCtx.sampleRate);
+    const targetPitchClasses = new Set(chordNotes.map(n => chromaticIdx[normalize(n)]));
+    const sim = chordChromaSimilarity(chroma, targetPitchClasses);
+    if (sim >= CHORD_MATCH_THRESHOLD) {
+      chordMatchStreak++;
+      if (chordMatchStreak >= CHORD_MATCH_FRAMES_NEEDED) {
+        chordMatchStreak = 0;
+        completeChordViaListen();
+      }
+    } else {
+      chordMatchStreak = 0;
+    }
+  } else {
+    let remainingKeys;
+    if (gameMode === 'freeplay') {
+      remainingKeys = scaleGameActive ? [...scaleGameNotes].filter(k => !scaleGameFound.has(k)) : [];
+    } else {
+      remainingKeys = [...targetKeys];
+    }
+    if (remainingKeys.length > 0) {
+      const timeData = new Float32Array(listenAnalyser.fftSize);
+      listenAnalyser.getFloatTimeDomainData(timeData);
+      const freq = autoCorrelate(timeData, audioCtx.sampleRate);
+      let bestKey = null, bestCents = Infinity;
+      if (freq > 0) {
+        remainingKeys.forEach(key => {
+          const cents = Math.abs(centsOff(freq, freqFromKey(key)));
+          if (cents < bestCents) { bestCents = cents; bestKey = key; }
+        });
+      }
+      if (bestKey && bestCents <= PITCH_MATCH_CENTS) {
+        if (bestKey === lastPitchMatchKey) pitchMatchStreak++;
+        else { lastPitchMatchKey = bestKey; pitchMatchStreak = 1; }
+        if (pitchMatchStreak >= PITCH_MATCH_FRAMES_NEEDED) {
+          pitchMatchStreak = 0;
+          lastPitchMatchKey = null;
+          handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
+        }
+      } else {
+        pitchMatchStreak = 0;
+        lastPitchMatchKey = null;
+      }
+    }
+  }
+  listenRafId = requestAnimationFrame(processListenFrame);
+}
+
+async function startListening() {
+  try {
+    listenStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    console.error('Microphone access denied or unavailable:', err);
+    return;
+  }
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+  const source = audioCtx.createMediaStreamSource(listenStream);
+  listenAnalyser = audioCtx.createAnalyser();
+  listenAnalyser.fftSize = 2048;
+  source.connect(listenAnalyser);
+  listenOn = true;
+  pitchMatchStreak = 0;
+  lastPitchMatchKey = null;
+  chordMatchStreak = 0;
+  listenWrapper.classList.add('listen-active');
+  listenStatusEl.textContent = 'Off';
+  processListenFrame();
+}
+
+function stopListening() {
+  listenOn = false;
+  if (listenRafId) cancelAnimationFrame(listenRafId);
+  listenRafId = null;
+  if (listenStream) listenStream.getTracks().forEach(t => t.stop());
+  listenStream = null;
+  listenAnalyser = null;
+  if (listenWrapper) listenWrapper.classList.remove('listen-active');
+  if (listenStatusEl) listenStatusEl.textContent = 'On';
+}
+
+if (listenWrapper) {
+  listenWrapper.addEventListener('click', () => {
+    if (listenOn) stopListening();
+    else startListening();
+  });
+}
+
 const svgCells = {};
 let targetKeys = new Set();
 
@@ -563,6 +747,7 @@ function showScoreToast(scored, isNewRecord, avgSeconds) {
 }
 
 homeBtn.addEventListener('click', () => {
+  if (listenOn) stopListening();
   const modeKey = getCurrentModeKey();
   if (score > 0 && HIGH_SCORE_MODES[modeKey]) {
     const storageKey = `hs_${modeKey}`;

@@ -428,6 +428,29 @@ header nav img {
 .timer-wrapper.timer-active #timer-icon { display: none; }
 .timer-wrapper.timer-active .timer-seconds-display { display: inline-block; }
 .timer-wrapper.timer-active .peek-label { color: darkorange; }
+.listen-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.greed-mode .listen-wrapper,
+.three-chord-mode .listen-wrapper,
+.four-inverts-mode .listen-wrapper,
+.slash-chord-mode .listen-wrapper,
+.four-chord-mode .listen-wrapper,
+.scales-mode .listen-wrapper,
+.basic-chord-mode .listen-wrapper,
+.single-note-mode .listen-wrapper {
+  display: flex;
+}
+.free-playing-mode .listen-wrapper {
+  display: none;
+}
+.listen-wrapper:active { opacity: 0.6; }
+.listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
+.listen-wrapper.listen-active .peek-label { color: #4aff9e; }
 .peek-btn {
   position: absolute;
   inset: 0;
