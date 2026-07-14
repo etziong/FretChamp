@@ -175,7 +175,7 @@ function completeChordViaListen() {
 const NECK_ZONES = [
   { minFret: 1, maxFret: 4,  yStart: 0,    yEnd: 502 },
   { minFret: 5, maxFret: 8,  yStart: 502,  yEnd: 900 },
-  { minFret: 9, maxFret: 13, yStart: 900,  yEnd: 1387 },
+  { minFret: 9, maxFret: 13, yStart: 900,  yEnd: 1904 },
 ];
 let activeZoneIndex = 1;
 const zoneOverlays = [];
