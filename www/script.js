@@ -120,12 +120,12 @@ function createListenMicIndicator() {
   g.style.display = 'none';
 
   // Center of the icon (icon group is translated+scaled below; this point matches its middle).
-  const cx = 340, cy = 970;
+  const cx = 360, cy = 970;
   g.innerHTML = `
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="darkorange" stroke-width="3"/>
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="darkorange" stroke-width="3"/>
-    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="darkorange" stroke-width="3"/>
-    <g transform="translate(220, 850) scale(10)">
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="white" stroke-width="7"/>
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="white" stroke-width="7"/>
+    <circle class="listen-mic-ripple" cx="${cx}" cy="${cy}" r="70" fill="none" stroke="white" stroke-width="7"/>
+    <g transform="translate(240, 850) scale(10)">
       <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="darkorange" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M5 10v1a7 7 0 0 0 14 0v-1" fill="none" stroke="darkorange" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="12" y1="18" x2="12" y2="22" stroke="darkorange" stroke-width="1.6" stroke-linecap="round"/>
