@@ -83,6 +83,43 @@ const ONSET_RELEASE_THRESHOLD = 0.012;
 const ONSET_COOLDOWN_MS = 400;
 const RELEASE_FRAMES_NEEDED = 5;
 
+// Big note-name circles shown on a successful Listen match, replacing the scattered
+// small-dot flash across real fret positions (which for a chord spans several
+// inversions at once and reads as noise) with a single readable stacked list.
+let listenBigCircles = [];
+const LISTEN_BIG_CIRCLE_COLORS = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
+
+function listenBigCircleYPositions(n) {
+  const top = 300, bottom = 1200;
+  if (n <= 1) return [(top + bottom) / 2];
+  const step = (bottom - top) / (n - 1);
+  return Array.from({ length: n }, (_, i) => top + i * step);
+}
+
+function showListenBigCircles(notes, colors) {
+  const ys = listenBigCircleYPositions(notes.length);
+  listenBigCircles.forEach((bc, i) => {
+    if (i < notes.length) {
+      bc.circle.setAttribute('cy', ys[i]);
+      bc.circle.setAttribute('fill', colors[i]);
+      bc.circle.setAttribute('opacity', '1');
+      bc.text.setAttribute('y', ys[i]);
+      bc.text.textContent = notes[i];
+      bc.text.setAttribute('opacity', '1');
+    } else {
+      bc.circle.setAttribute('opacity', '0');
+      bc.text.setAttribute('opacity', '0');
+    }
+  });
+}
+
+function hideListenBigCircles() {
+  listenBigCircles.forEach(bc => {
+    bc.circle.setAttribute('opacity', '0');
+    bc.text.setAttribute('opacity', '0');
+  });
+}
+
 function centsOff(freqA, freqB) {
   return 1200 * Math.log2(freqA / freqB);
 }
@@ -102,19 +139,8 @@ function noteNameFromFreq(freq) {
   return { name: LISTEN_NOTE_NAMES[pitchClass], cents };
 }
 
-function completeSingleNoteViaListen(detectedFreq) {
-  // Only light up positions in the SAME octave that was actually played (like the
-  // "Notes" staff-display mode already restricts to one octave), not every octave
-  // of the note across the whole neck.
-  const midiNum = Math.round(12 * Math.log2(detectedFreq / 440) + 69);
-  const playedAbs = midiNum - 12;
-  const octaveKeys = new Set(findAllKeysAtPitch(normalize(note), playedAbs));
-  targetKeys.forEach(key => {
-    if (svgCells[key] && octaveKeys.has(key)) {
-      svgCells[key].circle.setAttribute('fill', 'darkorange');
-      svgCells[key].circle.setAttribute('opacity', '1');
-    }
-  });
+function completeSingleNoteViaListen() {
+  showListenBigCircles([note], ['darkorange']);
   targetKeys.clear();
   showWellDone();
   playBigSuccess();
@@ -190,11 +216,14 @@ function chordChromaSimilarity(liveChroma, pitchClassSet) {
 }
 
 function completeChordViaListen() {
-  const remaining = chordNotes.filter(n => !foundChordNotes.has(n));
-  remaining.forEach(noteName => {
-    const key = [...targetKeys].find(k => normalize(neckNotes[k]) === normalize(noteName));
-    if (key) handleFretClick({ currentTarget: { dataset: { key } } });
-  });
+  showListenBigCircles(chordNotes, LISTEN_BIG_CIRCLE_COLORS);
+  targetKeys.clear();
+  score++;
+  scoreNumberEl.textContent = score;
+  showWellDone();
+  playChordTogether(chordNotes);
+  setTimeout(playBigSuccess, 1300);
+  nextRoundTimeout = setTimeout(nextRound, 2200);
 }
 
 function processListenFrame() {
@@ -240,7 +269,7 @@ function processListenFrame() {
             noteIsActive = true;
             listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
             if (detected.name === normalize(note)) {
-              completeSingleNoteViaListen(freq);
+              completeSingleNoteViaListen();
             } else {
               feedbackEl.textContent = 'Try again';
               feedbackEl.className = 'feedback incorrect';
@@ -361,6 +390,7 @@ function stopListening() {
   listenStream = null;
   listenAnalyser = null;
   listenChordAnalyser = null;
+  hideListenBigCircles();
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
 }
@@ -684,6 +714,30 @@ function initSvgGrid() {
       rect.addEventListener('pointerup', restoreScaleDot);
       rect.addEventListener('pointercancel', restoreScaleDot);
     }
+  }
+
+  const bigCircleCx = 380.5;
+  for (let i = 0; i < 4; i++) {
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', bigCircleCx);
+    circle.setAttribute('r', '65');
+    circle.setAttribute('opacity', '0');
+    circle.setAttribute('pointer-events', 'none');
+    const text = document.createElementNS(NS, 'text');
+    text.setAttribute('x', bigCircleCx);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'central');
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-size', '44');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-family', 'system-ui, sans-serif');
+    text.setAttribute('direction', 'ltr');
+    text.setAttribute('unicode-bidi', 'bidi-override');
+    text.setAttribute('opacity', '0');
+    text.setAttribute('pointer-events', 'none');
+    svg.appendChild(circle);
+    svg.appendChild(text);
+    listenBigCircles.push({ circle, text });
   }
 }
 
@@ -2767,6 +2821,7 @@ window.addEventListener('load', () => {
 
 function nextRound() {
   clearTimeout(nextRoundTimeout);
+  hideListenBigCircles();
   noteNameDisplay.classList.remove('well-done');
   feedbackEl.className = 'feedback';
   feedbackEl.textContent = '';
