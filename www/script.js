@@ -101,9 +101,15 @@ function noteNameFromFreq(freq) {
   return { name: LISTEN_NOTE_NAMES[pitchClass], cents };
 }
 
-function completeSingleNoteViaListen() {
+function completeSingleNoteViaListen(detectedFreq) {
+  // Only light up positions in the SAME octave that was actually played (like the
+  // "Notes" staff-display mode already restricts to one octave), not every octave
+  // of the note across the whole neck.
+  const midiNum = Math.round(12 * Math.log2(detectedFreq / 440) + 69);
+  const playedAbs = midiNum - 12;
+  const octaveKeys = new Set(findAllKeysAtPitch(normalize(note), playedAbs));
   targetKeys.forEach(key => {
-    if (svgCells[key]) {
+    if (svgCells[key] && octaveKeys.has(key)) {
       svgCells[key].circle.setAttribute('fill', 'darkorange');
       svgCells[key].circle.setAttribute('opacity', '1');
     }
@@ -233,7 +239,7 @@ function processListenFrame() {
             noteIsActive = true;
             listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
             if (detected.name === normalize(note)) {
-              completeSingleNoteViaListen();
+              completeSingleNoteViaListen(freq);
             } else {
               feedbackEl.textContent = 'Try again';
               feedbackEl.className = 'feedback incorrect';
