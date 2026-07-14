@@ -453,6 +453,14 @@ header nav img {
 .listen-wrapper.listen-active .peek-label { color: #4aff9e; }
 .listen-wrapper.listen-error .listen-icon { stroke: #ff5555; }
 .listen-wrapper.listen-error .peek-label { color: #ff5555; }
+.listen-mic-indicator {
+  pointer-events: none;
+  animation: listen-mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes listen-mic-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
 .peek-btn {
   position: absolute;
   inset: 0;

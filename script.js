@@ -108,6 +108,32 @@ function completeSingleNoteViaListen() {
   nextRoundTimeout = setTimeout(nextRound, 2200);
 }
 
+// Big pulsing mic placeholder shown over the grid in Single Note mode while
+// Listening, since no specific position is highlighted (see completeSingleNoteViaListen).
+let listenMicIndicator = null;
+function createListenMicIndicator() {
+  const svg = document.getElementById('fret-svg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const g = document.createElementNS(NS, 'g');
+  g.setAttribute('transform', 'translate(300, 850) scale(10)');
+  g.setAttribute('class', 'listen-mic-indicator');
+  g.style.display = 'none';
+  g.innerHTML = `
+    <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="darkorange" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M5 10v1a7 7 0 0 0 14 0v-1" fill="none" stroke="darkorange" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="12" y1="18" x2="12" y2="22" stroke="darkorange" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="8" y1="22" x2="16" y2="22" stroke="darkorange" stroke-width="1.6" stroke-linecap="round"/>
+  `;
+  svg.appendChild(g);
+  listenMicIndicator = g;
+}
+
+function updateListenMicIndicator() {
+  if (!listenMicIndicator) return;
+  listenMicIndicator.style.display = (listenOn && gameMode === 'single') ? '' : 'none';
+}
+
 // Classic autocorrelation pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch)
 function autoCorrelate(buf, sampleRate) {
   const SIZE = buf.length;
@@ -318,6 +344,7 @@ async function startListening() {
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
+    updateListenMicIndicator();
     processListenFrame();
   } catch (err) {
     console.error('Listen failed to start:', err);
@@ -339,6 +366,7 @@ function stopListening() {
   listenAnalyser = null;
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
+  updateListenMicIndicator();
 }
 
 if (listenWrapper) {
@@ -2461,6 +2489,7 @@ function startChordRound() {
 }
 
 initSvgGrid();
+createListenMicIndicator();
 if (!SHOW_ALL_CIRCLES) highlightNotes(note);
 
 let scaleMarkMode = 'position';
