@@ -177,7 +177,7 @@ const NECK_ZONES = [
   { minFret: 6, maxFret: 12,  yStart: 627,  yEnd: 1362 },
   { minFret: 13, maxFret: 13, yStart: 1362, yEnd: 1904 },
 ];
-let activeZoneIndex = 1;
+let activeZoneIndex = 0;
 const zoneOverlays = [];
 
 function zoneIndexForKey(key) {
@@ -210,8 +210,8 @@ function createZoneOverlays() {
     text.setAttribute('y', (zone.yStart + zone.yEnd) / 2);
     text.setAttribute('text-anchor', 'middle');
     text.setAttribute('dominant-baseline', 'middle');
-    text.setAttribute('fill', 'rgba(200,200,200,0.85)');
-    text.setAttribute('font-size', '22');
+    text.setAttribute('fill', 'rgba(160,160,160,0.9)');
+    text.setAttribute('font-size', '36');
     text.setAttribute('font-family', 'system-ui, sans-serif');
     text.setAttribute('pointer-events', 'none');
     text.textContent = 'Tap to activate';
@@ -326,7 +326,7 @@ async function startListening() {
     noteIsActive = false;
     listenCooldownUntil = 0;
     releaseStreak = 0;
-    activeZoneIndex = 1;
+    activeZoneIndex = 0;
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
