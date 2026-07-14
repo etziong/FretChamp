@@ -456,13 +456,6 @@ header nav img {
 .listen-mic-indicator {
   pointer-events: none;
 }
-.listen-mic-indicator > g {
-  animation: listen-mic-pulse 1.2s ease-in-out infinite;
-}
-@keyframes listen-mic-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
-}
 .listen-mic-ripple {
   transform-box: fill-box;
   transform-origin: center;
