@@ -71,12 +71,16 @@ let pitchMatchStreak = 0;
 let lastPitchMatchKey = null;
 let chordMatchStreak = 0;
 let noteIsActive = false;
+let listenCooldownUntil = 0;
+let releaseStreak = 0;
 const PITCH_MATCH_FRAMES_NEEDED = 3;
 const PITCH_MATCH_CENTS = 50;
 const CHORD_MATCH_FRAMES_NEEDED = 4;
 const CHORD_MATCH_THRESHOLD = 0.85;
 const ONSET_RMS_THRESHOLD = 0.02;
 const ONSET_RELEASE_THRESHOLD = 0.012;
+const ONSET_COOLDOWN_MS = 400;
+const RELEASE_FRAMES_NEEDED = 5;
 
 function centsOff(freqA, freqB) {
   return 1200 * Math.log2(freqA / freqB);
@@ -192,9 +196,16 @@ function processListenFrame() {
       const rms = computeRMS(timeData);
 
       if (noteIsActive) {
-        // A note is already ringing — wait for it to decay before accepting a new pluck,
-        // so one sustained note isn't repeatedly matched against every identical-pitch position.
-        if (rms < ONSET_RELEASE_THRESHOLD) noteIsActive = false;
+        // A note is already ringing — require several consecutive quiet frames (not
+        // just one) AND the cooldown to elapse before treating it as released, so a
+        // brief dip anywhere in a still-ringing note's envelope (tremolo, sympathetic
+        // resonance) can't look like the note ending and a new one starting.
+        if (rms < ONSET_RELEASE_THRESHOLD) releaseStreak++;
+        else releaseStreak = 0;
+        if (releaseStreak >= RELEASE_FRAMES_NEEDED && performance.now() >= listenCooldownUntil) {
+          noteIsActive = false;
+          releaseStreak = 0;
+        }
       } else if (rms >= ONSET_RMS_THRESHOLD) {
         const freq = autoCorrelate(timeData, audioCtx.sampleRate);
         let bestKey = null, bestCents = Infinity;
@@ -213,6 +224,7 @@ function processListenFrame() {
             pitchMatchStreak = 0;
             lastPitchMatchKey = null;
             noteIsActive = true;
+            listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
             handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
           }
         } else {
@@ -241,6 +253,8 @@ async function startListening() {
     lastPitchMatchKey = null;
     chordMatchStreak = 0;
     noteIsActive = false;
+    listenCooldownUntil = 0;
+    releaseStreak = 0;
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
