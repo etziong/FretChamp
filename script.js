@@ -218,7 +218,7 @@ function refreshZoneOverlays() {
     g.style.display = shouldShow ? '' : 'none';
     const rect = g.querySelector('rect');
     const isActive = i === activeZoneIndex;
-    rect.setAttribute('fill', isActive ? 'rgba(130,190,255,0.3)' : 'transparent');
+    rect.setAttribute('fill', isActive ? 'rgba(0,0,0,0.5)' : 'transparent');
     rect.setAttribute('pointer-events', isActive ? 'none' : 'all');
   });
 }
