@@ -168,8 +168,72 @@ function completeChordViaListen() {
   });
 }
 
+// ── Neck zones (disambiguate same-pitch positions while Listening) ─────────
+// Audio alone can tell which NOTE was played but never which physical string/fret
+// produced it, so when several target positions share a pitch, only one third of
+// the neck is "live" at a time — the other two are dimmed and tap-to-unlock.
+const NECK_ZONES = [
+  { minFret: 1, maxFret: 4,  yStart: 0,    yEnd: 502 },
+  { minFret: 5, maxFret: 8,  yStart: 502,  yEnd: 900 },
+  { minFret: 9, maxFret: 13, yStart: 900,  yEnd: 1387 },
+];
+let activeZoneIndex = 1;
+const zoneOverlays = [];
+
+function zoneIndexForKey(key) {
+  const fret = parseInt(key.match(/btn(\d+)/)[1]);
+  if (fret <= 4) return 0;
+  if (fret <= 8) return 1;
+  return 2;
+}
+
+function createZoneOverlays() {
+  const svg = document.getElementById('fret-svg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  NECK_ZONES.forEach((zone, i) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('neck-zone-overlay');
+    g.style.display = 'none';
+    g.style.cursor = 'pointer';
+
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', 0);
+    rect.setAttribute('y', zone.yStart);
+    rect.setAttribute('width', 761);
+    rect.setAttribute('height', zone.yEnd - zone.yStart);
+    rect.setAttribute('fill', 'rgba(0,0,0,0.6)');
+    rect.setAttribute('pointer-events', 'all');
+
+    const text = document.createElementNS(NS, 'text');
+    text.setAttribute('x', 380.5);
+    text.setAttribute('y', (zone.yStart + zone.yEnd) / 2);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('dominant-baseline', 'middle');
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-size', '32');
+    text.setAttribute('font-family', 'system-ui, sans-serif');
+    text.setAttribute('pointer-events', 'none');
+    text.textContent = 'Tap to unlock';
+
+    g.appendChild(rect);
+    g.appendChild(text);
+    g.addEventListener('click', () => { activeZoneIndex = i; refreshZoneOverlays(); });
+    svg.appendChild(g);
+    zoneOverlays.push(g);
+  });
+}
+
+function refreshZoneOverlays() {
+  const shouldShow = listenOn && gameMode !== 'chord';
+  zoneOverlays.forEach((g, i) => {
+    g.style.display = (shouldShow && i !== activeZoneIndex) ? '' : 'none';
+  });
+}
+
 function processListenFrame() {
   if (!listenOn) return;
+  refreshZoneOverlays();
   if (gameMode === 'chord') {
     const chroma = computeChroma(listenAnalyser, audioCtx.sampleRate);
     const targetPitchClasses = new Set(chordNotes.map(n => chromaticIdx[normalize(n)]));
@@ -190,6 +254,7 @@ function processListenFrame() {
     } else {
       remainingKeys = [...targetKeys];
     }
+    remainingKeys = remainingKeys.filter(k => zoneIndexForKey(k) === activeZoneIndex);
     if (remainingKeys.length > 0) {
       const timeData = new Float32Array(listenAnalyser.fftSize);
       listenAnalyser.getFloatTimeDomainData(timeData);
@@ -255,6 +320,7 @@ async function startListening() {
     noteIsActive = false;
     listenCooldownUntil = 0;
     releaseStreak = 0;
+    activeZoneIndex = 1;
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
@@ -279,6 +345,7 @@ function stopListening() {
   listenAnalyser = null;
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
+  refreshZoneOverlays();
 }
 
 if (listenWrapper) {
@@ -2401,6 +2468,7 @@ function startChordRound() {
 }
 
 initSvgGrid();
+createZoneOverlays();
 if (!SHOW_ALL_CIRCLES) highlightNotes(note);
 
 let scaleMarkMode = 'position';
