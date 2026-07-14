@@ -70,13 +70,26 @@ let listenRafId = null;
 let pitchMatchStreak = 0;
 let lastPitchMatchKey = null;
 let chordMatchStreak = 0;
+let noteIsActive = false;
+let listenCooldownUntil = 0;
+let releaseStreak = 0;
 const PITCH_MATCH_FRAMES_NEEDED = 3;
 const PITCH_MATCH_CENTS = 50;
 const CHORD_MATCH_FRAMES_NEEDED = 4;
 const CHORD_MATCH_THRESHOLD = 0.85;
+const ONSET_RMS_THRESHOLD = 0.02;
+const ONSET_RELEASE_THRESHOLD = 0.012;
+const ONSET_COOLDOWN_MS = 400;
+const RELEASE_FRAMES_NEEDED = 5;
 
 function centsOff(freqA, freqB) {
   return 1200 * Math.log2(freqA / freqB);
+}
+
+function computeRMS(buf) {
+  let sum = 0;
+  for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+  return Math.sqrt(sum / buf.length);
 }
 
 // Classic autocorrelation pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch)
@@ -180,25 +193,44 @@ function processListenFrame() {
     if (remainingKeys.length > 0) {
       const timeData = new Float32Array(listenAnalyser.fftSize);
       listenAnalyser.getFloatTimeDomainData(timeData);
-      const freq = autoCorrelate(timeData, audioCtx.sampleRate);
-      let bestKey = null, bestCents = Infinity;
-      if (freq > 0) {
-        remainingKeys.forEach(key => {
-          const cents = Math.abs(centsOff(freq, freqFromKey(key)));
-          if (cents < bestCents) { bestCents = cents; bestKey = key; }
-        });
-      }
-      if (bestKey && bestCents <= PITCH_MATCH_CENTS) {
-        if (bestKey === lastPitchMatchKey) pitchMatchStreak++;
-        else { lastPitchMatchKey = bestKey; pitchMatchStreak = 1; }
-        if (pitchMatchStreak >= PITCH_MATCH_FRAMES_NEEDED) {
+      const rms = computeRMS(timeData);
+
+      if (noteIsActive) {
+        // A note is already ringing — require several consecutive quiet frames (not
+        // just one) AND the cooldown to elapse before treating it as released, so a
+        // brief dip anywhere in a still-ringing note's envelope (tremolo, sympathetic
+        // resonance) can't look like the note ending and a new one starting.
+        if (rms < ONSET_RELEASE_THRESHOLD) releaseStreak++;
+        else releaseStreak = 0;
+        if (releaseStreak >= RELEASE_FRAMES_NEEDED && performance.now() >= listenCooldownUntil) {
+          noteIsActive = false;
+          releaseStreak = 0;
+        }
+      } else if (rms >= ONSET_RMS_THRESHOLD) {
+        const freq = autoCorrelate(timeData, audioCtx.sampleRate);
+        let bestKey = null, bestCents = Infinity;
+        if (freq > 0) {
+          remainingKeys.forEach(key => {
+            const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
+            if (lockedStrings.has(stringNum)) return;
+            const cents = Math.abs(centsOff(freq, freqFromKey(key)));
+            if (cents < bestCents) { bestCents = cents; bestKey = key; }
+          });
+        }
+        if (bestKey && bestCents <= PITCH_MATCH_CENTS) {
+          if (bestKey === lastPitchMatchKey) pitchMatchStreak++;
+          else { lastPitchMatchKey = bestKey; pitchMatchStreak = 1; }
+          if (pitchMatchStreak >= PITCH_MATCH_FRAMES_NEEDED) {
+            pitchMatchStreak = 0;
+            lastPitchMatchKey = null;
+            noteIsActive = true;
+            listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
+            handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
+          }
+        } else {
           pitchMatchStreak = 0;
           lastPitchMatchKey = null;
-          handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
         }
-      } else {
-        pitchMatchStreak = 0;
-        lastPitchMatchKey = null;
       }
     }
   }
@@ -220,6 +252,9 @@ async function startListening() {
     pitchMatchStreak = 0;
     lastPitchMatchKey = null;
     chordMatchStreak = 0;
+    noteIsActive = false;
+    listenCooldownUntil = 0;
+    releaseStreak = 0;
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
