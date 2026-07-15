@@ -438,6 +438,9 @@ header nav img {
 .free-playing-mode .timer-wrapper {
   display: none;
 }
+.school-mode .timer-wrapper {
+  display: none;
+}
 .timer-wrapper:active { opacity: 0.6; }
 .timer-seconds-display {
   display: none;
@@ -458,9 +461,8 @@ header nav img {
   cursor: pointer;
   margin-top: 8px;
 }
-.school-mode .listen-wrapper {
-  display: flex;
-}
+/* Listen is only shown once a lesson is actually active, not on the class-list screen
+   -- there's no lesson-active state yet, so it stays hidden in school-mode for now. */
 .listen-wrapper:active { opacity: 0.6; }
 .listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
 .listen-wrapper.listen-active .peek-label { color: #4aff9e; }
@@ -1103,6 +1105,10 @@ header nav img {
 .free-playing-mode .mute-wrapper:has(.next-btn) {
   display: none;
 }
+.school-mode .mute-wrapper:has(.mute-btn),
+.school-mode .mute-wrapper:has(.next-btn) {
+  display: none;
+}
 
 
 .free-play-mode .string-lock-section {
@@ -1173,6 +1179,23 @@ header nav img {
 
 .class-check.checked::after {
   content: '\2713';
+}
+
+.class-header-row {
+  margin-bottom: 2px;
+}
+
+.class-header-spacer {
+  flex: 1;
+}
+
+.class-check-label {
+  width: 18px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  font-family: system-ui, sans-serif;
 }
 
 .scale-selector.has-open .scale-group:not(.open) {
