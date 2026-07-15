@@ -1152,7 +1152,7 @@ header nav img {
   text-align: left;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 1ch;
 }
 
 .class-check {
