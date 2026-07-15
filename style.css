@@ -1130,6 +1130,7 @@ header nav img {
 .school-selector {
   display: none;
   flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
   margin-top: 6px;
   width: 118px;
