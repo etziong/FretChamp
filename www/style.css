@@ -208,9 +208,27 @@ header nav img {
   height: 45px;
 }
 
+.school-btn {
+  order: unset;
+  aspect-ratio: unset;
+  height: 45px;
+}
+
 .free-playing-btn {
   aspect-ratio: unset;
   height: 45px;
+}
+
+.tiny-btn {
+  width: 5px;
+  height: 5px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  font-size: 0;
+  overflow: hidden;
+  opacity: 0.15;
+  border-width: 1px;
 }
 
 .bottom-btn-row {
@@ -223,6 +241,11 @@ header nav img {
   flex: 1;
   aspect-ratio: unset;
   height: 45px;
+}
+
+.bottom-btn-row .tiny-btn {
+  flex: 0 0 5px;
+  height: 5px;
 }
 
 .bass-mode .bottom-btn-row .free-playing-btn {
@@ -435,18 +458,8 @@ header nav img {
   cursor: pointer;
   margin-top: 8px;
 }
-.greed-mode .listen-wrapper,
-.three-chord-mode .listen-wrapper,
-.four-inverts-mode .listen-wrapper,
-.slash-chord-mode .listen-wrapper,
-.four-chord-mode .listen-wrapper,
-.scales-mode .listen-wrapper,
-.basic-chord-mode .listen-wrapper,
-.single-note-mode .listen-wrapper {
+.school-mode .listen-wrapper {
   display: flex;
-}
-.free-playing-mode .listen-wrapper {
-  display: none;
 }
 .listen-wrapper:active { opacity: 0.6; }
 .listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
@@ -1102,6 +1115,60 @@ header nav img {
   gap: 4px;
   margin-top: 6px;
   width: 120px;
+}
+
+.school-selector {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  width: 140px;
+}
+
+.school-mode .school-selector {
+  display: flex;
+}
+
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.class-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  font-size: 14px;
+  font-family: system-ui, sans-serif;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+  flex: 1;
+}
+
+.class-check {
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: darkorange;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.class-check.checked {
+  border-color: darkorange;
+}
+
+.class-check.checked::after {
+  content: '\2713';
 }
 
 .scale-selector.has-open .scale-group:not(.open) {
