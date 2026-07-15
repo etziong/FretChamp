@@ -1139,12 +1139,6 @@ header nav img {
   display: flex;
 }
 
-.class-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .class-btn {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.35);
@@ -1155,7 +1149,9 @@ header nav img {
   padding: 6px 10px;
   cursor: pointer;
   text-align: left;
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .class-check {
@@ -1183,15 +1179,12 @@ header nav img {
 
 .class-header-row {
   margin-bottom: 2px;
-}
-
-.class-header-spacer {
-  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 10px;
 }
 
 .class-check-label {
-  width: 36px;
-  margin-right: -9px;
   flex-shrink: 0;
   text-align: center;
   font-size: 13px;

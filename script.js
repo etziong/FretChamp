@@ -1552,7 +1552,8 @@ function renderClassChecks() {
 }
 
 document.querySelectorAll('.class-check').forEach(el => {
-  el.addEventListener('click', () => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
     const n = el.dataset.classCheck;
     if (classCompleted.has(n)) classCompleted.delete(n);
     else classCompleted.add(n);
