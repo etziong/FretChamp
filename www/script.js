@@ -87,7 +87,9 @@ const RELEASE_FRAMES_NEEDED = 5;
 // small-dot flash across real fret positions (which for a chord spans several
 // inversions at once and reads as noise) with a single readable stacked list.
 let listenBigCircles = [];
-const LISTEN_BIG_CIRCLE_COLORS = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
+// Shared root/3rd/5th/7th degree palette, also used by applyDegreeToKey() for the
+// normal tap-mode fretboard circles.
+const CHORD_DEGREE_COLORS = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
 
 function listenBigCircleYPositions(n) {
   const top = 300, bottom = 1200;
@@ -216,8 +218,14 @@ function chordChromaSimilarity(liveChroma, pitchClassSet) {
 }
 
 function completeChordViaListen() {
-  showListenBigCircles(chordNotes, LISTEN_BIG_CIRCLE_COLORS);
+  // targetKeys is cleared exactly once per round, by whichever completion path (this
+  // one, or a tap-mode completion in handleFretClick) gets there first. Without this
+  // guard, a chord held ringing would re-trigger this every ~4 frames until nextRound()
+  // finally swaps chordNotes, and a simultaneous tap completion could double-fire it.
+  if (targetKeys.size === 0) return;
+  showListenBigCircles(chordNotes, CHORD_DEGREE_COLORS);
   targetKeys.clear();
+  foundChordNotes = new Set(chordNotes);
   score++;
   scoreNumberEl.textContent = score;
   showWellDone();
@@ -315,7 +323,7 @@ function processListenFrame() {
           remainingKeys.forEach(key => {
             const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
             if (lockedStrings.has(stringNum)) return;
-            const keyFreq = bassMode ? freqFromKey(key) / 2 : freqFromKey(key);
+            const keyFreq = freqFromKey(key);
             const cents = Math.abs(centsOff(freq, keyFreq));
             if (cents < bestCents) { bestCents = cents; bestKey = key; }
           });
@@ -340,7 +348,14 @@ function processListenFrame() {
   listenRafId = requestAnimationFrame(processListenFrame);
 }
 
+let listenStarting = false;
+
 async function startListening() {
+  // listenOn only becomes true after getUserMedia resolves below, so without this guard
+  // a second click on the Listen button while the first request is still pending would
+  // re-enter this function and create a second, orphaned analyser/rAF chain.
+  if (listenStarting) return;
+  listenStarting = true;
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
@@ -370,11 +385,13 @@ async function startListening() {
     listenWrapper.classList.remove('listen-error');
     listenWrapper.classList.add('listen-active');
     listenStatusEl.textContent = 'Off';
+    listenStarting = false;
     processListenFrame();
   } catch (err) {
     console.error('Listen failed to start:', err);
     if (listenStream) { listenStream.getTracks().forEach(t => t.stop()); listenStream = null; }
     listenOn = false;
+    listenStarting = false;
     listenWrapper.classList.remove('listen-active');
     listenWrapper.classList.add('listen-error');
     listenStatusEl.textContent = 'On';
@@ -717,7 +734,7 @@ function initSvgGrid() {
   }
 
   const bigCircleCx = 380.5;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < CHORD_DEGREE_COLORS.length; i++) {
     const circle = document.createElementNS(NS, 'circle');
     circle.setAttribute('cx', bigCircleCx);
     circle.setAttribute('r', '65');
@@ -784,7 +801,7 @@ function handleFretClick(e) {
   if (lockedStrings.has(stringNum)) return;
   if (gameMode === 'basicchord' && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
   showTapRipple(key);
-  playNote(bassMode ? freqFromKey(key) / 2 : freqFromKey(key));
+  playNote(freqFromKey(key));
   if (gameMode === 'freeplaying') return;
   if (gameMode === 'freeplay') {
     if (scaleGameActive && scaleGameNotes.size > 0) {
@@ -1024,7 +1041,7 @@ function applyDegreeToKey(key) {
   )) || gameMode === 'basicchord' || isSlash;
   if (!isDegree) return false;
 
-  const degreeColors = ['rgb(134,26,26)', 'rgb(184,68,12)', 'rgb(224,123,0)', 'rgb(216,190,0)'];
+  const degreeColors = CHORD_DEGREE_COLORS;
   const n = normalize(neckNotes[key]);
   const rootSemitone = chromaticIdx[normalize(chordNotes[0])] ?? 0;
   const semitones = (chromaticIdx[n] - rootSemitone + 12) % 12;
@@ -2014,7 +2031,10 @@ function formatNoteName(name) {
 function freqFromKey(key) {
   const fret = parseInt(key.match(/btn(\d+)/)[1]) - 1;
   const string = parseInt(key.match(/string-(\d+)/)[1]);
-  return openStrings[string] * Math.pow(2, fret / 12);
+  const freq = openStrings[string] * Math.pow(2, fret / 12);
+  // Bass mode sounds an octave below the guitar-neck pitch (see playNote's caller and
+  // getDisplayOctave's comment) -- apply that once here so every caller gets it for free.
+  return bassMode ? freq / 2 : freq;
 }
 
 function playNote(freq) {
