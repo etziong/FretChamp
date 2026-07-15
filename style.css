@@ -1132,7 +1132,7 @@ header nav img {
   flex-direction: column;
   gap: 4px;
   margin-top: 6px;
-  width: 140px;
+  width: 195px;
 }
 
 .school-mode .school-selector {
@@ -1190,11 +1190,12 @@ header nav img {
 }
 
 .class-check-label {
-  width: 18px;
+  width: 36px;
+  margin-right: -9px;
   flex-shrink: 0;
   text-align: center;
-  font-size: 10px;
-  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
   font-family: system-ui, sans-serif;
 }
 
