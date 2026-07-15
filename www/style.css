@@ -1109,6 +1109,10 @@ header nav img {
   display: none;
 }
 
+.school-mode .string-lock-section {
+  display: none;
+}
+
 .scale-selector {
   display: none;
   flex-direction: column;
