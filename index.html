@@ -38,8 +38,9 @@
         <button class="main-btn">TENSIONS</button>
         <button class="main-btn scales-btn">SCALES</button>
         <div class="bottom-btn-row">
-          <button class="main-btn basic-chords-btn">BEGINNERS</button>
+          <button class="main-btn school-btn">SCHOOL</button>
           <button class="main-btn free-playing-btn">FREE PLAYING</button>
+          <button class="main-btn basic-chords-btn tiny-btn">BEGINNERS</button>
         </div>
       </section>
 
@@ -207,6 +208,18 @@
 
 
       </div>
+      <div class="school-selector">
+        <div class="class-row"><button class="class-btn" data-class="1">Class 1</button><span class="class-check" data-class-check="1"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="2">Class 2</button><span class="class-check" data-class-check="2"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="3">Class 3</button><span class="class-check" data-class-check="3"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="4">Class 4</button><span class="class-check" data-class-check="4"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="5">Class 5</button><span class="class-check" data-class-check="5"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="6">Class 6</button><span class="class-check" data-class-check="6"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="7">Class 7</button><span class="class-check" data-class-check="7"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="8">Class 8</button><span class="class-check" data-class-check="8"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="9">Class 9</button><span class="class-check" data-class-check="9"></span></div>
+        <div class="class-row"><button class="class-btn" data-class="10">Class 10</button><span class="class-check" data-class-check="10"></span></div>
+      </div>
       <div class="string-lock-section">
         <span class="string-lock-label">Open/Lock<br>Strings</span>
         <div class="string-lock-row">
@@ -248,6 +261,16 @@
       <h3 style="margin:0 0 14px;text-align:left;font-size:18px;letter-spacing:1px;">How to Play</h3>
       <div id="instructions-modal-text" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;"></div>
       <button id="instructions-modal-close" style="width:100%;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Got it</button>
+    </div>
+  </div>
+  <div id="class-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
+      <h3 id="class-modal-title" style="margin:0 0 14px;text-align:left;font-size:18px;letter-spacing:1px;">Class 1</h3>
+      <p id="class-modal-desc" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;"></p>
+      <div style="display:flex;gap:10px;">
+        <button id="class-modal-start" style="flex:1;padding:10px;background:darkorange;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Start</button>
+        <button id="class-modal-exit" style="flex:1;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Exit</button>
+      </div>
     </div>
   </div>
 

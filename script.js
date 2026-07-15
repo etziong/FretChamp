@@ -956,7 +956,7 @@ homeBtn.addEventListener('click', () => {
     const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
     showScoreToast(score, isNew, avgSeconds);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode');
   instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   basicChordContinueBtn.classList.remove('show');
@@ -1382,7 +1382,7 @@ function playContinueClick() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode');
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
@@ -1439,6 +1439,29 @@ mainButtons.forEach((btn, index) => {
         cell.text.setAttribute('opacity', '0');
       });
     } else if (index === 7) {
+      gameMode = 'school';
+      document.body.classList.add('school-mode');
+      headLineEl.textContent = 'SCHOOL';
+      instracEl.innerHTML = 'Choose a class<br>to practice';
+      notesDisplay.innerHTML = '';
+      targetKeys.clear();
+      Object.values(svgCells).forEach(cell => {
+        cell.circle.setAttribute('opacity', '0');
+        cell.text.setAttribute('opacity', '0');
+      });
+      renderClassChecks();
+    } else if (index === 8) {
+      gameMode = 'freeplaying';
+      document.body.classList.add('free-playing-mode');
+      headLineEl.textContent = 'FREE PLAYING';
+      instracEl.innerHTML = 'Play something<br>nice :-)';
+      notesDisplay.innerHTML = '';
+      targetKeys.clear();
+      Object.values(svgCells).forEach(cell => {
+        cell.circle.setAttribute('opacity', '0');
+        cell.text.setAttribute('opacity', '0');
+      });
+    } else if (index === 9) {
       gameMode = 'basicchord';
       updatePeekLabel();
       basicChordCategory = null;
@@ -1450,17 +1473,6 @@ mainButtons.forEach((btn, index) => {
       headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
       instracEl.innerHTML = '<span style="color:darkorange">Choose open<br>or barre chords</span>';
       instracEl.classList.add('instrac-blink');
-      notesDisplay.innerHTML = '';
-      targetKeys.clear();
-      Object.values(svgCells).forEach(cell => {
-        cell.circle.setAttribute('opacity', '0');
-        cell.text.setAttribute('opacity', '0');
-      });
-    } else if (index === 8) {
-      gameMode = 'freeplaying';
-      document.body.classList.add('free-playing-mode');
-      headLineEl.textContent = 'FREE PLAYING';
-      instracEl.innerHTML = 'Play something<br>nice :-)';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -1516,6 +1528,59 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
     if (!isOpen) { group.classList.add('open'); scaleSelector.classList.add('has-open'); }
     else { scaleSelector.classList.remove('has-open'); }
   });
+});
+
+const CLASS_DESCRIPTIONS = {
+  1: 'Coming soon.', 2: 'Coming soon.', 3: 'Coming soon.', 4: 'Coming soon.', 5: 'Coming soon.',
+  6: 'Coming soon.', 7: 'Coming soon.', 8: 'Coming soon.', 9: 'Coming soon.', 10: 'Coming soon.'
+};
+
+function loadClassCompleted() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem('classCompleted') || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+let classCompleted = loadClassCompleted();
+
+function renderClassChecks() {
+  document.querySelectorAll('.class-check').forEach(el => {
+    el.classList.toggle('checked', classCompleted.has(el.dataset.classCheck));
+  });
+}
+
+document.querySelectorAll('.class-check').forEach(el => {
+  el.addEventListener('click', () => {
+    const n = el.dataset.classCheck;
+    if (classCompleted.has(n)) classCompleted.delete(n);
+    else classCompleted.add(n);
+    localStorage.setItem('classCompleted', JSON.stringify([...classCompleted]));
+    renderClassChecks();
+  });
+});
+
+const classModal = document.getElementById('class-modal');
+const classModalTitle = document.getElementById('class-modal-title');
+const classModalDesc = document.getElementById('class-modal-desc');
+
+document.querySelectorAll('.class-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const n = btn.dataset.class;
+    classModalTitle.textContent = 'Class ' + n;
+    classModalDesc.textContent = CLASS_DESCRIPTIONS[n] || '';
+    classModal.style.display = 'flex';
+  });
+});
+
+document.getElementById('class-modal-exit').addEventListener('click', () => {
+  classModal.style.display = 'none';
+});
+
+document.getElementById('class-modal-start').addEventListener('click', () => {
+  classModal.style.display = 'none';
+  // Lesson content not wired up yet -- filled in per-class once each lesson is designed.
 });
 
 const group1Cats = ['open', 'barre'];
