@@ -1667,8 +1667,7 @@ document.getElementById('class-modal-exit').addEventListener('click', () => {
 document.getElementById('class-modal-start').addEventListener('click', () => {
   classModal.style.display = 'none';
   document.body.classList.add('school-lesson-active');
-  document.querySelector('.home-icon').src = 'book.png';
-  document.getElementById('home-label').textContent = 'School';
+  document.getElementById('home-label').textContent = 'Back';
   schoolNotesShown = true;
   updatePeekLabel();
   lockedStrings.clear();
@@ -1709,7 +1708,6 @@ function exitSchoolLesson() {
   gameMode = 'school';
   document.body.classList.remove('school-lesson-active');
   restoreScoreLabel();
-  document.querySelector('.home-icon').src = 'homeIcon.png';
   document.getElementById('home-label').textContent = 'Home';
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));

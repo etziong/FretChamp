@@ -981,10 +981,19 @@ header nav img {
   object-fit: contain;
 }
 
-.school-lesson-active .home-icon {
-  object-position: center bottom;
+.home-back-icon {
+  display: none;
   width: 28px;
-  height: 38px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.school-lesson-active .home-icon {
+  display: none;
+}
+
+.school-lesson-active .home-back-icon {
+  display: block;
 }
 
 
