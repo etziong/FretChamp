@@ -983,8 +983,8 @@ header nav img {
 
 .school-lesson-active .home-icon {
   object-position: center bottom;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 38px;
 }
 
 
@@ -1121,6 +1121,9 @@ header nav img {
 }
 .school-mode .score-inline {
   display: none;
+}
+.school-lesson-active .score-inline {
+  display: block;
 }
 .free-playing-mode .string-lock-section {
   display: none;

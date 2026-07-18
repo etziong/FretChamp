@@ -1154,12 +1154,28 @@ function updatePeekLabel() {
   if (peekWrapper) peekWrapper.classList.remove('notes-shown');
 }
 
+const scoreLabelSmEl = document.querySelector('.score-label-sm');
+
+// Repurposes the existing Score line's two spans in place (rather than replacing
+// them) -- scoreNumberEl is cached once at load, so overwriting its parent's
+// innerHTML would detach it and silently break every future score update.
+function setSchoolClassLabel() {
+  if (scoreLabelSmEl) { scoreLabelSmEl.textContent = 'Class'; scoreLabelSmEl.style.opacity = '1'; }
+  if (scoreNumberEl) scoreNumberEl.textContent = activeClassNumber;
+}
+
+function restoreScoreLabel() {
+  if (scoreLabelSmEl) { scoreLabelSmEl.textContent = 'Score'; scoreLabelSmEl.style.opacity = ''; }
+  if (scoreNumberEl) scoreNumberEl.textContent = score;
+}
+
 // Re-applies the School lesson's headline and (if the user toggled it on) the
 // permanent notes display to whatever new round just started -- covers every
 // path a round can restart from: Next button, Listen completion, tap completion.
 function refreshSchoolLessonUI() {
   if (!document.body.classList.contains('school-lesson-active')) return;
-  headLineEl.textContent = 'Lesson ' + activeClassNumber;
+  headLineEl.textContent = LESSON_TITLES[activeClassNumber] || ('Lesson ' + activeClassNumber);
+  setSchoolClassLabel();
   if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
 }
 
@@ -1283,8 +1299,8 @@ const modeInstructions = {
 };
 
 const LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• Press Hide Notes for a more challenging practice.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• Press Hide Notes for a more challenging practice.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  1: '• Find notes on string 6.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
 };
 
 const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
@@ -1596,6 +1612,12 @@ const LESSON_SUBTITLES = {
   4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
 };
 
+const LESSON_TITLES = {
+  1: '6TH STRING',
+  2: '5TH STRING',
+  3: 'OPEN CHORDS',
+};
+
 function loadClassCompleted() {
   try {
     return new Set(JSON.parse(localStorage.getItem('classCompleted') || '[]'));
@@ -1675,7 +1697,8 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
     document.querySelector('.basic-chord-cat-btn[data-cat="open"]').classList.add('active');
     startBasicChordRound();
   }
-  headLineEl.textContent = 'Lesson ' + activeClassNumber;
+  headLineEl.textContent = LESSON_TITLES[activeClassNumber] || ('Lesson ' + activeClassNumber);
+  setSchoolClassLabel();
   if (!listenOn) startListening();
   if (targetKeys.size > 0) showPeek();
   // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
@@ -1685,6 +1708,7 @@ function exitSchoolLesson() {
   if (listenOn) stopListening();
   gameMode = 'school';
   document.body.classList.remove('school-lesson-active');
+  restoreScoreLabel();
   document.querySelector('.home-icon').src = 'homeIcon.png';
   document.getElementById('home-label').textContent = 'Home';
   lockedStrings.clear();
