@@ -946,6 +946,10 @@ function showScoreToast(scored, isNewRecord, avgSeconds) {
 }
 
 homeBtn.addEventListener('click', () => {
+  if (document.body.classList.contains('school-lesson-active')) {
+    exitSchoolLesson();
+    return;
+  }
   if (listenOn) stopListening();
   const modeKey = getCurrentModeKey();
   if (score > 0 && HIGH_SCORE_MODES[modeKey]) {
@@ -956,7 +960,7 @@ homeBtn.addEventListener('click', () => {
     const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
     showScoreToast(score, isNew, avgSeconds);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
   instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   basicChordContinueBtn.classList.remove('show');
@@ -1243,6 +1247,10 @@ const modeInstructions = {
   'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
+const LESSON_HOWTO = {
+  1: '• Find the notes on strings 5 and 6.\n\n• Use the Show Notes button if you\'re having trouble.\n\n• Use the Timer button to challenge yourself on time.\n\n• Use the Listen button to practice with your guitar.',
+};
+
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
 const instructionsModal = document.getElementById('instructions-modal');
@@ -1251,10 +1259,13 @@ const instructionsModalClose = document.getElementById('instructions-modal-close
 
 instructionsWrapper.addEventListener('click', () => {
   const isBass = document.body.classList.contains('bass-mode');
+  const isSchoolLesson = document.body.classList.contains('school-lesson-active');
   const currentMode = Object.keys(modeInstructions).find(m => document.body.classList.contains(m));
-  const text = isBass && bassModeInstructions[currentMode]
-    ? bassModeInstructions[currentMode]
-    : (currentMode ? modeInstructions[currentMode] : '');
+  const text = isSchoolLesson
+    ? (LESSON_HOWTO[activeClassNumber] || '')
+    : isBass && bassModeInstructions[currentMode]
+      ? bassModeInstructions[currentMode]
+      : (currentMode ? modeInstructions[currentMode] : '');
   instructionsModalText.innerHTML = text.split('\n\n').map(part => `<p style="margin:0 0 8px;">${part.replace(/\n/g, '<br>')}</p>`).join('');
   instructionsModal.style.display = 'flex';
 });
@@ -1382,7 +1393,7 @@ function playContinueClick() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
@@ -1531,8 +1542,14 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
 });
 
 const CLASS_DESCRIPTIONS = {
-  1: 'Coming soon.', 2: 'Coming soon.', 3: 'Coming soon.', 4: 'Coming soon.', 5: 'Coming soon.',
+  1: 'Learn the notes on strings 5 and 6\n-- you will use them to find the root notes of basic barre chords.',
+  2: 'Coming soon.', 3: 'Coming soon.', 4: 'Coming soon.', 5: 'Coming soon.',
   6: 'Coming soon.', 7: 'Coming soon.', 8: 'Coming soon.', 9: 'Coming soon.', 10: 'Coming soon.'
+};
+
+const LESSON_SUBTITLES = {
+  1: 'Identify notes on strings 5 and 6',
+  2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
 };
 
 function loadClassCompleted() {
@@ -1566,11 +1583,13 @@ const classModal = document.getElementById('class-modal');
 const classModalTitle = document.getElementById('class-modal-title');
 const classModalDesc = document.getElementById('class-modal-desc');
 
+let activeClassNumber = null;
+
 document.querySelectorAll('.class-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const n = btn.dataset.class;
-    classModalTitle.textContent = 'Class ' + n;
-    classModalDesc.textContent = CLASS_DESCRIPTIONS[n] || '';
+    activeClassNumber = btn.dataset.class;
+    classModalTitle.textContent = 'Class ' + activeClassNumber;
+    classModalDesc.textContent = CLASS_DESCRIPTIONS[activeClassNumber] || '';
     classModal.style.display = 'flex';
   });
 });
@@ -1581,8 +1600,49 @@ document.getElementById('class-modal-exit').addEventListener('click', () => {
 
 document.getElementById('class-modal-start').addEventListener('click', () => {
   classModal.style.display = 'none';
-  // Lesson content not wired up yet -- filled in per-class once each lesson is designed.
+  document.body.classList.add('school-lesson-active');
+  document.querySelector('.home-icon').src = 'book.png';
+  document.getElementById('home-label').textContent = 'School';
+  headLineEl.textContent = 'Lesson ' + activeClassNumber;
+  instracEl.textContent = LESSON_SUBTITLES[activeClassNumber] || '';
+  if (activeClassNumber === '1') {
+    noteDisplayMode = 'letter';
+    localStorage.setItem('noteDisplayMode', 'letter');
+    updateNoteDisplayToggleButton();
+    lockedStrings.clear();
+    document.querySelectorAll('.str-btn').forEach(strBtn => {
+      const stringNum = parseInt(strBtn.dataset.string);
+      if (stringNum === 5 || stringNum === 6) {
+        strBtn.classList.remove('locked');
+      } else {
+        lockedStrings.add(stringNum);
+        strBtn.classList.add('locked');
+      }
+    });
+    note = randomNote();
+    renderSingleNoteDisplay(note);
+    highlightNotes(note);
+  }
+  if (!listenOn) startListening();
+  // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
 });
+
+function exitSchoolLesson() {
+  if (listenOn) stopListening();
+  document.body.classList.remove('school-lesson-active');
+  document.querySelector('.home-icon').src = 'homeIcon.png';
+  document.getElementById('home-label').textContent = 'Home';
+  lockedStrings.clear();
+  document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  targetKeys.clear();
+  Object.values(svgCells).forEach(cell => {
+    cell.circle.setAttribute('opacity', '0');
+    cell.text.setAttribute('opacity', '0');
+  });
+  headLineEl.textContent = 'SCHOOL';
+  instracEl.innerHTML = 'Choose a class<br>to practice';
+  notesDisplay.innerHTML = '';
+}
 
 const group1Cats = ['open', 'barre'];
 const group2Cats = ['root6', 'root5'];
@@ -2185,7 +2245,12 @@ const halfDim7 = {
   "Fm7b5":["F","Ab","Cb","Eb"], "Gm7b5":["G","Bb","Db","F"],  "Am7b5":["A","C","Eb","G"], "Bm7b5":["B","D","F","A"]
 };
 
-const allSeventhChords = { ...dominant7, ...minor7, ...major7, ...halfDim7 };
+const augmented7 = {
+  "Caug7":["C","E","G#","B"],  "Daug7":["D","F#","A#","C#"], "Eaug7":["E","G#","C","D#"],
+  "Faug7":["F","A","C#","E"],  "Gaug7":["G","B","D#","F#"],  "Aaug7":["A","C#","F","G#"], "Baug7":["B","D#","G","A#"]
+};
+
+const allSeventhChords = { ...dominant7, ...minor7, ...major7, ...halfDim7, ...augmented7 };
 
 const tensionChords = {
   "CminM7":["C","Eb","G","B"],    "DminM7":["D","F","A","C#"],   "EminM7":["E","G","B","D#"],
@@ -2479,7 +2544,7 @@ let currentChordName = '';
 
 const notesArr = ["A","B","C","D","E","F","G"]
 const diesBemol = ["#","b","","","","",""]
-const excludedNotes = ["Cb"];
+const excludedNotes = ["Cb", "Fb", "E#"];
 
 function randomNote() {
   let n;
@@ -2562,11 +2627,14 @@ function startFourChordRound() {
 }
 
 function startFourInvertsRound() {
+  // Half-diminished and augmented are each weighted down to 15% (9 of 60), the
+  // other three qualities split the remaining 70% evenly (14 of 60 each, ~23.3%).
   const allChords = [
-    ...Object.keys(dominant7),
-    ...Object.keys(minor7),
-    ...Object.keys(major7),
-    ...Object.keys(halfDim7),
+    ...Array(14).fill(0).flatMap(() => Object.keys(dominant7)),
+    ...Array(14).fill(0).flatMap(() => Object.keys(minor7)),
+    ...Array(14).fill(0).flatMap(() => Object.keys(major7)),
+    ...Array(9).fill(0).flatMap(() => Object.keys(halfDim7)),
+    ...Array(9).fill(0).flatMap(() => Object.keys(augmented7)),
   ];
   let chordName;
   do { chordName = allChords[Math.floor(Math.random() * allChords.length)]; } while (chordName === lastChordName && allChords.length > 1);
@@ -2894,6 +2962,8 @@ window.addEventListener('load', () => {
       if (guideModal && guideModal.classList.contains('open')) {
         guideModal.classList.remove('open');
         homeBtn.click();
+      } else if (document.body.classList.contains('school-lesson-active')) {
+        exitSchoolLesson();
       } else if (document.body.classList.contains('greed-mode')) {
         homeBtn.click();
       } else {

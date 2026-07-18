@@ -407,6 +407,9 @@ header nav img {
 .four-chord-mode .peek-wrapper {
   display: flex;
 }
+.school-lesson-active.school-mode .peek-wrapper {
+  display: flex;
+}
 .try-again-wrapper {
   display: none;
   flex-direction: column;
@@ -441,6 +444,9 @@ header nav img {
 .school-mode .timer-wrapper {
   display: none;
 }
+.school-lesson-active.school-mode .timer-wrapper {
+  display: flex;
+}
 .timer-wrapper:active { opacity: 0.6; }
 .timer-seconds-display {
   display: none;
@@ -461,8 +467,10 @@ header nav img {
   cursor: pointer;
   margin-top: 8px;
 }
-/* Listen is only shown once a lesson is actually active, not on the class-list screen
-   -- there's no lesson-active state yet, so it stays hidden in school-mode for now. */
+/* Listen is only shown once a lesson is actually active, not on the class-list screen. */
+.school-lesson-active.school-mode .listen-wrapper {
+  display: flex;
+}
 .listen-wrapper:active { opacity: 0.6; }
 .listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
 .listen-wrapper.listen-active .peek-label { color: #4aff9e; }
@@ -923,7 +931,7 @@ header nav img {
   left: 24px;
   flex-direction: row;
   align-items: flex-end;
-  gap: 4px;
+  gap: 8px;
   z-index: 10;
   direction: ltr;
 }
@@ -966,6 +974,13 @@ header nav img {
   height: 28px;
   object-fit: contain;
 }
+
+.school-lesson-active .home-icon {
+  object-position: center bottom;
+  width: 32px;
+  height: 32px;
+}
+
 
 .mute-wrapper {
   display: flex;
@@ -1098,6 +1113,9 @@ header nav img {
 .free-playing-mode .score-inline {
   display: none;
 }
+.school-mode .score-inline {
+  display: none;
+}
 .free-playing-mode .string-lock-section {
   display: none;
 }
@@ -1109,6 +1127,10 @@ header nav img {
 .school-mode .mute-wrapper:has(.next-btn) {
   display: none;
 }
+.school-lesson-active.school-mode .mute-wrapper:has(.mute-btn),
+.school-lesson-active.school-mode .mute-wrapper:has(.next-btn) {
+  display: flex;
+}
 
 
 .free-play-mode .string-lock-section {
@@ -1117,6 +1139,9 @@ header nav img {
 
 .school-mode .string-lock-section {
   display: none;
+}
+.school-lesson-active.school-mode .string-lock-section {
+  display: flex;
 }
 
 .scale-selector {
@@ -1138,6 +1163,9 @@ header nav img {
 .school-mode .school-selector {
   display: flex;
 }
+.school-lesson-active.school-mode .school-selector {
+  display: none;
+}
 
 .class-btn {
   background: transparent;
@@ -1146,12 +1174,13 @@ header nav img {
   font-size: 14px;
   font-family: system-ui, sans-serif;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 6px 9px 6px 10px;
   cursor: pointer;
   text-align: left;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1ch;
   align-items: center;
-  gap: 1ch;
 }
 
 .class-check {
@@ -1181,7 +1210,7 @@ header nav img {
   margin-bottom: 2px;
   display: flex;
   justify-content: flex-end;
-  padding-right: 10px;
+  padding-right: 2px;
 }
 
 .class-check-label {

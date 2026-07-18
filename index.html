@@ -58,7 +58,7 @@
       <div class="bottom-bar">
         <div class="mute-wrapper">
           <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
-          <span class="mute-label">Home</span>
+          <span class="mute-label" id="home-label">Home</span>
         </div>
         <div class="mute-wrapper">
           <button class="mute-btn"><img src="note.png" class="note-icon" alt="mute" /></button>
@@ -267,7 +267,7 @@
   <div id="class-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
       <h3 id="class-modal-title" style="margin:0 0 14px;text-align:left;font-size:18px;letter-spacing:1px;">Class 1</h3>
-      <p id="class-modal-desc" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;"></p>
+      <p id="class-modal-desc" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;white-space:pre-line;"></p>
       <div style="display:flex;gap:10px;">
         <button id="class-modal-start" style="flex:1;padding:10px;background:darkorange;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Start</button>
         <button id="class-modal-exit" style="flex:1;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Exit</button>
