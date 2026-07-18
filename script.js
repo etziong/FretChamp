@@ -328,15 +328,22 @@ function processListenFrame() {
             if (cents < bestCents) { bestCents = cents; bestKey = key; }
           });
         }
-        if (bestKey && bestCents <= PITCH_MATCH_CENTS) {
-          if (bestKey === lastPitchMatchKey) pitchMatchStreak++;
-          else { lastPitchMatchKey = bestKey; pitchMatchStreak = 1; }
+        const matchToken = (bestKey && bestCents <= PITCH_MATCH_CENTS) ? bestKey : (freq > 0 ? 'wrong' : null);
+        if (matchToken) {
+          if (matchToken === lastPitchMatchKey) pitchMatchStreak++;
+          else { lastPitchMatchKey = matchToken; pitchMatchStreak = 1; }
           if (pitchMatchStreak >= PITCH_MATCH_FRAMES_NEEDED) {
             pitchMatchStreak = 0;
             lastPitchMatchKey = null;
             noteIsActive = true;
             listenCooldownUntil = performance.now() + ONSET_COOLDOWN_MS;
-            handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
+            if (matchToken === 'wrong') {
+              feedbackEl.textContent = 'Try again';
+              feedbackEl.className = 'feedback incorrect';
+              setTimeout(() => { if (feedbackEl.textContent === 'Try again') feedbackEl.className = 'feedback'; }, 1500);
+            } else {
+              handleFretClick({ currentTarget: { dataset: { key: bestKey } } });
+            }
           }
         } else {
           pitchMatchStreak = 0;
@@ -1029,6 +1036,7 @@ const instracEl = document.querySelector('.Instrac');
 const muteBtn = document.querySelector('.mute-btn');
 const peekBtn = document.querySelector('.peek-btn');
 const peekLabel = document.querySelector('.peek-label');
+const peekWrapper = document.querySelector('.peek-wrapper');
 
 function getPeekKeys() {
   return Array.from(targetKeys);
@@ -1132,10 +1140,27 @@ function hidePeek() {
   if (barreEl) barreEl.setAttribute('opacity', '0');
 }
 
+let schoolNotesShown = false;
+
 function updatePeekLabel() {
   if (!peekLabel) return;
+  if (document.body.classList.contains('school-lesson-active')) {
+    peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>${schoolNotesShown ? 'Hide' : 'Show'}<br>Notes`;
+    if (peekWrapper) peekWrapper.classList.toggle('notes-shown', schoolNotesShown);
+    return;
+  }
   const word = (gameMode === 'single' || gameMode === 'freeplay' || gameMode === 'basicchord') ? 'Notes' : 'Chords';
   peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>${word}`;
+  if (peekWrapper) peekWrapper.classList.remove('notes-shown');
+}
+
+// Re-applies the School lesson's headline and (if the user toggled it on) the
+// permanent notes display to whatever new round just started -- covers every
+// path a round can restart from: Next button, Listen completion, tap completion.
+function refreshSchoolLessonUI() {
+  if (!document.body.classList.contains('school-lesson-active')) return;
+  headLineEl.textContent = 'Lesson ' + activeClassNumber;
+  if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
 }
 
 let instracFlashTimeout = null;
@@ -1147,6 +1172,7 @@ basicChordContinueBtn.addEventListener('click', () => {
   basicChordContinueBtn.classList.remove('show');
   playContinueClick();
   startBasicChordRound();
+  refreshSchoolLessonUI();
 });
 
 
@@ -1167,6 +1193,13 @@ function bothCatGroupsSelected() {
 
 peekBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+
+  if (document.body.classList.contains('school-lesson-active')) {
+    schoolNotesShown = !schoolNotesShown;
+    if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
+    updatePeekLabel();
+    return;
+  }
 
   if (gameMode === 'freeplay' && scaleGameActive) {
     const activeBtn = document.querySelector('.scale-btn.active');
@@ -1196,6 +1229,7 @@ peekBtn.addEventListener('pointerdown', (e) => {
 });
 
 peekBtn.addEventListener('pointerup', () => {
+  if (document.body.classList.contains('school-lesson-active')) return;
   if (gameMode === 'freeplay' && scaleGameActive) {
     scaleGameNotes.forEach(k => {
       if (!scaleGameFound.has(k) && svgCells[k]) {
@@ -1213,6 +1247,7 @@ peekBtn.addEventListener('pointerup', () => {
   hidePeek();
 });
 peekBtn.addEventListener('pointerleave', () => {
+  if (document.body.classList.contains('school-lesson-active')) return;
   if (gameMode === 'freeplay' && scaleGameActive) {
     scaleGameNotes.forEach(k => {
       if (!scaleGameFound.has(k) && svgCells[k]) {
@@ -1248,8 +1283,11 @@ const modeInstructions = {
 };
 
 const LESSON_HOWTO = {
-  1: '• Find the notes on strings 5 and 6.\n\n• Use the Show Notes button if you\'re having trouble.\n\n• Use the Timer button to challenge yourself on time.\n\n• Use the Listen button to practice with your guitar.',
+  1: '• Find notes on string 6.\n\n• Press Hide Notes for a more challenging practice.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• Press Hide Notes for a more challenging practice.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
 };
+
+const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
@@ -1260,12 +1298,15 @@ const instructionsModalClose = document.getElementById('instructions-modal-close
 instructionsWrapper.addEventListener('click', () => {
   const isBass = document.body.classList.contains('bass-mode');
   const isSchoolLesson = document.body.classList.contains('school-lesson-active');
+  const isSchoolList = document.body.classList.contains('school-mode') && !isSchoolLesson;
   const currentMode = Object.keys(modeInstructions).find(m => document.body.classList.contains(m));
   const text = isSchoolLesson
     ? (LESSON_HOWTO[activeClassNumber] || '')
-    : isBass && bassModeInstructions[currentMode]
-      ? bassModeInstructions[currentMode]
-      : (currentMode ? modeInstructions[currentMode] : '');
+    : isSchoolList
+      ? SCHOOL_LIST_HOWTO
+      : isBass && bassModeInstructions[currentMode]
+        ? bassModeInstructions[currentMode]
+        : (currentMode ? modeInstructions[currentMode] : '');
   instructionsModalText.innerHTML = text.split('\n\n').map(part => `<p style="margin:0 0 8px;">${part.replace(/\n/g, '<br>')}</p>`).join('');
   instructionsModal.style.display = 'flex';
 });
@@ -1453,7 +1494,7 @@ mainButtons.forEach((btn, index) => {
       gameMode = 'school';
       document.body.classList.add('school-mode');
       headLineEl.textContent = 'SCHOOL';
-      instracEl.innerHTML = 'Choose a class<br>to practice';
+      instracEl.innerHTML = 'Choose a lesson from the list<br><span style="color:darkorange">Use your guitar</span>';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -1542,14 +1583,17 @@ document.querySelectorAll('.scale-category-btn').forEach(catBtn => {
 });
 
 const CLASS_DESCRIPTIONS = {
-  1: 'Learn the notes on strings 5 and 6\n-- you will use them to find the root notes of basic barre chords.',
-  2: 'Coming soon.', 3: 'Coming soon.', 4: 'Coming soon.', 5: 'Coming soon.',
+  1: 'Learn the notes on string 6\n-- you will use them to find the root notes of basic barre chords.',
+  2: 'Learn the notes on string 5\n-- you will use them to find the root notes of basic barre chords.',
+  3: 'Learn basic open chords.',
+  4: 'Coming soon.', 5: 'Coming soon.',
   6: 'Coming soon.', 7: 'Coming soon.', 8: 'Coming soon.', 9: 'Coming soon.', 10: 'Coming soon.'
 };
 
 const LESSON_SUBTITLES = {
-  1: 'Identify notes on strings 5 and 6',
-  2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
+  1: '', 2: '',
+  3: 'Learn open chords',
+  4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
 };
 
 function loadClassCompleted() {
@@ -1603,18 +1647,19 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   document.body.classList.add('school-lesson-active');
   document.querySelector('.home-icon').src = 'book.png';
   document.getElementById('home-label').textContent = 'School';
-  headLineEl.textContent = 'Lesson ' + activeClassNumber;
-  instracEl.textContent = LESSON_SUBTITLES[activeClassNumber] || '';
-  if (activeClassNumber === '1') {
+  schoolNotesShown = true;
+  updatePeekLabel();
+  lockedStrings.clear();
+  document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  instracEl.innerHTML = LESSON_SUBTITLES[activeClassNumber] || '';
+  if (activeClassNumber === '1' || activeClassNumber === '2') {
+    const focusString = activeClassNumber === '1' ? 6 : 5;
     noteDisplayMode = 'letter';
     localStorage.setItem('noteDisplayMode', 'letter');
     updateNoteDisplayToggleButton();
-    lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(strBtn => {
       const stringNum = parseInt(strBtn.dataset.string);
-      if (stringNum === 5 || stringNum === 6) {
-        strBtn.classList.remove('locked');
-      } else {
+      if (stringNum !== focusString) {
         lockedStrings.add(stringNum);
         strBtn.classList.add('locked');
       }
@@ -1622,26 +1667,45 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
     note = randomNote();
     renderSingleNoteDisplay(note);
     highlightNotes(note);
+    instracEl.innerHTML = 'Play notes<br>on string ' + focusString;
+  } else if (activeClassNumber === '3') {
+    gameMode = 'basicchord';
+    basicChordCategory = 'open';
+    document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.basic-chord-cat-btn[data-cat="open"]').classList.add('active');
+    startBasicChordRound();
   }
+  headLineEl.textContent = 'Lesson ' + activeClassNumber;
   if (!listenOn) startListening();
+  if (targetKeys.size > 0) showPeek();
   // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
 });
 
 function exitSchoolLesson() {
   if (listenOn) stopListening();
+  gameMode = 'school';
   document.body.classList.remove('school-lesson-active');
   document.querySelector('.home-icon').src = 'homeIcon.png';
   document.getElementById('home-label').textContent = 'Home';
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
+  document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   targetKeys.clear();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
+    cell.text.textContent = 'X';
+    cell.text.setAttribute('font-size', '28');
+    cell.text.setAttribute('font-family', '');
+    cell.text.setAttribute('y', String(parseFloat(cell.circle.getAttribute('cy')) + 6));
+    cell.text.setAttribute('dominant-baseline', 'auto');
     cell.text.setAttribute('opacity', '0');
   });
+  const barreEl = document.getElementById('barre-peek-line');
+  if (barreEl) barreEl.setAttribute('opacity', '0');
   headLineEl.textContent = 'SCHOOL';
-  instracEl.innerHTML = 'Choose a class<br>to practice';
+  instracEl.innerHTML = 'Choose a lesson from the list<br><span style="color:darkorange">Use your guitar</span>';
   notesDisplay.innerHTML = '';
+  schoolNotesShown = false;
 }
 
 const group1Cats = ['open', 'barre'];
@@ -2573,6 +2637,14 @@ function highlightNotes(note) {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
     if (lockedStrings.has(stringNum)) {
+      // A cell's text element may still be showing a stale chord-degree label (e.g.
+      // "1", "b3") left over from a previous chord round (Beginners/Lesson 2) --
+      // reset it back to the plain "X" mark before revealing it here.
+      cell.text.textContent = 'X';
+      cell.text.setAttribute('font-size', '28');
+      cell.text.setAttribute('font-family', '');
+      cell.text.setAttribute('y', String(parseFloat(cell.circle.getAttribute('cy')) + 6));
+      cell.text.setAttribute('dominant-baseline', 'auto');
       cell.text.setAttribute('opacity', key.startsWith('btn1-') ? '1' : '0');
       return;
     }
@@ -2584,6 +2656,18 @@ function highlightNotes(note) {
       targetKeys.add(key);
     }
   });
+  if (gameMode === 'school') {
+    // Lesson 1 only ever has 1-2 unlocked strings; when the target note matches the
+    // open string's pitch, it also reappears at fret 12 (0+12) within the visible
+    // grid -- keep just the open-string position so a beginner doesn't see the same
+    // note flagged twice on one string.
+    targetKeys.forEach(key => {
+      if (key.startsWith('btn13-')) {
+        const stringNum = key.match(/string-(\d+)/)[1];
+        if (targetKeys.has(`btn1-string-${stringNum}`)) targetKeys.delete(key);
+      }
+    });
+  }
 }
 
 function highlightChordNotes(notes) {
@@ -2594,6 +2678,14 @@ function highlightChordNotes(notes) {
     cell.circle.setAttribute('opacity', '0');
     if (bassMode && stringNum <= 2) return;
     if (lockedStrings.has(stringNum)) {
+      // A cell's text element may still be showing a stale chord-degree label (e.g.
+      // "1", "b3") left over from a previous chord round (Beginners/Lesson 2) --
+      // reset it back to the plain "X" mark before revealing it here.
+      cell.text.textContent = 'X';
+      cell.text.setAttribute('font-size', '28');
+      cell.text.setAttribute('font-family', '');
+      cell.text.setAttribute('y', String(parseFloat(cell.circle.getAttribute('cy')) + 6));
+      cell.text.setAttribute('dominant-baseline', 'auto');
       cell.text.setAttribute('opacity', key.startsWith('btn1-') ? '1' : '0');
       return;
     }
@@ -2988,6 +3080,10 @@ function nextRound() {
     else if (chordMode === 'fourInverts') startFourInvertsRound();
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
+  } else if (gameMode === 'school') {
+    note = randomNote();
+    renderSingleNoteDisplay(note);
+    highlightNotes(note);
   } else {
     headLineEl.textContent = 'SINGLE NOTE';
     updateSingleNoteInstrac();
@@ -2997,6 +3093,7 @@ function nextRound() {
     resetRoundTimer();
     highlightNotes(note);
   }
+  refreshSchoolLessonUI();
 }
 
 // ── Chord List Reference ─────────────────────────────────────────────────────

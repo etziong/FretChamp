@@ -472,8 +472,8 @@ header nav img {
   display: flex;
 }
 .listen-wrapper:active { opacity: 0.6; }
-.listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
-.listen-wrapper.listen-active .peek-label { color: #4aff9e; }
+.listen-wrapper.listen-active .listen-icon { stroke: darkorange; }
+.listen-wrapper.listen-active .peek-label { color: darkorange; }
 .listen-wrapper.listen-error .listen-icon { stroke: #ff5555; }
 .listen-wrapper.listen-error .peek-label { color: #ff5555; }
 .peek-btn {
@@ -499,6 +499,12 @@ header nav img {
   height: 28px;
   object-fit: contain;
   margin-bottom: 4px;
+}
+.peek-wrapper.notes-shown .peek-label {
+  color: darkorange;
+}
+.peek-wrapper.notes-shown .peek-icon {
+  filter: brightness(0) saturate(100%) invert(64%) sepia(97%) saturate(1934%) hue-rotate(1deg) brightness(103%) contrast(105%);
 }
 .peek-wrapper:active { opacity: 0.6; }
 
@@ -1140,9 +1146,6 @@ header nav img {
 .school-mode .string-lock-section {
   display: none;
 }
-.school-lesson-active.school-mode .string-lock-section {
-  display: flex;
-}
 
 .scale-selector {
   display: none;
@@ -1166,6 +1169,7 @@ header nav img {
 .school-lesson-active.school-mode .school-selector {
   display: none;
 }
+
 
 .class-btn {
   background: transparent;
