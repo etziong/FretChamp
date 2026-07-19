@@ -1187,7 +1187,11 @@ const basicChordContinueBtn = document.querySelector('.basic-chord-continue-btn'
 basicChordContinueBtn.addEventListener('click', () => {
   basicChordContinueBtn.classList.remove('show');
   playContinueClick();
-  startBasicChordRound();
+  if (document.body.classList.contains('school-lesson-active') && activeClassNumber === '4') {
+    startSchoolBarreChordRound();
+  } else {
+    startBasicChordRound();
+  }
   refreshSchoolLessonUI();
 });
 
@@ -1301,6 +1305,7 @@ const modeInstructions = {
 const LESSON_HOWTO = {
   1: '• Find notes on string 6.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
   2: '• Find notes on string 5.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  4: '• Play the barre chords.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
 };
 
 const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
@@ -1602,20 +1607,23 @@ const CLASS_DESCRIPTIONS = {
   1: 'Learn the notes on string 6\n-- you will use them to find the root notes of basic barre chords.',
   2: 'Learn the notes on string 5\n-- you will use them to find the root notes of basic barre chords.',
   3: 'Learn basic open chords.',
-  4: 'Coming soon.', 5: 'Coming soon.',
+  4: 'Learn to play basic barre chords.',
+  5: 'Coming soon.',
   6: 'Coming soon.', 7: 'Coming soon.', 8: 'Coming soon.', 9: 'Coming soon.', 10: 'Coming soon.'
 };
 
 const LESSON_SUBTITLES = {
   1: '', 2: '',
   3: 'Learn open chords',
-  4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
+  4: 'Learn barre chords',
+  5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
 };
 
 const LESSON_TITLES = {
   1: '6TH STRING',
   2: '5TH STRING',
   3: 'OPEN CHORDS',
+  4: 'BARRE CHORDS',
 };
 
 function loadClassCompleted() {
@@ -1695,6 +1703,9 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.basic-chord-cat-btn[data-cat="open"]').classList.add('active');
     startBasicChordRound();
+  } else if (activeClassNumber === '4') {
+    gameMode = 'basicchord';
+    startSchoolBarreChordRound();
   }
   headLineEl.textContent = LESSON_TITLES[activeClassNumber] || ('Lesson ' + activeClassNumber);
   setSchoolClassLabel();
@@ -1702,6 +1713,16 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   if (targetKeys.size > 0) showPeek();
   // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
 });
+
+// Lesson 4: randomly alternates between the root-6 (E-shape) and root-5 (A-shape)
+// barre chord families each round, reusing the Beginners "basicchord" pools/logic.
+function startSchoolBarreChordRound() {
+  basicChordCategory = Math.random() < 0.5 ? 'root6' : 'root5';
+  document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.basic-chord-cat-btn[data-cat="barre"]').classList.add('active');
+  document.querySelector(`.basic-chord-cat-btn[data-cat="${basicChordCategory}"]`).classList.add('active');
+  startBasicChordRound();
+}
 
 function exitSchoolLesson() {
   if (listenOn) stopListening();

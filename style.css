@@ -278,6 +278,17 @@ header nav img {
   display: none;
 }
 
+/* School lessons drive basicChordCategory programmatically and keep the category
+   buttons hidden -- but the selector's Move On button still needs to show through. */
+.school-lesson-active .basic-chord-selector {
+  display: flex;
+}
+
+.school-lesson-active .basic-chord-selector .basic-chord-cat-btn,
+.school-lesson-active .basic-chord-selector #root-hint-text {
+  display: none;
+}
+
 .basic-chord-cat-btn {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.35);
