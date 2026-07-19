@@ -57,8 +57,11 @@
       <p class="credit-text" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:20px;width:100%;font-family:system-ui,sans-serif;display:flex;justify-content:space-between;"><span>v1.8</span><span>VitalApps ©</span></p>
       <div class="bottom-bar">
         <div class="mute-wrapper">
-          <button class="home-btn"><img src="homeIcon.png" class="home-icon" alt="home" /></button>
-          <span class="mute-label">Home</span>
+          <button class="home-btn">
+            <img src="homeIcon.png" class="home-icon" alt="home" />
+            <img src="back.png" class="home-back-icon" alt="back" />
+          </button>
+          <span class="mute-label" id="home-label">Home</span>
         </div>
         <div class="mute-wrapper">
           <button class="mute-btn"><img src="note.png" class="note-icon" alt="mute" /></button>
@@ -209,16 +212,17 @@
 
       </div>
       <div class="school-selector">
-        <div class="class-row"><button class="class-btn" data-class="1">Class 1</button><span class="class-check" data-class-check="1"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="2">Class 2</button><span class="class-check" data-class-check="2"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="3">Class 3</button><span class="class-check" data-class-check="3"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="4">Class 4</button><span class="class-check" data-class-check="4"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="5">Class 5</button><span class="class-check" data-class-check="5"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="6">Class 6</button><span class="class-check" data-class-check="6"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="7">Class 7</button><span class="class-check" data-class-check="7"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="8">Class 8</button><span class="class-check" data-class-check="8"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="9">Class 9</button><span class="class-check" data-class-check="9"></span></div>
-        <div class="class-row"><button class="class-btn" data-class="10">Class 10</button><span class="class-check" data-class-check="10"></span></div>
+        <div class="class-header-row"><span class="class-check-label">Done</span></div>
+        <button class="class-btn" data-class="1">Class 1<span class="class-check" data-class-check="1"></span></button>
+        <button class="class-btn" data-class="2">Class 2<span class="class-check" data-class-check="2"></span></button>
+        <button class="class-btn" data-class="3">Class 3<span class="class-check" data-class-check="3"></span></button>
+        <button class="class-btn" data-class="4">Class 4<span class="class-check" data-class-check="4"></span></button>
+        <button class="class-btn" data-class="5">Class 5<span class="class-check" data-class-check="5"></span></button>
+        <button class="class-btn" data-class="6">Class 6<span class="class-check" data-class-check="6"></span></button>
+        <button class="class-btn" data-class="7">Class 7<span class="class-check" data-class-check="7"></span></button>
+        <button class="class-btn" data-class="8">Class 8<span class="class-check" data-class-check="8"></span></button>
+        <button class="class-btn" data-class="9">Class 9<span class="class-check" data-class-check="9"></span></button>
+        <button class="class-btn" data-class="10">Class 10<span class="class-check" data-class-check="10"></span></button>
       </div>
       <div class="string-lock-section">
         <span class="string-lock-label">Open/Lock<br>Strings</span>
@@ -266,7 +270,7 @@
   <div id="class-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
       <h3 id="class-modal-title" style="margin:0 0 14px;text-align:left;font-size:18px;letter-spacing:1px;">Class 1</h3>
-      <p id="class-modal-desc" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;"></p>
+      <p id="class-modal-desc" style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 20px;text-align:left;direction:ltr;white-space:pre-line;"></p>
       <div style="display:flex;gap:10px;">
         <button id="class-modal-start" style="flex:1;padding:10px;background:darkorange;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Start</button>
         <button id="class-modal-exit" style="flex:1;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Exit</button>

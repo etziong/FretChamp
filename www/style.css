@@ -407,6 +407,9 @@ header nav img {
 .four-chord-mode .peek-wrapper {
   display: flex;
 }
+.school-lesson-active.school-mode .peek-wrapper {
+  display: flex;
+}
 .try-again-wrapper {
   display: none;
   flex-direction: column;
@@ -438,6 +441,12 @@ header nav img {
 .free-playing-mode .timer-wrapper {
   display: none;
 }
+.school-mode .timer-wrapper {
+  display: none;
+}
+.school-lesson-active.school-mode .timer-wrapper {
+  display: flex;
+}
 .timer-wrapper:active { opacity: 0.6; }
 .timer-seconds-display {
   display: none;
@@ -458,12 +467,13 @@ header nav img {
   cursor: pointer;
   margin-top: 8px;
 }
-.school-mode .listen-wrapper {
+/* Listen is only shown once a lesson is actually active, not on the class-list screen. */
+.school-lesson-active.school-mode .listen-wrapper {
   display: flex;
 }
 .listen-wrapper:active { opacity: 0.6; }
-.listen-wrapper.listen-active .listen-icon { stroke: #4aff9e; }
-.listen-wrapper.listen-active .peek-label { color: #4aff9e; }
+.listen-wrapper.listen-active .listen-icon { stroke: darkorange; }
+.listen-wrapper.listen-active .peek-label { color: darkorange; }
 .listen-wrapper.listen-error .listen-icon { stroke: #ff5555; }
 .listen-wrapper.listen-error .peek-label { color: #ff5555; }
 .peek-btn {
@@ -489,6 +499,12 @@ header nav img {
   height: 28px;
   object-fit: contain;
   margin-bottom: 4px;
+}
+.peek-wrapper.notes-shown .peek-label {
+  color: darkorange;
+}
+.peek-wrapper.notes-shown .peek-icon {
+  filter: brightness(0) saturate(100%) invert(64%) sepia(97%) saturate(1934%) hue-rotate(1deg) brightness(103%) contrast(105%);
 }
 .peek-wrapper:active { opacity: 0.6; }
 
@@ -921,7 +937,7 @@ header nav img {
   left: 24px;
   flex-direction: row;
   align-items: flex-end;
-  gap: 4px;
+  gap: 8px;
   z-index: 10;
   direction: ltr;
 }
@@ -964,6 +980,22 @@ header nav img {
   height: 28px;
   object-fit: contain;
 }
+
+.home-back-icon {
+  display: none;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.school-lesson-active .home-icon {
+  display: none;
+}
+
+.school-lesson-active .home-back-icon {
+  display: block;
+}
+
 
 .mute-wrapper {
   display: flex;
@@ -1096,12 +1128,26 @@ header nav img {
 .free-playing-mode .score-inline {
   display: none;
 }
+.school-mode .score-inline {
+  display: none;
+}
+.school-lesson-active .score-inline {
+  display: block;
+}
 .free-playing-mode .string-lock-section {
   display: none;
 }
 .free-playing-mode .mute-wrapper:has(.mute-btn),
 .free-playing-mode .mute-wrapper:has(.next-btn) {
   display: none;
+}
+.school-mode .mute-wrapper:has(.mute-btn),
+.school-mode .mute-wrapper:has(.next-btn) {
+  display: none;
+}
+.school-lesson-active.school-mode .mute-wrapper:has(.mute-btn),
+.school-lesson-active.school-mode .mute-wrapper:has(.next-btn) {
+  display: flex;
 }
 
 
@@ -1126,18 +1172,16 @@ header nav img {
   flex-direction: column;
   gap: 4px;
   margin-top: 6px;
-  width: 140px;
+  width: fit-content;
 }
 
 .school-mode .school-selector {
   display: flex;
 }
-
-.class-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.school-lesson-active.school-mode .school-selector {
+  display: none;
 }
+
 
 .class-btn {
   background: transparent;
@@ -1146,17 +1190,20 @@ header nav img {
   font-size: 14px;
   font-family: system-ui, sans-serif;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 6px 9px 6px 10px;
   cursor: pointer;
   text-align: left;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1ch;
+  align-items: center;
 }
 
 .class-check {
   width: 18px;
   height: 18px;
   border: 1px solid rgba(255,255,255,0.4);
-  border-radius: 4px;
+  border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;
   display: flex;
@@ -1173,6 +1220,21 @@ header nav img {
 
 .class-check.checked::after {
   content: '\2713';
+}
+
+.class-header-row {
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 2px;
+}
+
+.class-check-label {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  font-family: system-ui, sans-serif;
 }
 
 .scale-selector.has-open .scale-group:not(.open) {
