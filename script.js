@@ -1502,8 +1502,8 @@ const BASS_LESSON_HOWTO = {
   9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
 };
 
-const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
-const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
