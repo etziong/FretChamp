@@ -274,36 +274,6 @@ header nav img {
   color: darkorange;
 }
 
-.basic-chord-continue-btn {
-  display: none;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  color: darkorange;
-  font-size: calc(var(--font-1) * 1.2);
-  font-family: system-ui, sans-serif;
-  font-weight: bold;
-  font-style: italic;
-  padding: 0;
-  cursor: pointer;
-  margin-top: 16px;
-  white-space: nowrap;
-}
-
-.basic-chord-continue-btn.show {
-  display: flex;
-}
-
-.continue-arrow {
-  align-self: center;
-  height: calc(var(--font-1) * 1.8);
-  width: auto;
-  margin-left: -6px;
-}
-
 @keyframes blink-orange {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -469,11 +439,25 @@ header nav img {
   object-fit: contain;
   margin-bottom: 4px;
 }
+.eye-icon {
+  display: inline-block;
+  background-color: #ffffff;
+  -webkit-mask-image: url('eya.png');
+  mask-image: url('eya.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
 .peek-wrapper.notes-shown .peek-label {
   color: darkorange;
 }
-.peek-wrapper.notes-shown .peek-icon {
-  filter: brightness(0) saturate(100%) invert(64%) sepia(97%) saturate(1934%) hue-rotate(1deg) brightness(103%) contrast(105%);
+.peek-wrapper.notes-shown .eye-icon {
+  background-color: darkorange;
+  -webkit-mask-image: url('Hide.png?v=2');
+  mask-image: url('Hide.png?v=2');
 }
 .peek-wrapper:active { opacity: 0.6; }
 
@@ -1131,6 +1115,10 @@ header nav img {
   gap: 3px;
   margin-top: 6px;
   width: fit-content;
+  max-height: calc(100dvh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
 }
 
 .school-mode .school-selector {
@@ -1142,7 +1130,7 @@ header nav img {
 
 
 .class-btn {
-  background: transparent;
+  background: #000000;
   border: 1px solid rgba(255,255,255,0.35);
   color: white;
   font-size: 14px;
