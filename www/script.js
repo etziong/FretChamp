@@ -60,6 +60,18 @@ if (timerWrapper) {
   });
 }
 
+// Entering (or re-entering) any mode or School lesson should start with the Timer
+// toggle off, not carry over whatever state it was left in elsewhere.
+function resetTimerToggle() {
+  timerOn = false;
+  clearInterval(timerIntervalId);
+  timerIntervalId = null;
+  timerSeconds = 0;
+  timerCarryover = 0;
+  if (timerWrapper) timerWrapper.classList.remove('timer-active');
+  if (timerStatusEl) timerStatusEl.textContent = 'On';
+}
+
 // ── Listen (microphone note/chord detection) ────────────────────────────────
 const listenWrapper = document.getElementById('listen-wrapper');
 const listenStatusEl = document.getElementById('listen-status');
@@ -138,7 +150,7 @@ function noteNameFromFreq(freq) {
   const rounded = Math.round(noteNum);
   const cents = (noteNum - rounded) * 100;
   const pitchClass = ((rounded % 12) + 12) % 12;
-  return { name: LISTEN_NOTE_NAMES[pitchClass], cents };
+  return { name: LISTEN_NOTE_NAMES[pitchClass], cents, midi: rounded };
 }
 
 function completeSingleNoteViaListen() {
@@ -295,7 +307,7 @@ function processListenFrame() {
     }
   } else {
     let remainingKeys;
-    if (gameMode === 'freeplay') {
+    if (gameMode === 'freeplay' || (gameMode === 'school' && !!activeMovableLessons()[activeClassNumber])) {
       remainingKeys = scaleGameActive ? [...scaleGameNotes].filter(k => !scaleGameFound.has(k)) : [];
     } else {
       remainingKeys = [...targetKeys];
@@ -417,6 +429,18 @@ function stopListening() {
   hideListenBigCircles();
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
+
+  // Turning off Listen means practicing without help -- so any notes currently
+  // shown on the grid as a visual aid should hide too, not stay visible.
+  if (document.body.classList.contains('school-lesson-active')) {
+    if (activeMovableLessons()[activeClassNumber]) {
+      hideScalePeekNow();
+    } else if (schoolNotesShown) {
+      schoolNotesShown = false;
+      hidePeek();
+      updatePeekLabel();
+    }
+  }
 }
 
 if (listenWrapper) {
@@ -424,6 +448,95 @@ if (listenWrapper) {
     if (listenOn) stopListening();
     else startListening();
   });
+}
+
+// ── Tuner (continuous mic pitch readout, independent of the Listen toggle) ──
+const tunerScreen = document.querySelector('.tuner-screen');
+const tunerGaugeWrap = document.querySelector('.tuner-gauge-wrap');
+const tunerNeedle = document.querySelector('.tuner-needle');
+const tunerNoteEl = document.querySelector('.tuner-note');
+const tunerCentsEl = document.querySelector('.tuner-cents');
+let tunerStream = null;
+let tunerAnalyser = null;
+let tunerRafId = null;
+let tunerStarting = false;
+const TUNER_RMS_THRESHOLD = 0.01;
+const TUNER_IN_TUNE_CENTS = 5;
+
+function updateTunerStringHighlight(midi) {
+  document.querySelectorAll('.tuner-string-chip').forEach(chip => {
+    chip.classList.toggle('active', midi != null && parseInt(chip.dataset.midi) === midi);
+  });
+}
+
+function tunerLoop() {
+  if (!tunerAnalyser) return;
+  const timeData = new Float32Array(tunerAnalyser.fftSize);
+  tunerAnalyser.getFloatTimeDomainData(timeData);
+  const rms = computeRMS(timeData);
+  const freq = rms >= TUNER_RMS_THRESHOLD ? autoCorrelate(timeData, audioCtx.sampleRate) : -1;
+  if (freq > 0) {
+    const detected = noteNameFromFreq(freq);
+    const inTune = Math.abs(detected.cents) <= TUNER_IN_TUNE_CENTS;
+    const deg = Math.max(-60, Math.min(60, detected.cents * 1.2));
+    tunerNeedle.setAttribute('transform', `rotate(${deg} 110 115)`);
+    tunerNoteEl.textContent = detected.name;
+    tunerCentsEl.textContent = inTune ? 'In tune' : `${detected.cents > 0 ? '+' : ''}${Math.round(detected.cents)} cents`;
+    tunerGaugeWrap.classList.remove('idle');
+    tunerGaugeWrap.classList.toggle('in-tune', inTune);
+    tunerGaugeWrap.classList.toggle('off-pitch', !inTune);
+    updateTunerStringHighlight(detected.midi);
+  } else {
+    tunerNeedle.setAttribute('transform', 'rotate(0 110 115)');
+    tunerNoteEl.textContent = '';
+    tunerCentsEl.textContent = 'Play a note';
+    tunerGaugeWrap.classList.add('idle');
+    tunerGaugeWrap.classList.remove('in-tune', 'off-pitch');
+    updateTunerStringHighlight(null);
+  }
+  tunerRafId = requestAnimationFrame(tunerLoop);
+}
+
+async function startTuner() {
+  if (tunerStarting || tunerAnalyser) return;
+  tunerStarting = true;
+  tunerScreen.classList.remove('mic-error');
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
+    }
+    tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    const source = audioCtx.createMediaStreamSource(tunerStream);
+    tunerAnalyser = audioCtx.createAnalyser();
+    tunerAnalyser.fftSize = 2048;
+    source.connect(tunerAnalyser);
+    tunerStarting = false;
+    tunerLoop();
+  } catch (err) {
+    console.error('Tuner failed to start:', err);
+    if (tunerStream) { tunerStream.getTracks().forEach(t => t.stop()); tunerStream = null; }
+    tunerAnalyser = null;
+    tunerStarting = false;
+    tunerScreen.classList.add('mic-error');
+  }
+}
+
+function stopTuner() {
+  if (tunerRafId) cancelAnimationFrame(tunerRafId);
+  tunerRafId = null;
+  if (tunerStream) tunerStream.getTracks().forEach(t => t.stop());
+  tunerStream = null;
+  tunerAnalyser = null;
+  if (tunerScreen) tunerScreen.classList.remove('mic-error');
+  if (tunerGaugeWrap) {
+    tunerGaugeWrap.classList.add('idle');
+    tunerGaugeWrap.classList.remove('in-tune', 'off-pitch');
+  }
+  if (tunerNeedle) tunerNeedle.setAttribute('transform', 'rotate(0 110 115)');
+  if (tunerNoteEl) tunerNoteEl.textContent = '';
+  if (tunerCentsEl) tunerCentsEl.textContent = 'Play a note';
+  updateTunerStringHighlight(null);
 }
 
 const svgCells = {};
@@ -675,6 +788,13 @@ function initSvgGrid() {
       extraHlCircle.setAttribute('r', '30'); extraHlCircle.setAttribute('fill', 'rgb(216,190,0)');
       extraHlCircle.setAttribute('opacity', '0'); extraHlCircle.setAttribute('pointer-events', 'none');
 
+      // Third labeled highlight slot (beyond root/blues/extra) -- used by the bass
+      // 7th-arpeggio lesson to label the 7th degree alongside blues=3rd, extra=5th.
+      const seventhHlCircle = document.createElementNS(NS, 'circle');
+      seventhHlCircle.setAttribute('cx', xCtr); seventhHlCircle.setAttribute('cy', yCtr2);
+      seventhHlCircle.setAttribute('r', '30'); seventhHlCircle.setAttribute('fill', 'rgb(120,40,180)');
+      seventhHlCircle.setAttribute('opacity', '0'); seventhHlCircle.setAttribute('pointer-events', 'none');
+
       const rootHlText = document.createElementNS(NS, 'text');
       rootHlText.setAttribute('x', xCtr); rootHlText.setAttribute('y', yCtr2 + 13);
       rootHlText.setAttribute('text-anchor', 'middle'); rootHlText.setAttribute('fill', 'white');
@@ -699,10 +819,18 @@ function initSvgGrid() {
       extraHlText.setAttribute('pointer-events', 'none'); extraHlText.setAttribute('opacity', '0');
       extraHlText.textContent = 'B';
 
-      svg.appendChild(scaleNoteCircle); svg.appendChild(rootHlCircle); svg.appendChild(bluesHlCircle); svg.appendChild(extraHlCircle);
-      svg.appendChild(rootHlText); svg.appendChild(bluesHlText); svg.appendChild(extraHlText);
+      const seventhHlText = document.createElementNS(NS, 'text');
+      seventhHlText.setAttribute('x', xCtr); seventhHlText.setAttribute('y', yCtr2 + 12);
+      seventhHlText.setAttribute('text-anchor', 'middle'); seventhHlText.setAttribute('fill', 'white');
+      seventhHlText.setAttribute('font-size', '32'); seventhHlText.setAttribute('font-weight', 'bold');
+      seventhHlText.setAttribute('font-family', 'system-ui, sans-serif');
+      seventhHlText.setAttribute('pointer-events', 'none'); seventhHlText.setAttribute('opacity', '0');
+      seventhHlText.textContent = 'B';
+
+      svg.appendChild(scaleNoteCircle); svg.appendChild(rootHlCircle); svg.appendChild(bluesHlCircle); svg.appendChild(extraHlCircle); svg.appendChild(seventhHlCircle);
+      svg.appendChild(rootHlText); svg.appendChild(bluesHlText); svg.appendChild(extraHlText); svg.appendChild(seventhHlText);
       svg.appendChild(rect); svg.appendChild(circle); svg.appendChild(text);
-      svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, rootHlText, bluesHlText, extraHlText };
+      svgCells[key] = { rect, circle, text, scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, seventhHlCircle, rootHlText, bluesHlText, extraHlText, seventhHlText };
       rect.addEventListener('click', handleFretClick);
       rect.addEventListener('pointerdown', () => {
         if (!document.body.classList.contains('scales-mode')) return;
@@ -806,7 +934,7 @@ function handleFretClick(e) {
   const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
   if (bassMode && stringNum <= 2) return;
   if (lockedStrings.has(stringNum)) return;
-  if (gameMode === 'basicchord' && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
+  if (gameMode === 'basicchord' && !document.body.classList.contains('school-lesson-active') && !bothCatGroupsSelected()) { flashBasicChordHint(); return; }
   showTapRipple(key);
   playNote(freqFromKey(key));
   if (gameMode === 'freeplaying') return;
@@ -838,11 +966,42 @@ function handleFretClick(e) {
     }
     return;
   }
+  if (gameMode === 'school' && activeMovableLessons()[activeClassNumber]) {
+    const { key: movableScaleKey, start: startMovableRound } = activeMovableLessons()[activeClassNumber];
+    if (scaleGameActive && scaleGameNotes.size > 0) {
+      if (scaleGameNotes.has(key) && !scaleGameFound.has(key)) {
+        scaleGameFound.add(key);
+        showScaleNoteFound(key, scaleData[movableScaleKey]);
+        playSuccess();
+        feedbackEl.textContent = 'Good job!';
+        feedbackEl.className = 'feedback correct';
+        score++;
+        scoreNumberEl.textContent = score;
+        setTimeout(() => { if (feedbackEl.textContent === 'Good job!') feedbackEl.className = 'feedback'; }, 1500);
+        if (scaleGameFound.size === scaleGameNotes.size) {
+          scaleGameActive = false;
+          showWellDone();
+          setTimeout(playBigSuccess, 300);
+          nextRoundTimeout = setTimeout(() => { startMovableRound(); refreshSchoolLessonUI(); }, 2200);
+        }
+      } else if (!scaleGameNotes.has(key)) {
+        feedbackEl.textContent = 'Try again';
+        feedbackEl.className = 'feedback incorrect';
+        setTimeout(() => { if (feedbackEl.textContent === 'Try again') feedbackEl.className = 'feedback'; }, 1500);
+      }
+    }
+    return;
+  }
   if (gameMode === 'basicchord') {
     if (document.body.classList.contains('basic-study-phase')) return;
     if (targetKeys.has(key)) {
       targetKeys.delete(key);
-      applyDegreeToKey(key);
+      if (!applyDegreeToKey(key)) {
+        svgCells[key].circle.setAttribute('fill', 'darkorange');
+        svgCells[key].circle.setAttribute('opacity', '1');
+      }
+      svgCells[key].circle.setAttribute('stroke', 'white');
+      svgCells[key].circle.setAttribute('stroke-width', '3');
       const found = basicStudyKeys.length - targetKeys.size;
       instracEl.textContent = `Find: ${found} / ${basicStudyKeys.length}`;
       if (targetKeys.size === 0) {
@@ -851,7 +1010,7 @@ function handleFretClick(e) {
         showWellDone();
         playChordTogether(basicStudyKeys.map(k => neckNotes[k]).filter(Boolean));
         setTimeout(playBigSuccess, 1300);
-        basicChordContinueBtn.classList.add('show');
+        nextRoundTimeout = setTimeout(() => { startBasicChordRound(); refreshSchoolLessonUI(); }, 2200);
       } else {
         playSuccess();
       }
@@ -874,6 +1033,10 @@ function handleFretClick(e) {
     if (!applyDegreeToKey(key)) {
       svgCells[key].circle.setAttribute('fill', 'darkorange');
       svgCells[key].circle.setAttribute('opacity', '1');
+    }
+    if (document.body.classList.contains('school-lesson-active')) {
+      svgCells[key].circle.setAttribute('stroke', 'white');
+      svgCells[key].circle.setAttribute('stroke-width', '3');
     }
     if (gameMode === 'chord') {
       const noteName = chordNotes.find(n => normalize(n) === normalize(neckNotes[key]));
@@ -958,6 +1121,8 @@ homeBtn.addEventListener('click', () => {
     return;
   }
   if (listenOn) stopListening();
+  stopTuner();
+  resetTimerToggle();
   const modeKey = getCurrentModeKey();
   if (score > 0 && HIGH_SCORE_MODES[modeKey]) {
     const storageKey = `hs_${modeKey}`;
@@ -967,10 +1132,9 @@ homeBtn.addEventListener('click', () => {
     const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
     showScoreToast(score, isNew, avgSeconds);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active', 'tuner-mode');
   instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
-  basicChordContinueBtn.classList.remove('show');
   scaleSelector.classList.remove('has-open');
   document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
   clearScaleHighlights();
@@ -984,11 +1148,13 @@ homeBtn.addEventListener('click', () => {
 
 document.getElementById('bass-btn').addEventListener('click', () => {
   bassMode = !bassMode;
+  localStorage.setItem('bassMode', bassMode ? '1' : '0');
   document.body.classList.toggle('bass-mode', bassMode);
   document.getElementById('bass-btn').classList.toggle('active', bassMode);
   document.getElementById('bass-btn-img').src = bassMode ? 'guitarHead.png' : 'bassHead.png';
   document.getElementById('mode-label').textContent = bassMode ? 'Bass Mode Trainer' : 'Guitar Mode Trainer';
   document.getElementById('bass-btn-label').textContent = bassMode ? 'Go Guitar' : 'Go Bass';
+  renderClassTopics();
   const inSetMode = document.body.classList.contains('three-chord-mode') || document.body.classList.contains('four-inverts-mode');
   if (inSetMode) {
     lockedStrings.clear();
@@ -1022,6 +1188,12 @@ document.getElementById('bass-btn').addEventListener('click', () => {
     highlightNotes(note);
   }
 });
+
+// Remember the player's last guitar/bass choice so they don't have to tap "Go Bass"
+// again every time they open the app.
+if (localStorage.getItem('bassMode') === '1') {
+  document.getElementById('bass-btn').click();
+}
 
 nextBtn.addEventListener('click', () => {
   nextRound();
@@ -1145,12 +1317,20 @@ let schoolNotesShown = false;
 function updatePeekLabel() {
   if (!peekLabel) return;
   if (document.body.classList.contains('school-lesson-active')) {
-    peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>${schoolNotesShown ? 'Hide' : 'Show'}<br>Notes`;
+    if (activeMovableLessons()[activeClassNumber] || activeClassNumber === '1' || activeClassNumber === '2') {
+      // Watch-then-find lessons (and the single-note string 1/2 lessons, same spirit):
+      // a momentary 5s peek, not a persistent toggle -- always shows "Show Notes" in
+      // the plain/white style, never the orange "notes shown" state.
+      peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>Notes`;
+      if (peekWrapper) peekWrapper.classList.remove('notes-shown');
+      return;
+    }
+    peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>${schoolNotesShown ? 'Hide' : 'Show'}<br>Notes`;
     if (peekWrapper) peekWrapper.classList.toggle('notes-shown', schoolNotesShown);
     return;
   }
   const word = (gameMode === 'single' || gameMode === 'freeplay' || gameMode === 'basicchord') ? 'Notes' : 'Chords';
-  peekLabel.innerHTML = `<img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>${word}`;
+  peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>${word}`;
   if (peekWrapper) peekWrapper.classList.remove('notes-shown');
 }
 
@@ -1174,7 +1354,7 @@ function restoreScoreLabel() {
 // path a round can restart from: Next button, Listen completion, tap completion.
 function refreshSchoolLessonUI() {
   if (!document.body.classList.contains('school-lesson-active')) return;
-  headLineEl.textContent = LESSON_TITLES[activeClassNumber] || ('Lesson ' + activeClassNumber);
+  headLineEl.innerHTML = (bassMode ? BASS_LESSON_TITLES : LESSON_TITLES)[activeClassNumber] || ('Lesson ' + activeClassNumber);
   setSchoolClassLabel();
   if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
 }
@@ -1182,15 +1362,6 @@ function refreshSchoolLessonUI() {
 let instracFlashTimeout = null;
 let hintFlashTimeout = null;
 const basicChordHintEl = document.querySelector('.basic-chord-hint');
-const basicChordContinueBtn = document.querySelector('.basic-chord-continue-btn');
-
-basicChordContinueBtn.addEventListener('click', () => {
-  basicChordContinueBtn.classList.remove('show');
-  playContinueClick();
-  startBasicChordRound();
-  refreshSchoolLessonUI();
-});
-
 
 function flashBasicChordHint() {
   if (!basicChordHintEl) return;
@@ -1211,6 +1382,14 @@ peekBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
 
   if (document.body.classList.contains('school-lesson-active')) {
+    if (activeMovableLessons()[activeClassNumber]) {
+      peekScaleNotes();
+      return;
+    }
+    if (activeClassNumber === '1' || activeClassNumber === '2') {
+      peekSingleNoteStringNow();
+      return;
+    }
     schoolNotesShown = !schoolNotesShown;
     if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
     updatePeekLabel();
@@ -1293,17 +1472,38 @@ const modeInstructions = {
   'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
   'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
   'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
-  'basic-chord-mode': '• To practice Open Chords — tap "Open Chords".\n\n• To practice Barre Chords — tap "Barre Chords", then choose a root on string 5 or 6.\n\n• Find the chord tones on the fretboard.\n\n• Use Show Notes if you need a hint.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
   'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  3: '• Play the open chords.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  4: '• Play the barre chords, rooted on string 6.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  5: '• Play the barre chords, rooted on string 5.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  6: '• Play the power chords, rooted on string 6.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  7: '• Play the power chords, rooted on string 5.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  10: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  11: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+};
+
+const BASS_LESSON_HOWTO = {
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  3: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  4: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  5: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  6: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  7: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
 };
 
 const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
@@ -1317,9 +1517,9 @@ instructionsWrapper.addEventListener('click', () => {
   const isSchoolList = document.body.classList.contains('school-mode') && !isSchoolLesson;
   const currentMode = Object.keys(modeInstructions).find(m => document.body.classList.contains(m));
   const text = isSchoolLesson
-    ? (LESSON_HOWTO[activeClassNumber] || '')
+    ? ((isBass ? BASS_LESSON_HOWTO : LESSON_HOWTO)[activeClassNumber] || '')
     : isSchoolList
-      ? SCHOOL_LIST_HOWTO
+      ? (isBass ? BASS_SCHOOL_LIST_HOWTO : SCHOOL_LIST_HOWTO)
       : isBass && bassModeInstructions[currentMode]
         ? bassModeInstructions[currentMode]
         : (currentMode ? modeInstructions[currentMode] : '');
@@ -1430,34 +1630,19 @@ function playBigSuccess() {
 
 }
 
-function playContinueClick() {
-  const ctx = audioCtx;
-  [523.25, 659.25, 783.99].forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.05 + 0.5);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime + i * 0.05);
-    osc.stop(ctx.currentTime + i * 0.05 + 0.5);
-  });
-}
-
 
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active', 'tuner-mode');
+    stopTuner();
+    resetTimerToggle();
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
-    basicChordContinueBtn.classList.remove('show');
     if (index === 0) {
       const modal = document.getElementById('chord-list-modal');
       modal.classList.add('open');
@@ -1518,6 +1703,7 @@ mainButtons.forEach((btn, index) => {
         cell.text.setAttribute('opacity', '0');
       });
       renderClassChecks();
+      adjustSchoolListHeight();
     } else if (index === 8) {
       gameMode = 'freeplaying';
       document.body.classList.add('free-playing-mode');
@@ -1530,23 +1716,9 @@ mainButtons.forEach((btn, index) => {
         cell.text.setAttribute('opacity', '0');
       });
     } else if (index === 9) {
-      gameMode = 'basicchord';
-      updatePeekLabel();
-      basicChordCategory = null;
-      lastBasicChordName = null;
-      rootCatBtns.forEach(b => { b.style.display = ''; b.classList.remove('active'); });
-      rootHintText.style.display = 'none';
-      basicChordHintEl.style.display = 'none';
-      document.body.classList.add('basic-chord-mode');
-      headLineEl.innerHTML = 'BEGINNERS<br>TRAINER';
-      instracEl.innerHTML = '<span style="color:darkorange">Choose open<br>or barre chords</span>';
-      instracEl.classList.add('instrac-blink');
-      notesDisplay.innerHTML = '';
-      targetKeys.clear();
-      Object.values(svgCells).forEach(cell => {
-        cell.circle.setAttribute('opacity', '0');
-        cell.text.setAttribute('opacity', '0');
-      });
+      gameMode = 'tuner';
+      document.body.classList.add('tuner-mode');
+      startTuner();
     } else {
       gameMode = 'single';
       document.body.classList.add('single-note-mode');
@@ -1602,21 +1774,101 @@ const CLASS_DESCRIPTIONS = {
   1: 'Learn the notes on string 6\n-- you will use them to find the root notes of basic barre chords.',
   2: 'Learn the notes on string 5\n-- you will use them to find the root notes of basic barre chords.',
   3: 'Learn basic open chords.',
-  4: 'Coming soon.', 5: 'Coming soon.',
-  6: 'Coming soon.', 7: 'Coming soon.', 8: 'Coming soon.', 9: 'Coming soon.', 10: 'Coming soon.'
+  4: 'Learn to play basic barre chords, rooted on string 6.',
+  5: 'Learn to play basic barre chords, rooted on string 5.',
+  6: 'Learn to play power chords, rooted on string 6.',
+  7: 'Learn to play power chords, rooted on string 5.',
+  8: 'Learn the Minor Blues scale on string 6.',
+  9: 'Learn the Major Blues scale on string 6.',
+  10: 'Learn the Major scale on string 6.',
+  11: 'Learn the Minor scale on string 6.',
+};
+
+const BASS_CLASS_DESCRIPTIONS = {
+  1: 'Learn the notes on string 6\n-- essential for navigating the bass fretboard.',
+  2: 'Learn the notes on string 5\n-- essential for navigating the bass fretboard.',
+  3: 'Learn the major triad arpeggio.',
+  4: 'Learn the minor triad arpeggio.',
+  5: 'Learn 7th chord arpeggios.',
+  6: 'Learn the Minor Blues scale on string 6.',
+  7: 'Learn the Major Blues scale on string 6.',
+  8: 'Learn the Major scale on string 6.',
+  9: 'Learn the Minor scale on string 6.',
 };
 
 const LESSON_SUBTITLES = {
   1: '', 2: '',
   3: 'Learn open chords',
-  4: '', 5: '', 6: '', 7: '', 8: '', 9: '', 10: ''
+  4: 'Learn barre chords (root 6)',
+  5: 'Learn barre chords (root 5)',
+  6: 'Learn power chords (root 6)',
+  7: 'Learn power chords (root 5)',
+  8: 'Learn the blues scale',
+  9: 'Learn the major blues scale',
+  10: 'Learn the major scale',
+  11: 'Learn the minor scale',
+};
+
+const BASS_LESSON_SUBTITLES = {
+  1: '', 2: '',
+  3: 'Learn the major triad',
+  4: 'Learn the minor triad',
+  5: 'Learn 7th arpeggios',
+  6: 'Learn the blues scale',
+  7: 'Learn the major blues scale',
+  8: 'Learn the major scale',
+  9: 'Learn the minor scale',
 };
 
 const LESSON_TITLES = {
   1: '6TH STRING',
   2: '5TH STRING',
   3: 'OPEN CHORDS',
+  4: 'BARRE<br>ROOT 6',
+  5: 'BARRE<br>ROOT 5',
+  6: 'POWER<br>ROOT 6',
+  7: 'POWER<br>ROOT 5',
+  8: 'MINOR BLUES<br>SCALE',
+  9: 'MAJOR BLUES<br>SCALE',
+  10: 'MAJOR SCALE',
+  11: 'MINOR SCALE',
 };
+
+const BASS_LESSON_TITLES = {
+  1: '6TH STRING',
+  2: '5TH STRING',
+  3: 'MAJOR TRIAD',
+  4: 'MINOR TRIAD',
+  5: '7TH ARPEGGIO',
+  6: 'MINOR BLUES<br>SCALE',
+  7: 'MAJOR BLUES<br>SCALE',
+  8: 'MAJOR SCALE',
+  9: 'MINOR SCALE',
+};
+
+const CLASS_TOPICS = {
+  1: '6th Str', 2: '5th Str', 3: 'Open Chords',
+  4: 'Barre R6', 5: 'Barre R5',
+  6: 'Power R6', 7: 'Power R5',
+  8: 'Minor Blues', 9: 'Major Blues',
+  10: 'Major Scale', 11: 'Minor Scale',
+};
+
+const BASS_CLASS_TOPICS = {
+  1: '6th Str', 2: '5th Str',
+  3: 'Major Triad', 4: 'Minor Triad', 5: '7th Arpeggio',
+  6: 'Minor Blues', 7: 'Major Blues',
+  8: 'Major Scale', 9: 'Minor Scale',
+};
+
+function renderClassTopics() {
+  const topics = bassMode ? BASS_CLASS_TOPICS : CLASS_TOPICS;
+  document.querySelectorAll('.class-topic').forEach(el => {
+    el.textContent = topics[el.dataset.classTopic] || '';
+  });
+}
+
+renderClassTopics();
 
 function loadClassCompleted() {
   try {
@@ -1633,6 +1885,25 @@ function renderClassChecks() {
     el.classList.toggle('checked', classCompleted.has(el.dataset.classCheck));
   });
 }
+
+// The class list's available height depends on the actual position of the fixed
+// Home button, which varies by device/viewport -- a guessed CSS max-height either
+// leaves too much empty scroll room or still overlaps on short screens. Measuring
+// both elements' real positions is the only way to size it exactly right everywhere.
+function adjustSchoolListHeight() {
+  const selector = document.querySelector('.school-selector');
+  if (!selector || !homeBtn) return;
+  const selectorTop = selector.getBoundingClientRect().top;
+  const homeTop = homeBtn.getBoundingClientRect().top;
+  const available = homeTop - selectorTop - 16;
+  selector.style.maxHeight = Math.max(120, available) + 'px';
+}
+
+window.addEventListener('resize', () => {
+  if (document.body.classList.contains('school-mode') && !document.body.classList.contains('school-lesson-active')) {
+    adjustSchoolListHeight();
+  }
+});
 
 document.querySelectorAll('.class-check').forEach(el => {
   el.addEventListener('click', (e) => {
@@ -1655,7 +1926,7 @@ document.querySelectorAll('.class-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     activeClassNumber = btn.dataset.class;
     classModalTitle.textContent = 'Class ' + activeClassNumber;
-    classModalDesc.textContent = CLASS_DESCRIPTIONS[activeClassNumber] || '';
+    classModalDesc.textContent = (bassMode ? BASS_CLASS_DESCRIPTIONS : CLASS_DESCRIPTIONS)[activeClassNumber] || '';
     classModal.style.display = 'flex';
   });
 });
@@ -1668,11 +1939,12 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   classModal.style.display = 'none';
   document.body.classList.add('school-lesson-active');
   document.getElementById('home-label').textContent = 'Back';
-  schoolNotesShown = true;
+  resetTimerToggle();
+  schoolNotesShown = !(activeClassNumber === '1' || activeClassNumber === '2');
   updatePeekLabel();
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
-  instracEl.innerHTML = LESSON_SUBTITLES[activeClassNumber] || '';
+  instracEl.innerHTML = (bassMode ? BASS_LESSON_SUBTITLES : LESSON_SUBTITLES)[activeClassNumber] || '';
   if (activeClassNumber === '1' || activeClassNumber === '2') {
     const focusString = activeClassNumber === '1' ? 6 : 5;
     noteDisplayMode = 'letter';
@@ -1689,22 +1961,231 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
     renderSingleNoteDisplay(note);
     highlightNotes(note);
     instracEl.innerHTML = 'Play notes<br>on string ' + focusString;
+  } else if (bassMode && BASS_MOVABLE_LESSONS[activeClassNumber]) {
+    BASS_MOVABLE_LESSONS[activeClassNumber].reset();
+    BASS_MOVABLE_LESSONS[activeClassNumber].start();
   } else if (activeClassNumber === '3') {
     gameMode = 'basicchord';
     basicChordCategory = 'open';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.basic-chord-cat-btn[data-cat="open"]').classList.add('active');
     startBasicChordRound();
+  } else if (activeClassNumber === '4') {
+    gameMode = 'basicchord';
+    basicChordCategory = 'root6';
+    startBasicChordRound();
+  } else if (activeClassNumber === '5') {
+    gameMode = 'basicchord';
+    basicChordCategory = 'root5';
+    startBasicChordRound();
+  } else if (activeClassNumber === '6') {
+    gameMode = 'basicchord';
+    basicChordCategory = 'power6';
+    startBasicChordRound();
+  } else if (activeClassNumber === '7') {
+    gameMode = 'basicchord';
+    basicChordCategory = 'power5';
+    startBasicChordRound();
+  } else if (activeClassNumber === '8') {
+    lastMovableBluesRoot = null;
+    startSchoolMovableBluesRound();
+  } else if (activeClassNumber === '9') {
+    lastMajorBluesRoot = null;
+    startSchoolMajorBluesRound();
+  } else if (activeClassNumber === '10') {
+    lastMajorScaleRoot = null;
+    startSchoolMajorScaleRound();
+  } else if (activeClassNumber === '11') {
+    lastMinorScaleRoot = null;
+    startSchoolMinorScaleRound();
   }
-  headLineEl.textContent = LESSON_TITLES[activeClassNumber] || ('Lesson ' + activeClassNumber);
+  headLineEl.innerHTML = (bassMode ? BASS_LESSON_TITLES : LESSON_TITLES)[activeClassNumber] || ('Lesson ' + activeClassNumber);
   setSchoolClassLabel();
   if (!listenOn) startListening();
-  if (targetKeys.size > 0) showPeek();
+  if (schoolNotesShown && targetKeys.size > 0) showPeek();
   // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
 });
 
+// Lesson 8: moves the "Minor Blues 1" box shape to a random root on string 6, from
+// btn1 (E) to btn10 (Db) -- the exact window where the whole shape stays on-grid --
+// and shows the root's name in the .noteD display, then reuses the existing
+// watch-then-find scale game (applyScaleHighlights/startScaleGame).
+let lastMovableBluesRoot = null;
+
+function startSchoolMovableBluesRound() {
+  let rootBtn;
+  do { rootBtn = 1 + Math.floor(Math.random() * 10); } while (rootBtn === lastMovableBluesRoot);
+  lastMovableBluesRoot = rootBtn;
+  const delta = rootBtn - 4;
+  scaleData['School Movable Blues'] = transposeScaleShape(scaleData['Minor Blues 1'], delta);
+  noteDisplayMode = 'letter';
+  localStorage.setItem('noteDisplayMode', 'letter');
+  updateNoteDisplayToggleButton();
+  notesDisplay.classList.remove('noteD--staff');
+  notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+  applyScaleHighlights('School Movable Blues');
+}
+
+// Lesson 9: same mechanic as Lesson 8, but moves the "Minor Blues 2" box shape on
+// string 6 -- its actual notes (G, A, Bb, B, D, E) are the G Major Blues scale.
+// Its lowest note sits one fret below the root, so the root's minimum position is
+// btn3 (F#), keeping that lowest note off the open string (never below btn2/F).
+let lastMajorBluesRoot = null;
+
+function startSchoolMajorBluesRound() {
+  let rootBtn;
+  do { rootBtn = 3 + Math.floor(Math.random() * 8); } while (rootBtn === lastMajorBluesRoot);
+  lastMajorBluesRoot = rootBtn;
+  const delta = rootBtn - 4;
+  scaleData['School Movable Major Blues'] = transposeScaleShape(scaleData['Minor Blues 2'], delta);
+  noteDisplayMode = 'letter';
+  localStorage.setItem('noteDisplayMode', 'letter');
+  updateNoteDisplayToggleButton();
+  notesDisplay.classList.remove('noteD--staff');
+  notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+  applyScaleHighlights('School Movable Major Blues');
+}
+
+// Lesson 10: moves the "Ionian" (Major Scale) shape on string 6. Its root is also
+// the shape's lowest note, so the full open-string-inclusive range is safe:
+// btn1 (E) through btn8 (A#).
+let lastMajorScaleRoot = null;
+
+function startSchoolMajorScaleRound() {
+  let rootBtn;
+  do { rootBtn = 1 + Math.floor(Math.random() * 8); } while (rootBtn === lastMajorScaleRoot);
+  lastMajorScaleRoot = rootBtn;
+  const delta = rootBtn - 4;
+  scaleData['School Movable Major Scale'] = transposeScaleShape(scaleData['Ionian'], delta);
+  noteDisplayMode = 'letter';
+  localStorage.setItem('noteDisplayMode', 'letter');
+  updateNoteDisplayToggleButton();
+  notesDisplay.classList.remove('noteD--staff');
+  notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+  applyScaleHighlights('School Movable Major Scale');
+}
+
+// Lesson 11: moves the "Aeolian" (Minor Scale) shape on string 6. Same as Lesson 10,
+// its root is also the shape's lowest note: btn1 (E) through btn8 (A#).
+let lastMinorScaleRoot = null;
+
+function startSchoolMinorScaleRound() {
+  let rootBtn;
+  do { rootBtn = 1 + Math.floor(Math.random() * 8); } while (rootBtn === lastMinorScaleRoot);
+  lastMinorScaleRoot = rootBtn;
+  const delta = rootBtn - 4;
+  scaleData['School Movable Minor Scale'] = transposeScaleShape(scaleData['Aeolian'], delta);
+  noteDisplayMode = 'letter';
+  localStorage.setItem('noteDisplayMode', 'letter');
+  updateNoteDisplayToggleButton();
+  notesDisplay.classList.remove('noteD--staff');
+  notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+  applyScaleHighlights('School Movable Minor Scale');
+}
+
+const MOVABLE_SCALE_LESSONS = {
+  '8': { key: 'School Movable Blues', start: () => startSchoolMovableBluesRound() },
+  '9': { key: 'School Movable Major Blues', start: () => startSchoolMajorBluesRound() },
+  '10': { key: 'School Movable Major Scale', start: () => startSchoolMajorScaleRound() },
+  '11': { key: 'School Movable Minor Scale', start: () => startSchoolMinorScaleRound() },
+};
+
+// Bass School lessons: builds a { key, start, reset } round-controller that picks a
+// random non-repeating root in [minRoot,maxRoot], transposes whatever shape
+// getSourceData() returns to that root, and reuses the same watch-then-find
+// scale game as the guitar movable lessons above.
+// degreeOverrides (optional): { blues: {label, color}, extra: {label, color},
+// seventh: {label, color} } -- repurposes the blues/extra/seventh highlight
+// slots to show arpeggio degree numbers (e.g. "3", "5", "b7") instead of their
+// usual blue-note/bebop-extra "B" label.
+function applyDegreeOverrides(shape, degreeOverrides) {
+  if (!degreeOverrides) return;
+  const slots = { blues: 'bluesHl', extra: 'extraHl', seventh: 'seventhHl' };
+  Object.entries(slots).forEach(([field, prefix]) => {
+    const override = degreeOverrides[field];
+    if (!override) return;
+    (shape[field] || []).forEach(k => {
+      if (!svgCells[k]) return;
+      svgCells[k][`${prefix}Circle`].setAttribute('fill', override.color);
+      svgCells[k][`${prefix}Text`].textContent = override.label;
+    });
+  });
+}
+
+function makeMovableRound(resultKey, minRoot, maxRoot, getSourceData, degreeOverrides) {
+  let lastRoot = null;
+  return {
+    key: resultKey,
+    reset() { lastRoot = null; },
+    start() {
+      let rootBtn;
+      const span = maxRoot - minRoot + 1;
+      do { rootBtn = minRoot + Math.floor(Math.random() * span); } while (rootBtn === lastRoot);
+      lastRoot = rootBtn;
+      const delta = rootBtn - 4;
+      const shape = transposeScaleShape(getSourceData(), delta);
+      scaleData[resultKey] = shape;
+      noteDisplayMode = 'letter';
+      localStorage.setItem('noteDisplayMode', 'letter');
+      updateNoteDisplayToggleButton();
+      notesDisplay.classList.remove('noteD--staff');
+      notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+      applyScaleHighlights(resultKey);
+      applyDegreeOverrides(shape, degreeOverrides);
+    },
+  };
+}
+
+const BASS_SEVENTH_QUALITIES = [
+  { key: 'Dominant7 Bass', suffix: '7', degrees: { blues: { label: '3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] }, seventh: { label: 'b7', color: CHORD_DEGREE_COLORS[3] } } },
+  { key: 'Major7 Bass', suffix: 'maj7', degrees: { blues: { label: '3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] }, seventh: { label: '7', color: CHORD_DEGREE_COLORS[3] } } },
+  { key: 'Minor7 Bass', suffix: 'm7', degrees: { blues: { label: 'b3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] }, seventh: { label: 'b7', color: CHORD_DEGREE_COLORS[3] } } },
+];
+
+// Bespoke controller (not the generic makeMovableRound) because the .noteD display
+// needs the full chord name (e.g. "Cm7"), not just the root letter -- it has to know
+// which of the 3 qualities got picked this round, not just the transposed shape.
+let lastSeventhRoot = null;
+const bassSeventhLesson = {
+  key: 'School Bass Seventh',
+  reset() { lastSeventhRoot = null; },
+  start() {
+    let rootBtn;
+    do { rootBtn = 2 + Math.floor(Math.random() * 9); } while (rootBtn === lastSeventhRoot);
+    lastSeventhRoot = rootBtn;
+    const delta = rootBtn - 4;
+    const quality = BASS_SEVENTH_QUALITIES[Math.floor(Math.random() * BASS_SEVENTH_QUALITIES.length)];
+    const shape = transposeScaleShape(scaleData[quality.key], delta);
+    scaleData['School Bass Seventh'] = shape;
+    noteDisplayMode = 'letter';
+    localStorage.setItem('noteDisplayMode', 'letter');
+    updateNoteDisplayToggleButton();
+    notesDisplay.classList.remove('noteD--staff');
+    notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`] + quality.suffix);
+    applyScaleHighlights('School Bass Seventh');
+    applyDegreeOverrides(shape, quality.degrees);
+  },
+};
+
+const BASS_MOVABLE_LESSONS = {
+  '3': makeMovableRound('School Bass Major Triad', 1, 9, () => scaleData['Major Triad Bass'],
+    { blues: { label: '3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] } }),
+  '4': makeMovableRound('School Bass Minor Triad', 1, 10, () => scaleData['Minor Triad Bass'],
+    { blues: { label: 'b3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] } }),
+  '5': bassSeventhLesson,
+  '6': makeMovableRound('School Bass Minor Blues', 1, 10, () => filterBassStrings(scaleData['Minor Blues 1'])),
+  '7': makeMovableRound('School Bass Major Blues', 2, 10, () => filterBassStrings(scaleData['Minor Blues 2'])),
+  '8': makeMovableRound('School Bass Major Scale', 1, 9, () => filterBassStrings(scaleData['Ionian'])),
+  '9': makeMovableRound('School Bass Minor Scale', 1, 9, () => filterBassStrings(scaleData['Aeolian'])),
+};
+
+function activeMovableLessons() {
+  return bassMode ? BASS_MOVABLE_LESSONS : MOVABLE_SCALE_LESSONS;
+}
+
 function exitSchoolLesson() {
   if (listenOn) stopListening();
+  resetTimerToggle();
   gameMode = 'school';
   document.body.classList.remove('school-lesson-active');
   restoreScoreLabel();
@@ -1713,6 +2194,13 @@ function exitSchoolLesson() {
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   targetKeys.clear();
+  clearTimeout(scaleGameTimeout);
+  clearInterval(scaleGamePreBlinkInterval);
+  clearTimeout(scalePeekTimeout);
+  scaleGameActive = false;
+  scaleGameNotes = new Set();
+  scaleGameFound = new Set();
+  clearScaleHighlights();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
     cell.text.textContent = 'X';
@@ -1728,6 +2216,7 @@ function exitSchoolLesson() {
   instracEl.innerHTML = 'Choose a lesson from the list<br><span style="color:darkorange">Use your guitar</span>';
   notesDisplay.innerHTML = '';
   schoolNotesShown = false;
+  adjustSchoolListHeight();
 }
 
 const group1Cats = ['open', 'barre'];
@@ -1835,7 +2324,35 @@ document.querySelector('.scale-selector').addEventListener('click', e => {
 });
 
 
-const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor":{"notes":["btn4-string-6","btn6-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn5-string-4","btn6-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn4-string-2","btn5-string-2","btn8-string-2","btn4-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor Pos.5":{"notes":["btn11-string-6","btn12-string-6","btn11-string-5","btn13-string-5","btn14-string-5","btn11-string-4","btn13-string-4","btn12-string-3","btn13-string-3","btn11-string-2","btn12-string-2","btn11-string-1","btn12-string-1"],"roots":["btn11-string-5","btn13-string-3"],"blues":[]},"Major Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn8-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn7-string-5","btn5-string-2"]},"Dorian Bebop":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn7-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn8-string-6","btn5-string-3","btn8-string-1"]},"Mixolydian Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn5-string-4","btn8-string-2"]}};
+const scaleData = {"Arp Major 3n":{"notes":["btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn11-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Major 4n":{"notes":["btn3-string-6","btn8-string-6","btn6-string-5","btn10-string-4","btn8-string-3","btn8-string-2","btn5-string-4","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Arp Minor 3n":{"notes":["btn7-string-6","btn6-string-5","btn9-string-4","btn8-string-3","btn5-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn7-string-2"],"blues":[]},"Arp Minor 4n":{"notes":["btn2-string-6","btn7-string-6","btn6-string-5","btn4-string-4","btn9-string-4","btn8-string-3","btn7-string-2","btn7-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn10-string-4","btn6-string-3","btn8-string-3","btn10-string-3","btn11-string-2","btn13-string-2","btn8-string-2","btn9-string-1","btn11-string-1","btn13-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn9-string-3","btn7-string-2","btn11-string-2","btn12-string-2","btn9-string-1","btn11-string-1","btn12-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"AO Major Blues":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn8-string-4","btn5-string-3","btn8-string-3","btn6-string-2","btn11-string-2","btn8-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn7-string-6","btn9-string-4","btn12-string-2"]},"AO Minor Blues":{"notes":["btn7-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn9-string-4","btn6-string-3","btn8-string-3","btn7-string-2","btn12-string-2","btn9-string-1","btn11-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":["btn5-string-5","btn7-string-3","btn10-string-1"]},"Ionian":{"notes":["btn4-string-5","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn5-string-4","btn5-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn6-string-2","btn6-string-1","btn8-string-2","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Phrygian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn6-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Lydian":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn8-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn6-string-5"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Mixolydian":{"notes":["btn4-string-5","btn4-string-4","btn6-string-6","btn6-string-5","btn8-string-6","btn8-string-5","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn7-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn8-string-4","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Minor Blues 1":{"notes":["btn7-string-6","btn4-string-5","btn4-string-4","btn4-string-3","btn4-string-2","btn6-string-5","btn6-string-3","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-5","btn7-string-3"]},"Minor Blues 2":{"notes":["btn6-string-6","btn3-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn5-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-6","btn7-string-1","btn4-string-3"]},"Minor Blues 3":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn4-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn7-string-2","btn6-string-1"],"roots":["btn4-string-6","btn4-string-1","btn6-string-4"],"blues":["btn7-string-5","btn5-string-1"]},"Minor Blues 4":{"notes":["btn7-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn4-string-3","btn6-string-3","btn5-string-2","btn7-string-2","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn5-string-4","btn8-string-2"]},"Minor Blues 5":{"notes":["btn6-string-6","btn4-string-5","btn6-string-5","btn3-string-4","btn3-string-3","btn6-string-3","btn4-string-2","btn6-string-2","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":["btn7-string-5","btn5-string-2"]},"Diminished":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn3-string-4","btn5-string-4","btn3-string-3","btn4-string-3","btn6-string-3","btn3-string-2","btn5-string-2","btn6-string-2","btn3-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Dim b9":{"notes":["btn5-string-6","btn7-string-6","btn8-string-6","btn5-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn4-string-2","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Whole Tone":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn7-string-5","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn4-string-4","btn8-string-4","btn5-string-3","btn7-string-3"],"roots":["btn4-string-6","btn6-string-4","btn4-string-1"],"blues":[]},"Melodic Minor":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn8-string-4","btn5-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn8-string-2"],"blues":[]},"Dorian ♭2":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn5-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Lydian Aug":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-4","btn5-string-3","btn7-string-3","btn6-string-2","btn6-string-1","btn8-string-1","btn10-string-1","btn8-string-5","btn5-string-4","btn8-string-2","btn7-string-5","btn9-string-3"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Lydian Dom":{"notes":["btn6-string-6","btn8-string-6","btn5-string-5","btn8-string-5","btn4-string-4","btn6-string-4","btn8-string-4","btn5-string-3","btn7-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn10-string-1"],"roots":["btn4-string-6","btn6-string-5","btn9-string-2"],"blues":[]},"Altered Scale":{"notes":["btn5-string-6","btn7-string-6","btn3-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn5-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn5-string-1","btn6-string-1","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮2":{"notes":["btn7-string-6","btn6-string-6","btn4-string-5","btn5-string-5","btn7-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn7-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Mixolydian ♭6":{"notes":["btn4-string-5","btn6-string-6","btn8-string-6","btn7-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1","btn5-string-5"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Aeolian ♯7":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn5-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn5-string-4","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Locrian ♮6":{"notes":["btn5-string-6","btn7-string-6","btn4-string-5","btn5-string-5","btn4-string-4","btn7-string-4","btn4-string-3","btn6-string-3","btn7-string-3","btn5-string-2","btn5-string-1","btn7-string-1","btn9-string-1","btn8-string-5","btn8-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Dorian ♯4":{"notes":["btn6-string-6","btn7-string-6","btn6-string-5","btn8-string-5","btn4-string-4","btn4-string-3","btn6-string-2","btn6-string-1","btn7-string-2","btn8-string-4","btn5-string-5","btn7-string-3","btn10-string-1","btn8-string-3","btn7-string-1"],"roots":["btn4-string-6","btn9-string-2","btn6-string-4"],"blues":[]},"Phrygian ♮3":{"notes":["btn5-string-6","btn4-string-5","btn7-string-5","btn4-string-4","btn7-string-4","btn6-string-5","btn6-string-3","btn8-string-3","btn5-string-2","btn5-string-1","btn7-string-2","btn9-string-1","btn8-string-6","btn5-string-3","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor":{"notes":["btn4-string-6","btn6-string-6","btn4-string-5","btn6-string-5","btn7-string-5","btn5-string-4","btn6-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn4-string-2","btn5-string-2","btn8-string-2","btn4-string-1","btn6-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[]},"Harmonic Minor Pos.5":{"notes":["btn11-string-6","btn12-string-6","btn11-string-5","btn13-string-5","btn14-string-5","btn11-string-4","btn13-string-4","btn12-string-3","btn13-string-3","btn11-string-2","btn12-string-2","btn11-string-1","btn12-string-1"],"roots":["btn11-string-5","btn13-string-3"],"blues":[]},"Major Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn5-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn9-string-1","btn8-string-2","btn8-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn7-string-5","btn5-string-2"]},"Dorian Bebop":{"notes":["btn6-string-6","btn7-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn4-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn6-string-1","btn7-string-1","btn9-string-1","btn7-string-2"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn8-string-6","btn5-string-3","btn8-string-1"]},"Mixolydian Bebop":{"notes":["btn6-string-6","btn8-string-6","btn4-string-5","btn6-string-5","btn8-string-5","btn4-string-4","btn8-string-4","btn5-string-3","btn6-string-3","btn8-string-3","btn6-string-2","btn7-string-2","btn6-string-1","btn8-string-1","btn9-string-1"],"roots":["btn4-string-6","btn6-string-4","btn9-string-2"],"blues":[],"extra":["btn5-string-4","btn8-string-2"]},"Major Triad Bass":{"notes":[],"roots":["btn4-string-6"],"blues":["btn8-string-6"],"extra":["btn6-string-5"]},"Minor Triad Bass":{"notes":[],"roots":["btn4-string-6"],"blues":["btn7-string-6"],"extra":["btn6-string-5"]},"Dominant7 Bass":{"notes":[],"roots":["btn4-string-6"],"blues":["btn3-string-5"],"extra":["btn6-string-5"],"seventh":["btn4-string-4"]},"Major7 Bass":{"notes":[],"roots":["btn4-string-6"],"blues":["btn3-string-5"],"extra":["btn6-string-5"],"seventh":["btn5-string-4"]},"Minor7 Bass":{"notes":[],"roots":["btn4-string-6"],"blues":["btn7-string-6"],"extra":["btn6-string-5"],"seventh":["btn4-string-4"]}};
+
+// Shifts every key in a scale shape by deltaBtn frets, keeping each key's string
+// the same -- used to move a fixed-root shape (e.g. "Minor Blues 1") to any root.
+function transposeScaleShape(data, deltaBtn) {
+  const shiftKey = key => {
+    const m = key.match(/^btn(\d+)-string-(\d+)$/);
+    return `btn${parseInt(m[1]) + deltaBtn}-string-${m[2]}`;
+  };
+  return {
+    notes: (data.notes || []).map(shiftKey),
+    roots: (data.roots || []).map(shiftKey),
+    blues: (data.blues || []).map(shiftKey),
+    extra: (data.extra || []).map(shiftKey),
+    seventh: (data.seventh || []).map(shiftKey),
+  };
+}
+
+// Keeps only strings 3-6 (the 4 bass strings) of a 6-string guitar scale shape.
+// The remaining subset still contains every scale degree -- the guitar shapes
+// were built with enough redundancy across strings that nothing is lost.
+function filterBassStrings(data) {
+  const keep = k => parseInt(k.match(/string-(\d+)/)[1]) >= 3;
+  return {
+    notes: (data.notes || []).filter(keep),
+    roots: (data.roots || []).filter(keep),
+    blues: (data.blues || []).filter(keep),
+  };
+}
 
 function repositionCell(key, dx, dy) {
   const base = baseCellPositions[key];
@@ -1851,10 +2368,10 @@ function repositionCell(key, dx, dy) {
   cell.rect.setAttribute('y', yCtr2 - rectH / 2);
   cell.text.setAttribute('x', xCtr);
   cell.text.setAttribute('y', yCtr2 + 6);
-  [cell.scaleNoteCircle, cell.rootHlCircle, cell.bluesHlCircle, cell.extraHlCircle].forEach(el => {
+  [cell.scaleNoteCircle, cell.rootHlCircle, cell.bluesHlCircle, cell.extraHlCircle, cell.seventhHlCircle].forEach(el => {
     if (el) { el.setAttribute('cx', xCtr); el.setAttribute('cy', yCtr2); }
   });
-  [cell.rootHlText, cell.bluesHlText, cell.extraHlText].forEach(el => {
+  [cell.rootHlText, cell.bluesHlText, cell.extraHlText, cell.seventhHlText].forEach(el => {
     if (el) { el.setAttribute('x', xCtr); el.setAttribute('y', yCtr2 + 13); }
   });
 }
@@ -1895,6 +2412,12 @@ function applyScaleHighlights(scaleName) {
       svgCells[k].extraHlText.setAttribute('opacity','1');
     }
   });
+  (d.seventh || []).forEach(k => {
+    if (svgCells[k] && !skipKey(k)) {
+      svgCells[k].seventhHlCircle.setAttribute('opacity','1');
+      svgCells[k].seventhHlText.setAttribute('opacity','1');
+    }
+  });
   startScaleGame(scaleName, d);
 }
 
@@ -1903,6 +2426,7 @@ let scaleGameActive = false;
 let scaleGameNotes = new Set();
 let scaleGameFound = new Set();
 let scaleGameTimeout = null;
+let scaleGamePreBlinkInterval = null;
 let lastScaleName = null;
 let lastScaleData = null;
 
@@ -1914,6 +2438,7 @@ document.getElementById('try-again-wrapper').addEventListener('click', () => {
 
 function startScaleGame(scaleName, d) {
   clearTimeout(scaleGameTimeout);
+  clearInterval(scaleGamePreBlinkInterval);
   scaleGameActive = false;
   lastScaleName = scaleName;
   lastScaleData = d;
@@ -1923,7 +2448,8 @@ function startScaleGame(scaleName, d) {
   const rootKeys  = new Set((d.roots||[]).filter(k => !skipKey(k)));
   const bluesKeys = new Set((d.blues||[]).filter(k => !skipKey(k)));
   const extraKeys = new Set((d.extra||[]).filter(k => !skipKey(k)));
-  scaleGameNotes = new Set([...noteKeys, ...rootKeys, ...bluesKeys, ...extraKeys]);
+  const seventhKeys = new Set((d.seventh||[]).filter(k => !skipKey(k)));
+  scaleGameNotes = new Set([...noteKeys, ...rootKeys, ...bluesKeys, ...extraKeys, ...seventhKeys]);
 
   instracEl.innerHTML = '<span style="color:darkorange">Watch the scale<br>note positions!</span>';
 
@@ -1932,16 +2458,17 @@ function startScaleGame(scaleName, d) {
     rootKeys.forEach(k  => { if (svgCells[k]) { svgCells[k].rootHlCircle.setAttribute('opacity', op); svgCells[k].rootHlText.setAttribute('opacity', op); } });
     bluesKeys.forEach(k => { if (svgCells[k]) { svgCells[k].bluesHlCircle.setAttribute('opacity', op); svgCells[k].bluesHlText.setAttribute('opacity', op); } });
     extraKeys.forEach(k => { if (svgCells[k]) { svgCells[k].extraHlCircle.setAttribute('opacity', op); svgCells[k].extraHlText.setAttribute('opacity', op); } });
+    seventhKeys.forEach(k => { if (svgCells[k]) { svgCells[k].seventhHlCircle.setAttribute('opacity', op); svgCells[k].seventhHlText.setAttribute('opacity', op); } });
   };
 
   // Phase 1: 4 blinks before display
   setAllOp('0');
   let pre = 0;
-  const preBlink = setInterval(() => {
+  scaleGamePreBlinkInterval = setInterval(() => {
     setAllOp(pre % 2 === 0 ? '1' : '0');
     pre++;
     if (pre >= 8) {
-      clearInterval(preBlink);
+      clearInterval(scaleGamePreBlinkInterval);
       setAllOp('1');
       // Phase 2: 3s stable display, then 6 blinks
       scaleGameTimeout = setTimeout(() => {
@@ -1964,20 +2491,77 @@ function showScaleNoteFound(key, d) {
   } else if ((d.extra||[]).includes(key)) {
     svgCells[key].extraHlCircle.setAttribute('opacity','1');
     svgCells[key].extraHlText.setAttribute('opacity','1');
+  } else if ((d.seventh||[]).includes(key)) {
+    svgCells[key].seventhHlCircle.setAttribute('opacity','1');
+    svgCells[key].seventhHlText.setAttribute('opacity','1');
   } else {
     svgCells[key].scaleNoteCircle.setAttribute('opacity','1');
   }
 }
 
+// Momentary 5s peek for watch-then-find School lessons (movable scales/arpeggios):
+// reveals every note in the current shape (found or not), then re-hides whatever
+// hasn't been found yet. Found notes stay visible, matching normal completion look.
+let scalePeekTimeout = null;
+
+function hideScalePeekNow() {
+  clearTimeout(scalePeekTimeout);
+  scaleGameNotes.forEach(k => {
+    if (scaleGameFound.has(k) || !svgCells[k]) return;
+    svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
+    svgCells[k].rootHlCircle.setAttribute('opacity','0');
+    svgCells[k].rootHlText.setAttribute('opacity','0');
+    svgCells[k].bluesHlCircle.setAttribute('opacity','0');
+    svgCells[k].bluesHlText.setAttribute('opacity','0');
+    svgCells[k].extraHlCircle.setAttribute('opacity','0');
+    svgCells[k].extraHlText.setAttribute('opacity','0');
+    svgCells[k].seventhHlCircle.setAttribute('opacity','0');
+    svgCells[k].seventhHlText.setAttribute('opacity','0');
+  });
+}
+
+function peekScaleNotes() {
+  if (!scaleGameActive) return;
+  const lesson = activeMovableLessons()[activeClassNumber];
+  if (!lesson) return;
+  const d = scaleData[lesson.key];
+  if (!d) return;
+  clearTimeout(scalePeekTimeout);
+  scaleGameNotes.forEach(k => showScaleNoteFound(k, d));
+  scalePeekTimeout = setTimeout(hideScalePeekNow, 5000);
+}
+
+// Classes 1-2 (find notes on string 6/5) start hidden, same watch-then-find spirit as
+// the movable scale lessons, but built on targetKeys/showPeek since they aren't a
+// scaleGameNotes-based lesson -- so they get their own momentary 5s peek helper.
+function peekSingleNoteStringNow() {
+  if (targetKeys.size === 0) return;
+  clearTimeout(scalePeekTimeout);
+  showPeek();
+  scalePeekTimeout = setTimeout(hidePeek, 5000);
+}
+
 function clearScaleHighlights() {
-  Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, rootHlText, bluesHlText, extraHlText }) => {
+  Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, seventhHlCircle, rootHlText, bluesHlText, extraHlText, seventhHlText }) => {
     if (scaleNoteCircle) scaleNoteCircle.setAttribute('opacity','0');
     if (rootHlCircle)    rootHlCircle.setAttribute('opacity','0');
     if (bluesHlCircle)   bluesHlCircle.setAttribute('opacity','0');
     if (extraHlCircle)   extraHlCircle.setAttribute('opacity','0');
+    if (seventhHlCircle) seventhHlCircle.setAttribute('opacity','0');
     if (rootHlText)      rootHlText.setAttribute('opacity','0');
     if (bluesHlText)     bluesHlText.setAttribute('opacity','0');
     if (extraHlText)     extraHlText.setAttribute('opacity','0');
+    if (seventhHlText)   seventhHlText.setAttribute('opacity','0');
+    // Bass arpeggio lessons temporarily repurpose the blues/extra/seventh slots to
+    // show degree numbers (3, 5, 7) in different colors -- restore their normal
+    // blues-note/bebop-extra look here so that override never leaks into the
+    // next scale/lesson that uses these slots for their original meaning.
+    if (bluesHlCircle)   bluesHlCircle.setAttribute('fill', 'rgb(15,45,140)');
+    if (bluesHlText)     bluesHlText.textContent = 'B';
+    if (extraHlCircle)   extraHlCircle.setAttribute('fill', 'rgb(216,190,0)');
+    if (extraHlText)     extraHlText.textContent = 'B';
+    if (seventhHlCircle) seventhHlCircle.setAttribute('fill', 'rgb(120,40,180)');
+    if (seventhHlText)   seventhHlText.textContent = 'B';
   });
 }
 
@@ -2578,6 +3162,26 @@ const basicRoot5Chords = [
   { name: 'Gmaj7',keys: ['btn11-string-5','btn13-string-4','btn12-string-3','btn13-string-2','btn11-string-1'] },
 ];
 
+// Power chords: just the root + 5th + octave (first 3 keys) of each E-shape/A-shape
+// barre position above -- no major/minor quality, so only one entry per root.
+const basicPower6Chords = [
+  { name: 'F5', keys: ['btn2-string-6','btn4-string-5','btn4-string-4'] },
+  { name: 'G5', keys: ['btn4-string-6','btn6-string-5','btn6-string-4'] },
+  { name: 'A5', keys: ['btn6-string-6','btn8-string-5','btn8-string-4'] },
+  { name: 'B5', keys: ['btn8-string-6','btn10-string-5','btn10-string-4'] },
+  { name: 'C5', keys: ['btn9-string-6','btn11-string-5','btn11-string-4'] },
+  { name: 'D5', keys: ['btn11-string-6','btn13-string-5','btn13-string-4'] },
+];
+
+const basicPower5Chords = [
+  { name: 'B5', keys: ['btn3-string-5','btn5-string-4','btn5-string-3'] },
+  { name: 'C5', keys: ['btn4-string-5','btn6-string-4','btn6-string-3'] },
+  { name: 'D5', keys: ['btn6-string-5','btn8-string-4','btn8-string-3'] },
+  { name: 'E5', keys: ['btn8-string-5','btn10-string-4','btn10-string-3'] },
+  { name: 'F5', keys: ['btn9-string-5','btn11-string-4','btn11-string-3'] },
+  { name: 'G5', keys: ['btn11-string-5','btn13-string-4','btn13-string-3'] },
+];
+
 let basicChordCategory = null;
 let lastBasicChordName = null;
 let basicStudyKeys = [];
@@ -2590,6 +3194,7 @@ function showBasicChordStudy(chord) {
   foundChordNotes = new Set();
   Object.values(svgCells).forEach(cell => {
     cell.circle.setAttribute('opacity', '0');
+    cell.circle.setAttribute('stroke', 'none');
     cell.text.setAttribute('opacity', '0');
   });
   startBasicChordPlay(chord);
@@ -2601,16 +3206,24 @@ function startBasicChordPlay(chord) {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
   targetKeys = new Set(chord.keys);
-  chordNotes = allTriads[chord.name] || allSeventhChords[chord.name] || [];
+  if (basicChordCategory === 'power6' || basicChordCategory === 'power5') {
+    // Power chords aren't in allTriads/allSeventhChords (they're just root+5th, no
+    // third) -- build chordNotes straight from the shape's own root/5th keys so
+    // applyDegreeToKey() can still color and label them like every other chord.
+    chordNotes = [neckNotes[chord.keys[0]], neckNotes[chord.keys[1]]];
+  } else {
+    chordNotes = allTriads[chord.name] || allSeventhChords[chord.name] || [];
+  }
   instracEl.innerHTML = `Find:<br>${chord.name}`;
 }
 
 function startBasicChordRound() {
   if (!basicChordCategory) return;
-  basicChordContinueBtn.classList.remove('show');
   const pool = basicChordCategory === 'open' ? basicOpenChords :
                basicChordCategory === 'root6' ? basicRoot6Chords :
                basicChordCategory === 'root5' ? basicRoot5Chords :
+               basicChordCategory === 'power6' ? basicPower6Chords :
+               basicChordCategory === 'power5' ? basicPower5Chords :
                basicBarreChords;
   let chord;
   do { chord = pool[Math.floor(Math.random() * pool.length)]; } while (chord.name === lastBasicChordName && pool.length > 1);
@@ -2658,6 +3271,7 @@ function highlightNotes(note) {
   Object.entries(svgCells).forEach(([key, cell]) => {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
+    cell.circle.setAttribute('stroke', 'none');
     if (lockedStrings.has(stringNum)) {
       // A cell's text element may still be showing a stale chord-degree label (e.g.
       // "1", "b3") left over from a previous chord round (Beginners/Lesson 2) --
@@ -3102,6 +3716,8 @@ function nextRound() {
     else if (chordMode === 'fourInverts') startFourInvertsRound();
     else if (chordMode === 'slash') startSlashChordRound();
     else startChordRound();
+  } else if (gameMode === 'school' && activeMovableLessons()[activeClassNumber]) {
+    activeMovableLessons()[activeClassNumber].start();
   } else if (gameMode === 'school') {
     note = randomNote();
     renderSingleNoteDisplay(note);
@@ -3483,8 +4099,8 @@ function renderInstructionsSection(body) {
     title.textContent = '👉 How to use this app:';
     box.appendChild(title);
     const steps = isBass
-      ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard']
-      : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. Beginners — practice open & barre chord shapes'];
+      ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard', '5. School — beginner lessons that teach the basics, from note-finding to arpeggios and scales', '6. Tuner — check that your bass is in tune']
+      : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. School — beginner lessons that teach the basics, from note-finding to chords and scales', '7. Tuner — check that your guitar is in tune'];
     steps.forEach(step => {
       const p = document.createElement('p');
       p.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);font-family:system-ui;margin:0 0 4px 0;line-height:1.5;';
@@ -3495,8 +4111,12 @@ function renderInstructionsSection(body) {
 
   s('FretChamp helps you practice notes, chord tones, inversions, arpeggios and scales — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
   { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
-  if (!isBass) {
-    s('Please note: this app is not intended for teaching chord shapes — but it does include a Beginners section for open and barre chords.', false);
+  if (isBass) {
+    s('This app includes a School section that teaches the basics step by step, from notes to arpeggios and scales.', false);
+    s('School lessons use your device\'s microphone so you can practice with a real bass.', false);
+  } else {
+    s('Please note: this app is not intended for teaching chord shapes — but it does include a School section that teaches the basics step by step, from notes to chords and scales.', false);
+    s('School lessons use your device\'s microphone so you can practice with a real guitar.', false);
     { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-right of the screen.'; body.appendChild(p); }
   }
   s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);

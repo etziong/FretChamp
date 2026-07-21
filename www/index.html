@@ -40,7 +40,7 @@
         <div class="bottom-btn-row">
           <button class="main-btn school-btn">SCHOOL</button>
           <button class="main-btn free-playing-btn">FREE PLAYING</button>
-          <button class="main-btn basic-chords-btn tiny-btn">BEGINNERS</button>
+          <button class="main-btn tuner-btn">TUNER</button>
         </div>
       </section>
 
@@ -110,7 +110,6 @@
         <button class="basic-chord-cat-btn" data-cat="root6" style="margin-top:12px;">Root: 6th Str</button>
         <button class="basic-chord-cat-btn" data-cat="root5">Root: 5th Str</button>
         <p id="root-hint-text" style="display:none; color:rgba(255,255,255,0.5); font-size:11px; font-weight:normal; text-align:left; margin-top:2px; font-family:system-ui;">Select a string</p>
-        <button class="basic-chord-continue-btn">MOVE ON <img src="moveOn.png" class="continue-arrow" alt=""></button>
       </div>
       <div class="scale-selector">
 
@@ -213,16 +212,17 @@
       </div>
       <div class="school-selector">
         <div class="class-header-row"><span class="class-check-label">Done</span></div>
-        <button class="class-btn" data-class="1">Class 1<span class="class-check" data-class-check="1"></span></button>
-        <button class="class-btn" data-class="2">Class 2<span class="class-check" data-class-check="2"></span></button>
-        <button class="class-btn" data-class="3">Class 3<span class="class-check" data-class-check="3"></span></button>
-        <button class="class-btn" data-class="4">Class 4<span class="class-check" data-class-check="4"></span></button>
-        <button class="class-btn" data-class="5">Class 5<span class="class-check" data-class-check="5"></span></button>
-        <button class="class-btn" data-class="6">Class 6<span class="class-check" data-class-check="6"></span></button>
-        <button class="class-btn" data-class="7">Class 7<span class="class-check" data-class-check="7"></span></button>
-        <button class="class-btn" data-class="8">Class 8<span class="class-check" data-class-check="8"></span></button>
-        <button class="class-btn" data-class="9">Class 9<span class="class-check" data-class-check="9"></span></button>
-        <button class="class-btn" data-class="10">Class 10<span class="class-check" data-class-check="10"></span></button>
+        <button class="class-btn" data-class="1"><span class="class-btn-label">Class 1<span class="class-topic" data-class-topic="1"></span></span><span class="class-check" data-class-check="1"></span></button>
+        <button class="class-btn" data-class="2"><span class="class-btn-label">Class 2<span class="class-topic" data-class-topic="2"></span></span><span class="class-check" data-class-check="2"></span></button>
+        <button class="class-btn" data-class="3"><span class="class-btn-label">Class 3<span class="class-topic" data-class-topic="3"></span></span><span class="class-check" data-class-check="3"></span></button>
+        <button class="class-btn" data-class="4"><span class="class-btn-label">Class 4<span class="class-topic" data-class-topic="4"></span></span><span class="class-check" data-class-check="4"></span></button>
+        <button class="class-btn" data-class="5"><span class="class-btn-label">Class 5<span class="class-topic" data-class-topic="5"></span></span><span class="class-check" data-class-check="5"></span></button>
+        <button class="class-btn" data-class="6"><span class="class-btn-label">Class 6<span class="class-topic" data-class-topic="6"></span></span><span class="class-check" data-class-check="6"></span></button>
+        <button class="class-btn" data-class="7"><span class="class-btn-label">Class 7<span class="class-topic" data-class-topic="7"></span></span><span class="class-check" data-class-check="7"></span></button>
+        <button class="class-btn" data-class="8"><span class="class-btn-label">Class 8<span class="class-topic" data-class-topic="8"></span></span><span class="class-check" data-class-check="8"></span></button>
+        <button class="class-btn" data-class="9"><span class="class-btn-label">Class 9<span class="class-topic" data-class-topic="9"></span></span><span class="class-check" data-class-check="9"></span></button>
+        <button class="class-btn" data-class="10"><span class="class-btn-label">Class 10<span class="class-topic" data-class-topic="10"></span></span><span class="class-check" data-class-check="10"></span></button>
+        <button class="class-btn" data-class="11"><span class="class-btn-label">Class 11<span class="class-topic" data-class-topic="11"></span></span><span class="class-check" data-class-check="11"></span></button>
       </div>
       <div class="string-lock-section">
         <span class="string-lock-label">Open/Lock<br>Strings</span>
@@ -238,6 +238,36 @@
       <img src="cup.png" class="cup-img" alt="cup" />
       </section>
 
+      <div class="tuner-screen">
+        <p class="tuner-headline">TUNER</p>
+        <div class="tuner-gauge-wrap idle">
+          <svg class="tuner-gauge" viewBox="0 0 220 130" width="220" height="130">
+            <path class="tuner-gauge-track" d="M15,115 A95,95 0 0,1 205,115"></path>
+            <path class="tuner-gauge-zone" d="M100.07,20.52 A95,95 0 0,1 119.93,20.52"></path>
+            <line class="tuner-needle" x1="110" y1="115" x2="110" y2="28"></line>
+            <circle class="tuner-needle-hub" cx="110" cy="115" r="7"></circle>
+            <circle class="tuner-gauge-cap" cx="110" cy="115" r="40"></circle>
+          </svg>
+          <p class="tuner-note"></p>
+        </div>
+        <p class="tuner-cents">Play a note</p>
+        <div class="tuner-strings-row tuner-strings-guitar">
+          <span class="tuner-string-chip" data-midi="40">E</span>
+          <span class="tuner-string-chip" data-midi="45">A</span>
+          <span class="tuner-string-chip" data-midi="50">D</span>
+          <span class="tuner-string-chip" data-midi="55">G</span>
+          <span class="tuner-string-chip" data-midi="59">B</span>
+          <span class="tuner-string-chip" data-midi="64">E</span>
+        </div>
+        <div class="tuner-strings-row tuner-strings-bass">
+          <span class="tuner-string-chip" data-midi="28">E</span>
+          <span class="tuner-string-chip" data-midi="33">A</span>
+          <span class="tuner-string-chip" data-midi="38">D</span>
+          <span class="tuner-string-chip" data-midi="43">G</span>
+        </div>
+        <p class="tuner-error">Microphone access is needed for the tuner.</p>
+      </div>
+
     </div>
   <div class="side-btns-container">
     <div class="instructions-wrapper" id="instructions-wrapper">
@@ -245,7 +275,7 @@
     </div>
     <div class="peek-wrapper">
       <button class="peek-btn"></button>
-      <span class="peek-label"><img src="eya.png" class="peek-icon" alt="show" /><br>Show<br>Notes</span>
+      <span class="peek-label"><span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>Notes</span>
     </div>
     <div class="try-again-wrapper" id="try-again-wrapper">
       <span class="peek-label"><img src="reload.png" class="peek-icon" alt="try again" /><br>Try<br>Again</span>

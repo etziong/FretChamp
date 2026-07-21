@@ -198,16 +198,6 @@ header nav img {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.bass-mode .basic-chords-btn {
-  display: none;
-}
-
-.basic-chords-btn {
-  order: unset;
-  aspect-ratio: unset;
-  height: 45px;
-}
-
 .school-btn {
   order: unset;
   aspect-ratio: unset;
@@ -217,18 +207,6 @@ header nav img {
 .free-playing-btn {
   aspect-ratio: unset;
   height: 45px;
-}
-
-.tiny-btn {
-  width: 5px;
-  height: 5px;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  font-size: 0;
-  overflow: hidden;
-  opacity: 0.15;
-  border-width: 1px;
 }
 
 .bottom-btn-row {
@@ -243,14 +221,6 @@ header nav img {
   height: 45px;
 }
 
-.bottom-btn-row .tiny-btn {
-  flex: 0 0 5px;
-  height: 5px;
-}
-
-.bass-mode .bottom-btn-row .free-playing-btn {
-  flex: 1 1 100%;
-}
 
 .scales-btn {
 }
@@ -269,12 +239,14 @@ header nav img {
   width: fit-content;
 }
 
-.basic-chord-mode .basic-chord-selector {
+/* School lessons drive basicChordCategory programmatically and keep the category
+   buttons hidden -- but the selector's Move On button still needs to show through. */
+.school-lesson-active .basic-chord-selector {
   display: flex;
 }
 
-.basic-chord-mode .basic-chord-cat-btn[data-cat="root6"],
-.basic-chord-mode .basic-chord-cat-btn[data-cat="root5"] {
+.school-lesson-active .basic-chord-selector .basic-chord-cat-btn,
+.school-lesson-active .basic-chord-selector #root-hint-text {
   display: none;
 }
 
@@ -300,36 +272,6 @@ header nav img {
 .basic-chord-cat-btn.active {
   border-color: darkorange;
   color: darkorange;
-}
-
-.basic-chord-continue-btn {
-  display: none;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  color: darkorange;
-  font-size: calc(var(--font-1) * 1.2);
-  font-family: system-ui, sans-serif;
-  font-weight: bold;
-  font-style: italic;
-  padding: 0;
-  cursor: pointer;
-  margin-top: 16px;
-  white-space: nowrap;
-}
-
-.basic-chord-continue-btn.show {
-  display: flex;
-}
-
-.continue-arrow {
-  align-self: center;
-  height: calc(var(--font-1) * 1.8);
-  width: auto;
-  margin-left: -6px;
 }
 
 @keyframes blink-orange {
@@ -379,7 +321,6 @@ header nav img {
 .slash-chord-mode .instructions-wrapper,
 .four-chord-mode .instructions-wrapper,
 .scales-mode .instructions-wrapper,
-.basic-chord-mode .instructions-wrapper,
 .free-playing-mode .instructions-wrapper {
   display: flex;
 }
@@ -398,7 +339,6 @@ header nav img {
   cursor: pointer;
   position: relative;
 }
-.basic-chord-mode .peek-wrapper,
 .scales-mode .peek-wrapper,
 .single-note-mode .peek-wrapper,
 .three-chord-mode .peek-wrapper,
@@ -434,7 +374,6 @@ header nav img {
 .slash-chord-mode .timer-wrapper,
 .four-chord-mode .timer-wrapper,
 .scales-mode .timer-wrapper,
-.basic-chord-mode .timer-wrapper,
 .single-note-mode .timer-wrapper {
   display: flex;
 }
@@ -500,15 +439,28 @@ header nav img {
   object-fit: contain;
   margin-bottom: 4px;
 }
+.eye-icon {
+  display: inline-block;
+  background-color: #ffffff;
+  -webkit-mask-image: url('eya.png');
+  mask-image: url('eya.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
 .peek-wrapper.notes-shown .peek-label {
   color: darkorange;
 }
-.peek-wrapper.notes-shown .peek-icon {
-  filter: brightness(0) saturate(100%) invert(64%) sepia(97%) saturate(1934%) hue-rotate(1deg) brightness(103%) contrast(105%);
+.peek-wrapper.notes-shown .eye-icon {
+  background-color: darkorange;
+  -webkit-mask-image: url('Hide.png?v=2');
+  mask-image: url('Hide.png?v=2');
 }
 .peek-wrapper:active { opacity: 0.6; }
 
-.basic-chord-mode .string-lock-section,
 .three-chord-mode .string-lock-section,
 .four-inverts-mode .string-lock-section {
   display: none;
@@ -779,7 +731,7 @@ header nav img {
   font-family: system-ui, sans-serif;
   font-style: normal;
 }
-.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.basic-chord-mode):not(.scales-mode):not(.three-chord-mode) .single-note-hint {
+.greed-mode:not(.four-chord-mode):not(.slash-chord-mode):not(.scales-mode):not(.three-chord-mode) .single-note-hint {
   display: block;
 }
 .three-chord-hint {
@@ -800,31 +752,6 @@ header nav img {
   opacity: 0.7;
   font-family: system-ui, sans-serif;
   font-style: normal;
-}
-.basic-chord-mode .basic-chord-hint {
-  display: none;
-}
-.practice-56-btn {
-  display: none;
-  margin-top: 10px;
-  background: transparent;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.35);
-  border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 11px;
-  font-family: system-ui, sans-serif;
-  cursor: pointer;
-  text-align: left;
-  white-space: nowrap;
-  width: 95px;
-}
-.practice-56-btn.active {
-  border-color: darkorange;
-  color: darkorange;
-}
-.basic-chord-mode .practice-56-btn {
-  display: block;
 }
 
 .slash-instrac {
@@ -868,8 +795,23 @@ header nav img {
   color: darkorange;
   text-align: left;
   margin-left: 0px;
+  padding-left: 4px;
   height: 60px;
   overflow: hidden;
+}
+
+/* Empty and unused on the School class-list screen (only used inside a lesson) --
+   collapse it there so it doesn't leave a gap above the lesson list. */
+.school-mode:not(.school-lesson-active) .noteD {
+  height: 0;
+  padding: 0;
+}
+
+/* .feedback is opacity:0 (not display:none) so it can fade in during a round --
+   but on the class-list screen no round is running, so its invisible 1.2em
+   height plus grid-gap padding just widens the gap above the lesson list. */
+.school-mode:not(.school-lesson-active) .feedback {
+  height: 0;
 }
 
 .noteD.noteD--staff {
@@ -1170,9 +1112,13 @@ header nav img {
 .school-selector {
   display: none;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   margin-top: 6px;
   width: fit-content;
+  max-height: calc(100dvh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
 }
 
 .school-mode .school-selector {
@@ -1184,19 +1130,42 @@ header nav img {
 
 
 .class-btn {
-  background: transparent;
+  background: #000000;
   border: 1px solid rgba(255,255,255,0.35);
   color: white;
   font-size: 14px;
   font-family: system-ui, sans-serif;
   border-radius: 6px;
-  padding: 6px 9px 6px 10px;
+  padding: 4px 6px 4px 8px;
   cursor: pointer;
   text-align: left;
   display: grid;
   grid-template-columns: 1fr auto;
   column-gap: 1ch;
   align-items: center;
+}
+
+/* Bass School only has 9 lessons (no chord lessons) -- hide the unused slots. */
+.bass-mode .class-btn[data-class="10"],
+.bass-mode .class-btn[data-class="11"] {
+  display: none;
+}
+
+.class-btn-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+
+.class-topic {
+  font-size: 10px;
+  font-weight: normal;
+  color: rgba(255,255,255,0.5);
+}
+
+.class-topic:empty {
+  display: none;
 }
 
 .class-check {
@@ -1522,6 +1491,169 @@ header nav img {
   justify-content: center;
   color: rgba(255,255,255,0.2);
   font-size: 9px;
+}
+
+/* ── Tuner ── */
+.tuner-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 3;
+  pointer-events: none;
+  direction: ltr;
+}
+
+.tuner-mode .tuner-screen {
+  display: flex;
+  pointer-events: all;
+}
+
+.greed-mode.tuner-mode .guitar-wrapper,
+.greed-mode.tuner-mode .noteNameDisplay {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+
+.tuner-headline {
+  font-size: 20px;
+  color: white;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-family: system-ui, sans-serif;
+}
+
+.tuner-gauge-wrap {
+  position: relative;
+  width: 220px;
+  height: 130px;
+}
+
+.tuner-gauge {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tuner-gauge-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.tuner-gauge-zone {
+  fill: none;
+  stroke: darkorange;
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.tuner-needle {
+  stroke: white;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: transform 0.12s ease-out, stroke 0.2s ease;
+}
+
+.tuner-needle-hub {
+  fill: white;
+  transition: fill 0.2s ease;
+}
+
+.tuner-gauge-cap {
+  fill: #000000;
+}
+
+.tuner-gauge-wrap.in-tune .tuner-needle { stroke: darkorange; }
+.tuner-gauge-wrap.in-tune .tuner-needle-hub { fill: darkorange; }
+.tuner-gauge-wrap.off-pitch .tuner-needle { stroke: rgb(0, 120, 255); }
+.tuner-gauge-wrap.off-pitch .tuner-needle-hub { fill: rgb(0, 120, 255); }
+.tuner-gauge-wrap.idle .tuner-needle { stroke: rgba(255, 255, 255, 0.35); }
+.tuner-gauge-wrap.idle .tuner-needle-hub { fill: rgba(255, 255, 255, 0.35); }
+
+.tuner-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  text-align: center;
+  font-size: 44px;
+  font-weight: bold;
+  color: darkorange;
+  font-family: system-ui, sans-serif;
+  transition: color 0.2s ease;
+}
+.tuner-gauge-wrap.off-pitch .tuner-note { color: rgb(0, 120, 255); }
+.tuner-gauge-wrap.idle .tuner-note { color: rgba(255, 255, 255, 0.5); }
+
+.tuner-cents {
+  position: relative;
+  z-index: 2;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-family: system-ui, sans-serif;
+  min-height: 1.3em;
+}
+
+.tuner-strings-row {
+  display: none;
+  gap: 8px;
+  direction: ltr;
+}
+.tuner-mode .tuner-strings-row.tuner-strings-guitar { display: flex; }
+.bass-mode.tuner-mode .tuner-strings-row.tuner-strings-guitar { display: none; }
+.bass-mode.tuner-mode .tuner-strings-row.tuner-strings-bass { display: flex; }
+
+.tuner-string-chip {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.tuner-string-chip.active {
+  border-color: darkorange;
+  color: darkorange;
+}
+
+.tuner-error {
+  display: none;
+  font-size: 13px;
+  color: #ff5555;
+  font-family: system-ui, sans-serif;
+  max-width: 240px;
+  text-align: center;
+}
+.tuner-screen.mic-error .tuner-error { display: block; }
+.tuner-screen.mic-error .tuner-gauge-wrap,
+.tuner-screen.mic-error .tuner-cents,
+.tuner-screen.mic-error .tuner-strings-row {
+  opacity: 0.25;
+}
+
+.tuner-mode .mute-wrapper:has(.mute-btn),
+.tuner-mode .mute-wrapper:has(.next-btn) {
+  display: none;
+}
+
+.tuner-mode .instructions-wrapper,
+.tuner-mode .timer-wrapper {
+  display: none;
 }
 
 /* ── Tablet flex fix (must come after base rules) ── */
