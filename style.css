@@ -221,9 +221,6 @@ header nav img {
   height: 45px;
 }
 
-.bass-mode .bottom-btn-row .free-playing-btn {
-  flex: 1 1 100%;
-}
 
 .scales-btn {
 }
@@ -1506,6 +1503,169 @@ header nav img {
   justify-content: center;
   color: rgba(255,255,255,0.2);
   font-size: 9px;
+}
+
+/* ── Tuner ── */
+.tuner-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 3;
+  pointer-events: none;
+  direction: ltr;
+}
+
+.tuner-mode .tuner-screen {
+  display: flex;
+  pointer-events: all;
+}
+
+.greed-mode.tuner-mode .guitar-wrapper,
+.greed-mode.tuner-mode .noteNameDisplay {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+
+.tuner-headline {
+  font-size: 20px;
+  color: white;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-family: system-ui, sans-serif;
+}
+
+.tuner-gauge-wrap {
+  position: relative;
+  width: 220px;
+  height: 130px;
+}
+
+.tuner-gauge {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tuner-gauge-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.tuner-gauge-zone {
+  fill: none;
+  stroke: darkorange;
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+
+.tuner-needle {
+  stroke: white;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: transform 0.12s ease-out, stroke 0.2s ease;
+}
+
+.tuner-needle-hub {
+  fill: white;
+  transition: fill 0.2s ease;
+}
+
+.tuner-gauge-cap {
+  fill: #000000;
+}
+
+.tuner-gauge-wrap.in-tune .tuner-needle { stroke: darkorange; }
+.tuner-gauge-wrap.in-tune .tuner-needle-hub { fill: darkorange; }
+.tuner-gauge-wrap.off-pitch .tuner-needle { stroke: rgb(0, 120, 255); }
+.tuner-gauge-wrap.off-pitch .tuner-needle-hub { fill: rgb(0, 120, 255); }
+.tuner-gauge-wrap.idle .tuner-needle { stroke: rgba(255, 255, 255, 0.35); }
+.tuner-gauge-wrap.idle .tuner-needle-hub { fill: rgba(255, 255, 255, 0.35); }
+
+.tuner-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  text-align: center;
+  font-size: 44px;
+  font-weight: bold;
+  color: darkorange;
+  font-family: system-ui, sans-serif;
+  transition: color 0.2s ease;
+}
+.tuner-gauge-wrap.off-pitch .tuner-note { color: rgb(0, 120, 255); }
+.tuner-gauge-wrap.idle .tuner-note { color: rgba(255, 255, 255, 0.5); }
+
+.tuner-cents {
+  position: relative;
+  z-index: 2;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-family: system-ui, sans-serif;
+  min-height: 1.3em;
+}
+
+.tuner-strings-row {
+  display: none;
+  gap: 8px;
+  direction: ltr;
+}
+.tuner-mode .tuner-strings-row.tuner-strings-guitar { display: flex; }
+.bass-mode.tuner-mode .tuner-strings-row.tuner-strings-guitar { display: none; }
+.bass-mode.tuner-mode .tuner-strings-row.tuner-strings-bass { display: flex; }
+
+.tuner-string-chip {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.tuner-string-chip.active {
+  border-color: darkorange;
+  color: darkorange;
+}
+
+.tuner-error {
+  display: none;
+  font-size: 13px;
+  color: #ff5555;
+  font-family: system-ui, sans-serif;
+  max-width: 240px;
+  text-align: center;
+}
+.tuner-screen.mic-error .tuner-error { display: block; }
+.tuner-screen.mic-error .tuner-gauge-wrap,
+.tuner-screen.mic-error .tuner-cents,
+.tuner-screen.mic-error .tuner-strings-row {
+  opacity: 0.25;
+}
+
+.tuner-mode .mute-wrapper:has(.mute-btn),
+.tuner-mode .mute-wrapper:has(.next-btn) {
+  display: none;
+}
+
+.tuner-mode .instructions-wrapper,
+.tuner-mode .timer-wrapper {
+  display: none;
 }
 
 /* ── Tablet flex fix (must come after base rules) ── */

@@ -40,6 +40,7 @@
         <div class="bottom-btn-row">
           <button class="main-btn school-btn">SCHOOL</button>
           <button class="main-btn free-playing-btn">FREE PLAYING</button>
+          <button class="main-btn tuner-btn">TUNER</button>
         </div>
       </section>
 
@@ -237,6 +238,36 @@
       </div>
       <img src="cup.png" class="cup-img" alt="cup" />
       </section>
+
+      <div class="tuner-screen">
+        <p class="tuner-headline">TUNER</p>
+        <div class="tuner-gauge-wrap idle">
+          <svg class="tuner-gauge" viewBox="0 0 220 130" width="220" height="130">
+            <path class="tuner-gauge-track" d="M15,115 A95,95 0 0,1 205,115"></path>
+            <path class="tuner-gauge-zone" d="M100.07,20.52 A95,95 0 0,1 119.93,20.52"></path>
+            <line class="tuner-needle" x1="110" y1="115" x2="110" y2="28"></line>
+            <circle class="tuner-needle-hub" cx="110" cy="115" r="7"></circle>
+            <circle class="tuner-gauge-cap" cx="110" cy="115" r="40"></circle>
+          </svg>
+          <p class="tuner-note"></p>
+        </div>
+        <p class="tuner-cents">Play a note</p>
+        <div class="tuner-strings-row tuner-strings-guitar">
+          <span class="tuner-string-chip" data-midi="40">E</span>
+          <span class="tuner-string-chip" data-midi="45">A</span>
+          <span class="tuner-string-chip" data-midi="50">D</span>
+          <span class="tuner-string-chip" data-midi="55">G</span>
+          <span class="tuner-string-chip" data-midi="59">B</span>
+          <span class="tuner-string-chip" data-midi="64">E</span>
+        </div>
+        <div class="tuner-strings-row tuner-strings-bass">
+          <span class="tuner-string-chip" data-midi="28">E</span>
+          <span class="tuner-string-chip" data-midi="33">A</span>
+          <span class="tuner-string-chip" data-midi="38">D</span>
+          <span class="tuner-string-chip" data-midi="43">G</span>
+        </div>
+        <p class="tuner-error">Microphone access is needed for the tuner.</p>
+      </div>
 
     </div>
   <div class="side-btns-container">

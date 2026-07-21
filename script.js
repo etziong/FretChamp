@@ -138,7 +138,7 @@ function noteNameFromFreq(freq) {
   const rounded = Math.round(noteNum);
   const cents = (noteNum - rounded) * 100;
   const pitchClass = ((rounded % 12) + 12) % 12;
-  return { name: LISTEN_NOTE_NAMES[pitchClass], cents };
+  return { name: LISTEN_NOTE_NAMES[pitchClass], cents, midi: rounded };
 }
 
 function completeSingleNoteViaListen() {
@@ -424,6 +424,95 @@ if (listenWrapper) {
     if (listenOn) stopListening();
     else startListening();
   });
+}
+
+// ── Tuner (continuous mic pitch readout, independent of the Listen toggle) ──
+const tunerScreen = document.querySelector('.tuner-screen');
+const tunerGaugeWrap = document.querySelector('.tuner-gauge-wrap');
+const tunerNeedle = document.querySelector('.tuner-needle');
+const tunerNoteEl = document.querySelector('.tuner-note');
+const tunerCentsEl = document.querySelector('.tuner-cents');
+let tunerStream = null;
+let tunerAnalyser = null;
+let tunerRafId = null;
+let tunerStarting = false;
+const TUNER_RMS_THRESHOLD = 0.01;
+const TUNER_IN_TUNE_CENTS = 5;
+
+function updateTunerStringHighlight(midi) {
+  document.querySelectorAll('.tuner-string-chip').forEach(chip => {
+    chip.classList.toggle('active', midi != null && parseInt(chip.dataset.midi) === midi);
+  });
+}
+
+function tunerLoop() {
+  if (!tunerAnalyser) return;
+  const timeData = new Float32Array(tunerAnalyser.fftSize);
+  tunerAnalyser.getFloatTimeDomainData(timeData);
+  const rms = computeRMS(timeData);
+  const freq = rms >= TUNER_RMS_THRESHOLD ? autoCorrelate(timeData, audioCtx.sampleRate) : -1;
+  if (freq > 0) {
+    const detected = noteNameFromFreq(freq);
+    const inTune = Math.abs(detected.cents) <= TUNER_IN_TUNE_CENTS;
+    const deg = Math.max(-60, Math.min(60, detected.cents * 1.2));
+    tunerNeedle.setAttribute('transform', `rotate(${deg} 110 115)`);
+    tunerNoteEl.textContent = detected.name;
+    tunerCentsEl.textContent = inTune ? 'In tune' : `${detected.cents > 0 ? '+' : ''}${Math.round(detected.cents)} cents`;
+    tunerGaugeWrap.classList.remove('idle');
+    tunerGaugeWrap.classList.toggle('in-tune', inTune);
+    tunerGaugeWrap.classList.toggle('off-pitch', !inTune);
+    updateTunerStringHighlight(detected.midi);
+  } else {
+    tunerNeedle.setAttribute('transform', 'rotate(0 110 115)');
+    tunerNoteEl.textContent = '';
+    tunerCentsEl.textContent = 'Play a note';
+    tunerGaugeWrap.classList.add('idle');
+    tunerGaugeWrap.classList.remove('in-tune', 'off-pitch');
+    updateTunerStringHighlight(null);
+  }
+  tunerRafId = requestAnimationFrame(tunerLoop);
+}
+
+async function startTuner() {
+  if (tunerStarting || tunerAnalyser) return;
+  tunerStarting = true;
+  tunerScreen.classList.remove('mic-error');
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
+    }
+    tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    const source = audioCtx.createMediaStreamSource(tunerStream);
+    tunerAnalyser = audioCtx.createAnalyser();
+    tunerAnalyser.fftSize = 2048;
+    source.connect(tunerAnalyser);
+    tunerStarting = false;
+    tunerLoop();
+  } catch (err) {
+    console.error('Tuner failed to start:', err);
+    if (tunerStream) { tunerStream.getTracks().forEach(t => t.stop()); tunerStream = null; }
+    tunerAnalyser = null;
+    tunerStarting = false;
+    tunerScreen.classList.add('mic-error');
+  }
+}
+
+function stopTuner() {
+  if (tunerRafId) cancelAnimationFrame(tunerRafId);
+  tunerRafId = null;
+  if (tunerStream) tunerStream.getTracks().forEach(t => t.stop());
+  tunerStream = null;
+  tunerAnalyser = null;
+  if (tunerScreen) tunerScreen.classList.remove('mic-error');
+  if (tunerGaugeWrap) {
+    tunerGaugeWrap.classList.add('idle');
+    tunerGaugeWrap.classList.remove('in-tune', 'off-pitch');
+  }
+  if (tunerNeedle) tunerNeedle.setAttribute('transform', 'rotate(0 110 115)');
+  if (tunerNoteEl) tunerNoteEl.textContent = '';
+  if (tunerCentsEl) tunerCentsEl.textContent = 'Play a note';
+  updateTunerStringHighlight(null);
 }
 
 const svgCells = {};
@@ -1002,6 +1091,7 @@ homeBtn.addEventListener('click', () => {
     return;
   }
   if (listenOn) stopListening();
+  stopTuner();
   const modeKey = getCurrentModeKey();
   if (score > 0 && HIGH_SCORE_MODES[modeKey]) {
     const storageKey = `hs_${modeKey}`;
@@ -1011,7 +1101,7 @@ homeBtn.addEventListener('click', () => {
     const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
     showScoreToast(score, isNew, avgSeconds);
   }
-  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
+  document.body.classList.remove('greed-mode', 'four-chord-mode', 'free-play-mode', 'scales-mode', 'slash-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active', 'tuner-mode');
   instracEl.classList.remove('instrac-blink');
   document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
   basicChordContinueBtn.classList.remove('show');
@@ -1528,7 +1618,8 @@ function playContinueClick() {
 mainButtons.forEach((btn, index) => {
   btn.addEventListener('click', () => {
     document.body.classList.add('greed-mode');
-    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active');
+    document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active', 'tuner-mode');
+    stopTuner();
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
@@ -1607,6 +1698,10 @@ mainButtons.forEach((btn, index) => {
         cell.circle.setAttribute('opacity', '0');
         cell.text.setAttribute('opacity', '0');
       });
+    } else if (index === 9) {
+      gameMode = 'tuner';
+      document.body.classList.add('tuner-mode');
+      startTuner();
     } else {
       gameMode = 'single';
       document.body.classList.add('single-note-mode');
