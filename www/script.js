@@ -1397,15 +1397,7 @@ peekBtn.addEventListener('pointerdown', (e) => {
   }
 
   if (gameMode === 'freeplay' && scaleGameActive) {
-    const activeBtn = document.querySelector('.scale-btn.active');
-    if (!activeBtn) return;
-    const d = scaleData[activeBtn.dataset.scale];
-    if (!d) return;
-    const skipKey = k => bassMode && parseInt(k.match(/string-(\d+)/)[1]) <= 2;
-    (d.notes||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
-    (d.roots||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].rootHlCircle.setAttribute('opacity','1'); svgCells[k].rootHlText.setAttribute('opacity','1'); } });
-    (d.blues||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].bluesHlCircle.setAttribute('opacity','1'); svgCells[k].bluesHlText.setAttribute('opacity','1'); } });
-    (d.extra||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].extraHlCircle.setAttribute('opacity','1'); svgCells[k].extraHlText.setAttribute('opacity','1'); } });
+    peekFreeplayScaleNotes();
     return;
   }
 
@@ -1420,60 +1412,25 @@ peekBtn.addEventListener('pointerdown', (e) => {
     }
   }
   if (targetKeys.size === 0) return;
+  clearTimeout(scalePeekTimeout);
   showPeek();
-});
-
-peekBtn.addEventListener('pointerup', () => {
-  if (document.body.classList.contains('school-lesson-active')) return;
-  if (gameMode === 'freeplay' && scaleGameActive) {
-    scaleGameNotes.forEach(k => {
-      if (!scaleGameFound.has(k) && svgCells[k]) {
-        svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlText.setAttribute('opacity','0');
-        svgCells[k].bluesHlCircle.setAttribute('opacity','0');
-        svgCells[k].bluesHlText.setAttribute('opacity','0');
-        svgCells[k].extraHlCircle.setAttribute('opacity','0');
-        svgCells[k].extraHlText.setAttribute('opacity','0');
-      }
-    });
-    return;
-  }
-  hidePeek();
-});
-peekBtn.addEventListener('pointerleave', () => {
-  if (document.body.classList.contains('school-lesson-active')) return;
-  if (gameMode === 'freeplay' && scaleGameActive) {
-    scaleGameNotes.forEach(k => {
-      if (!scaleGameFound.has(k) && svgCells[k]) {
-        svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlText.setAttribute('opacity','0');
-        svgCells[k].bluesHlCircle.setAttribute('opacity','0');
-        svgCells[k].bluesHlText.setAttribute('opacity','0');
-        svgCells[k].extraHlCircle.setAttribute('opacity','0');
-        svgCells[k].extraHlText.setAttribute('opacity','0');
-      }
-    });
-    return;
-  }
-  hidePeek();
+  scalePeekTimeout = setTimeout(hidePeek, 5000);
 });
 
 const bassModeInstructions = {
-  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.\n\n• Tap the Timer button to time how long each round takes you.',
-  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.\n\n• Tap the Timer button to time how long each round takes you.',
+  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.\n\n• Tap the Timer button to time how long each round takes you.',
+  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const modeInstructions = {
-  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• Tap Show Notes if needed.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• Tap Show Notes if needed.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, use the Show Notes button.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
+  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
-  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• Tap the Show Notes button if needed.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const LESSON_HOWTO = {
@@ -1502,8 +1459,8 @@ const BASS_LESSON_HOWTO = {
   9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
 };
 
-const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
-const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
@@ -2539,6 +2496,34 @@ function peekSingleNoteStringNow() {
   clearTimeout(scalePeekTimeout);
   showPeek();
   scalePeekTimeout = setTimeout(hidePeek, 5000);
+}
+
+// Free Scales practice (gameMode 'freeplay'): same momentary 5s peek, for consistency
+// with every other Show Notes button in the app.
+function peekFreeplayScaleNotes() {
+  const activeBtn = document.querySelector('.scale-btn.active');
+  if (!activeBtn) return;
+  const d = scaleData[activeBtn.dataset.scale];
+  if (!d) return;
+  const skipKey = k => bassMode && parseInt(k.match(/string-(\d+)/)[1]) <= 2;
+  clearTimeout(scalePeekTimeout);
+  (d.notes||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
+  (d.roots||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].rootHlCircle.setAttribute('opacity','1'); svgCells[k].rootHlText.setAttribute('opacity','1'); } });
+  (d.blues||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].bluesHlCircle.setAttribute('opacity','1'); svgCells[k].bluesHlText.setAttribute('opacity','1'); } });
+  (d.extra||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].extraHlCircle.setAttribute('opacity','1'); svgCells[k].extraHlText.setAttribute('opacity','1'); } });
+  scalePeekTimeout = setTimeout(() => {
+    scaleGameNotes.forEach(k => {
+      if (!scaleGameFound.has(k) && svgCells[k]) {
+        svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
+        svgCells[k].rootHlCircle.setAttribute('opacity','0');
+        svgCells[k].rootHlText.setAttribute('opacity','0');
+        svgCells[k].bluesHlCircle.setAttribute('opacity','0');
+        svgCells[k].bluesHlText.setAttribute('opacity','0');
+        svgCells[k].extraHlCircle.setAttribute('opacity','0');
+        svgCells[k].extraHlText.setAttribute('opacity','0');
+      }
+    });
+  }, 5000);
 }
 
 function clearScaleHighlights() {

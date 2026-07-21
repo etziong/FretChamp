@@ -23,6 +23,7 @@ closeBtn.addEventListener('click', () => {
 submitBtn.addEventListener('click', async () => {
   const text = textarea.value.trim();
   if (!text) return;
+  const name = nameInput.value.trim();
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'Sending...';
@@ -34,6 +35,7 @@ submitBtn.addEventListener('click', async () => {
       body: JSON.stringify({
         fields: {
           text:      { stringValue: text },
+          name:      { stringValue: name },
           userAgent: { stringValue: navigator.userAgent },
           timestamp: { stringValue: new Date().toISOString() }
         }
