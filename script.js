@@ -1317,10 +1317,10 @@ let schoolNotesShown = false;
 function updatePeekLabel() {
   if (!peekLabel) return;
   if (document.body.classList.contains('school-lesson-active')) {
-    if (activeMovableLessons()[activeClassNumber]) {
-      // Watch-then-find lessons: a momentary 5s peek, not a persistent toggle --
-      // always shows "Show Notes" in the plain/white style, never the orange
-      // "notes shown" state.
+    if (activeMovableLessons()[activeClassNumber] || activeClassNumber === '1' || activeClassNumber === '2') {
+      // Watch-then-find lessons (and the single-note string 1/2 lessons, same spirit):
+      // a momentary 5s peek, not a persistent toggle -- always shows "Show Notes" in
+      // the plain/white style, never the orange "notes shown" state.
       peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>Notes`;
       if (peekWrapper) peekWrapper.classList.remove('notes-shown');
       return;
@@ -1384,6 +1384,10 @@ peekBtn.addEventListener('pointerdown', (e) => {
   if (document.body.classList.contains('school-lesson-active')) {
     if (activeMovableLessons()[activeClassNumber]) {
       peekScaleNotes();
+      return;
+    }
+    if (activeClassNumber === '1' || activeClassNumber === '2') {
+      peekSingleNoteStringNow();
       return;
     }
     schoolNotesShown = !schoolNotesShown;
@@ -1473,8 +1477,8 @@ const modeInstructions = {
 };
 
 const LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
   3: '• Play the open chords.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   4: '• Play the barre chords, rooted on string 6.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   5: '• Play the barre chords, rooted on string 5.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
@@ -1487,8 +1491,8 @@ const LESSON_HOWTO = {
 };
 
 const BASS_LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• Press Hide Notes if you want to practice without seeing the notes on the grid.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
   3: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
   4: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
   5: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
@@ -1936,7 +1940,7 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   document.body.classList.add('school-lesson-active');
   document.getElementById('home-label').textContent = 'Back';
   resetTimerToggle();
-  schoolNotesShown = true;
+  schoolNotesShown = !(activeClassNumber === '1' || activeClassNumber === '2');
   updatePeekLabel();
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
@@ -1998,7 +2002,7 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   headLineEl.innerHTML = (bassMode ? BASS_LESSON_TITLES : LESSON_TITLES)[activeClassNumber] || ('Lesson ' + activeClassNumber);
   setSchoolClassLabel();
   if (!listenOn) startListening();
-  if (targetKeys.size > 0) showPeek();
+  if (schoolNotesShown && targetKeys.size > 0) showPeek();
   // Lesson content beyond this not wired up yet -- filled in per-class once each lesson is designed.
 });
 
@@ -2525,6 +2529,16 @@ function peekScaleNotes() {
   clearTimeout(scalePeekTimeout);
   scaleGameNotes.forEach(k => showScaleNoteFound(k, d));
   scalePeekTimeout = setTimeout(hideScalePeekNow, 5000);
+}
+
+// Classes 1-2 (find notes on string 6/5) start hidden, same watch-then-find spirit as
+// the movable scale lessons, but built on targetKeys/showPeek since they aren't a
+// scaleGameNotes-based lesson -- so they get their own momentary 5s peek helper.
+function peekSingleNoteStringNow() {
+  if (targetKeys.size === 0) return;
+  clearTimeout(scalePeekTimeout);
+  showPeek();
+  scalePeekTimeout = setTimeout(hidePeek, 5000);
 }
 
 function clearScaleHighlights() {
