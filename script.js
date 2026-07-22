@@ -435,6 +435,8 @@ function stopListening() {
   if (document.body.classList.contains('school-lesson-active')) {
     if (activeMovableLessons()[activeClassNumber]) {
       hideScalePeekNow();
+      schoolNotesShown = false;
+      updatePeekLabel();
     } else if (schoolNotesShown) {
       schoolNotesShown = false;
       hidePeek();
@@ -1094,7 +1096,7 @@ const HIGH_SCORE_MODES = {
   slash: 'Slash Chords',
   sevenths: '7th Chords',
   freeplay: 'Scales',
-  basicchord: 'Beginners Trainer'
+  basicchord: 'School'
 };
 
 function getCurrentModeKey() {
@@ -1188,12 +1190,6 @@ document.getElementById('bass-btn').addEventListener('click', () => {
     highlightNotes(note);
   }
 });
-
-// Remember the player's last guitar/bass choice so they don't have to tap "Go Bass"
-// again every time they open the app.
-if (localStorage.getItem('bassMode') === '1') {
-  document.getElementById('bass-btn').click();
-}
 
 nextBtn.addEventListener('click', () => {
   nextRound();
@@ -1316,22 +1312,11 @@ let schoolNotesShown = false;
 
 function updatePeekLabel() {
   if (!peekLabel) return;
-  if (document.body.classList.contains('school-lesson-active')) {
-    if (activeMovableLessons()[activeClassNumber] || activeClassNumber === '1' || activeClassNumber === '2') {
-      // Watch-then-find lessons (and the single-note string 1/2 lessons, same spirit):
-      // a momentary 5s peek, not a persistent toggle -- always shows "Show Notes" in
-      // the plain/white style, never the orange "notes shown" state.
-      peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>Notes`;
-      if (peekWrapper) peekWrapper.classList.remove('notes-shown');
-      return;
-    }
-    peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>${schoolNotesShown ? 'Hide' : 'Show'}<br>Notes`;
-    if (peekWrapper) peekWrapper.classList.toggle('notes-shown', schoolNotesShown);
-    return;
-  }
-  const word = (gameMode === 'single' || gameMode === 'freeplay' || gameMode === 'basicchord') ? 'Notes' : 'Chords';
-  peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>Show<br>${word}`;
-  if (peekWrapper) peekWrapper.classList.remove('notes-shown');
+  const word = document.body.classList.contains('school-lesson-active')
+    ? 'Notes'
+    : (gameMode === 'single' || gameMode === 'freeplay' || gameMode === 'basicchord') ? 'Notes' : 'Chords';
+  peekLabel.innerHTML = `<span class="peek-icon eye-icon" role="img" aria-label="show"></span><br>${schoolNotesShown ? 'Hide' : 'Show'}<br>${word}`;
+  if (peekWrapper) peekWrapper.classList.toggle('notes-shown', schoolNotesShown);
 }
 
 const scoreLabelSmEl = document.querySelector('.score-label-sm');
@@ -1356,7 +1341,11 @@ function refreshSchoolLessonUI() {
   if (!document.body.classList.contains('school-lesson-active')) return;
   headLineEl.innerHTML = (bassMode ? BASS_LESSON_TITLES : LESSON_TITLES)[activeClassNumber] || ('Lesson ' + activeClassNumber);
   setSchoolClassLabel();
-  if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
+  if (activeMovableLessons()[activeClassNumber]) {
+    if (schoolNotesShown) showScalePeekNow(); else hideScalePeekNow();
+  } else {
+    if (schoolNotesShown) { if (targetKeys.size > 0) showPeek(); } else { hidePeek(); }
+  }
 }
 
 let instracFlashTimeout = null;
@@ -1383,11 +1372,9 @@ peekBtn.addEventListener('pointerdown', (e) => {
 
   if (document.body.classList.contains('school-lesson-active')) {
     if (activeMovableLessons()[activeClassNumber]) {
-      peekScaleNotes();
-      return;
-    }
-    if (activeClassNumber === '1' || activeClassNumber === '2') {
-      peekSingleNoteStringNow();
+      schoolNotesShown = !schoolNotesShown;
+      if (schoolNotesShown) showScalePeekNow(); else hideScalePeekNow();
+      updatePeekLabel();
       return;
     }
     schoolNotesShown = !schoolNotesShown;
@@ -1397,7 +1384,9 @@ peekBtn.addEventListener('pointerdown', (e) => {
   }
 
   if (gameMode === 'freeplay' && scaleGameActive) {
-    peekFreeplayScaleNotes();
+    schoolNotesShown = !schoolNotesShown;
+    if (schoolNotesShown) showFreeplayScalePeek(); else hideFreeplayScalePeek();
+    updatePeekLabel();
     return;
   }
 
@@ -1412,55 +1401,55 @@ peekBtn.addEventListener('pointerdown', (e) => {
     }
   }
   if (targetKeys.size === 0) return;
-  clearTimeout(scalePeekTimeout);
-  showPeek();
-  scalePeekTimeout = setTimeout(hidePeek, 5000);
+  schoolNotesShown = !schoolNotesShown;
+  if (schoolNotesShown) showPeek(); else hidePeek();
+  updatePeekLabel();
 });
 
 const bassModeInstructions = {
-  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.\n\n• Tap the Timer button to time how long each round takes you.',
-  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Tap the Timer button to time how long each round takes you.',
+  'greed-mode':        '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes.\n\n• To display the note on a music staff (F clef for bass), tap the Notes button.\n\n• Tap the Timer button to time how long each round takes you.',
+  'three-chord-mode':  '• Find the 3 notes of the displayed chord.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode': '• Find the chord tones shown on screen.\n• For deeper practice, try placing the root note on a different string each time.\n\n• If you\'re struggling, tap Show Notes.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const modeInstructions = {
-  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
-  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
+  'three-chord-mode': '• Choose a string set, then find a triad inversion of the displayed chord.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-inverts-mode':'• Choose a string set, then find a 7th chord inversion.\n\n• For deeper practice, try placing the root on a different string each time.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the "Free Grid" button to practice inversions and arpeggios freely across the entire fretboard.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'slash-chord-mode': '• Find the chord tones on the fretboard.\n\n• Place the note after the slash as the lowest bass note of the chord.\n\n• If you\'re struggling, tap Show Notes.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'four-chord-mode':  '• Find the chord tones.\n\n• Use the string lock buttons to practice on a specific string set if needed.\n\n• The 5th is optional.\n\n• If you\'re struggling, tap Show Notes.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'scales-mode':      '• Choose a scale — the notes will appear on the fretboard for a few seconds, then disappear.\n\n• Try to remember and find them.\n\n• If you\'re struggling, tap Show Notes.\n\n• For convenience, the scale root is set on the note G.\n\n• Tap the Timer button to time how long each round takes you.',
   'free-playing-mode':'• Tap any fret to hear the note.\n• Explore freely with no scoring or goals.\n• Try to play something nice :-)',
-  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes and the notes will be revealed for 5 seconds.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
+  'greed-mode':       '• A note name appears on screen.\nFind all its positions on the fretboard.\n\n• Use the string lock buttons to focus on specific strings if needed.\n\n• If you\'re struggling, tap Show Notes.\n\n• To display the note on a music staff (G Clef), tap the Notes button.\n\n• Beginners: start by learning notes on strings 5 & 6 — these are where barre chord roots appear.\n\n• For open string notes, tap the top of the grid.\n\n• Tap the Timer button to time how long each round takes you.',
 };
 
 const LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a guitar, turn off Listen.',
   3: '• Play the open chords.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   4: '• Play the barre chords, rooted on string 6.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   5: '• Play the barre chords, rooted on string 5.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   6: '• Play the power chords, rooted on string 6.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
   7: '• Play the power chords, rooted on string 5.\n\n• Use the Hide Notes button for a more challenging practice.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
-  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
-  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
-  10: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
-  11: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  10: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
+  11: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your guitar.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a guitar.',
 };
 
 const BASS_LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes to reveal it for 5 seconds.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
-  3: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  4: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  5: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  6: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  7: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
-  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• Tap Show Notes to reveal them again for 5 seconds.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  3: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  4: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  5: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  6: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  7: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  8: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
+  9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
 };
 
-const SCHOOL_LIST_HOWTO = '• In this training, you can practice with your guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• Follow the instructions in "How To" in each lesson.';
-const BASS_SCHOOL_LIST_HOWTO = '• In this training, you can practice with your bass guitar, using your device microphone.\n\n• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• Follow the instructions in "How To" in each lesson.';
+const SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• In this training, you can practice with your guitar, using your device microphone.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
+const BASS_SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• In this training, you can practice with your bass guitar, using your device microphone.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
@@ -1594,6 +1583,8 @@ mainButtons.forEach((btn, index) => {
     document.body.classList.remove('slash-chord-mode', 'scales-mode', 'free-play-mode', 'four-chord-mode', 'basic-study-phase', 'three-chord-mode', 'four-inverts-mode', 'free-playing-mode', 'single-note-mode', 'school-mode', 'school-lesson-active', 'tuner-mode');
     stopTuner();
     resetTimerToggle();
+    schoolNotesShown = false;
+    updatePeekLabel();
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
@@ -1897,7 +1888,10 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
   document.body.classList.add('school-lesson-active');
   document.getElementById('home-label').textContent = 'Back';
   resetTimerToggle();
-  schoolNotesShown = !(activeClassNumber === '1' || activeClassNumber === '2');
+  // Chord lessons (guitar Classes 3-7) start with notes shown, like before; every
+  // other lesson (single-string 1-2, and every movable scale/arpeggio lesson,
+  // guitar or bass) starts hidden until the player taps Show Notes.
+  schoolNotesShown = !bassMode && ['3', '4', '5', '6', '7'].includes(activeClassNumber);
   updatePeekLabel();
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
@@ -1916,6 +1910,7 @@ document.getElementById('class-modal-start').addEventListener('click', () => {
     });
     note = randomNote();
     renderSingleNoteDisplay(note);
+    resetRoundTimer();
     highlightNotes(note);
     instracEl.innerHTML = 'Play notes<br>on string ' + focusString;
   } else if (bassMode && BASS_MOVABLE_LESSONS[activeClassNumber]) {
@@ -2153,7 +2148,6 @@ function exitSchoolLesson() {
   targetKeys.clear();
   clearTimeout(scaleGameTimeout);
   clearInterval(scaleGamePreBlinkInterval);
-  clearTimeout(scalePeekTimeout);
   scaleGameActive = false;
   scaleGameNotes = new Set();
   scaleGameFound = new Set();
@@ -2278,6 +2272,8 @@ document.querySelector('.scale-selector').addEventListener('click', e => {
   document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   applyScaleHighlights(btn.dataset.scale);
+  schoolNotesShown = false;
+  updatePeekLabel();
 });
 
 
@@ -2429,7 +2425,7 @@ function startScaleGame(scaleName, d) {
       setAllOp('1');
       // Phase 2: 3s stable display, then 6 blinks
       scaleGameTimeout = setTimeout(() => {
-        clearScaleHighlights();
+        hideAllScaleOpacities();
         scaleGameActive = true;
         instracEl.innerHTML = 'Find the scale<br>notes!';
       }, 3000);
@@ -2456,13 +2452,10 @@ function showScaleNoteFound(key, d) {
   }
 }
 
-// Momentary 5s peek for watch-then-find School lessons (movable scales/arpeggios):
-// reveals every note in the current shape (found or not), then re-hides whatever
-// hasn't been found yet. Found notes stay visible, matching normal completion look.
-let scalePeekTimeout = null;
-
+// Show Notes for watch-then-find School lessons (movable scales/arpeggios): reveals
+// every note in the current shape (found or not); hide re-hides whatever hasn't been
+// found yet. Found notes stay visible either way, matching normal completion look.
 function hideScalePeekNow() {
-  clearTimeout(scalePeekTimeout);
   scaleGameNotes.forEach(k => {
     if (scaleGameFound.has(k) || !svgCells[k]) return;
     svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
@@ -2477,53 +2470,59 @@ function hideScalePeekNow() {
   });
 }
 
-function peekScaleNotes() {
+function showScalePeekNow() {
   if (!scaleGameActive) return;
   const lesson = activeMovableLessons()[activeClassNumber];
   if (!lesson) return;
   const d = scaleData[lesson.key];
   if (!d) return;
-  clearTimeout(scalePeekTimeout);
   scaleGameNotes.forEach(k => showScaleNoteFound(k, d));
-  scalePeekTimeout = setTimeout(hideScalePeekNow, 5000);
 }
 
-// Classes 1-2 (find notes on string 6/5) start hidden, same watch-then-find spirit as
-// the movable scale lessons, but built on targetKeys/showPeek since they aren't a
-// scaleGameNotes-based lesson -- so they get their own momentary 5s peek helper.
-function peekSingleNoteStringNow() {
-  if (targetKeys.size === 0) return;
-  clearTimeout(scalePeekTimeout);
-  showPeek();
-  scalePeekTimeout = setTimeout(hidePeek, 5000);
-}
-
-// Free Scales practice (gameMode 'freeplay'): same momentary 5s peek, for consistency
+// Free Scales practice (gameMode 'freeplay'): same Show Notes toggle, for consistency
 // with every other Show Notes button in the app.
-function peekFreeplayScaleNotes() {
+function showFreeplayScalePeek() {
   const activeBtn = document.querySelector('.scale-btn.active');
   if (!activeBtn) return;
   const d = scaleData[activeBtn.dataset.scale];
   if (!d) return;
   const skipKey = k => bassMode && parseInt(k.match(/string-(\d+)/)[1]) <= 2;
-  clearTimeout(scalePeekTimeout);
   (d.notes||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) svgCells[k].scaleNoteCircle.setAttribute('opacity','1'); });
   (d.roots||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].rootHlCircle.setAttribute('opacity','1'); svgCells[k].rootHlText.setAttribute('opacity','1'); } });
   (d.blues||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].bluesHlCircle.setAttribute('opacity','1'); svgCells[k].bluesHlText.setAttribute('opacity','1'); } });
   (d.extra||[]).forEach(k => { if (svgCells[k] && !skipKey(k) && !scaleGameFound.has(k)) { svgCells[k].extraHlCircle.setAttribute('opacity','1'); svgCells[k].extraHlText.setAttribute('opacity','1'); } });
-  scalePeekTimeout = setTimeout(() => {
-    scaleGameNotes.forEach(k => {
-      if (!scaleGameFound.has(k) && svgCells[k]) {
-        svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlCircle.setAttribute('opacity','0');
-        svgCells[k].rootHlText.setAttribute('opacity','0');
-        svgCells[k].bluesHlCircle.setAttribute('opacity','0');
-        svgCells[k].bluesHlText.setAttribute('opacity','0');
-        svgCells[k].extraHlCircle.setAttribute('opacity','0');
-        svgCells[k].extraHlText.setAttribute('opacity','0');
-      }
-    });
-  }, 5000);
+}
+
+function hideFreeplayScalePeek() {
+  scaleGameNotes.forEach(k => {
+    if (!scaleGameFound.has(k) && svgCells[k]) {
+      svgCells[k].scaleNoteCircle.setAttribute('opacity','0');
+      svgCells[k].rootHlCircle.setAttribute('opacity','0');
+      svgCells[k].rootHlText.setAttribute('opacity','0');
+      svgCells[k].bluesHlCircle.setAttribute('opacity','0');
+      svgCells[k].bluesHlText.setAttribute('opacity','0');
+      svgCells[k].extraHlCircle.setAttribute('opacity','0');
+      svgCells[k].extraHlText.setAttribute('opacity','0');
+    }
+  });
+}
+
+// Opacity-only reset: hides every scale highlight without touching the
+// blues/extra/seventh fill/text -- used mid-round (watch phase -> find phase)
+// so an arpeggio lesson's degree-number override (applyDegreeOverrides) survives
+// for the rest of that round instead of being wiped back to the generic "B" look.
+function hideAllScaleOpacities() {
+  Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, seventhHlCircle, rootHlText, bluesHlText, extraHlText, seventhHlText }) => {
+    if (scaleNoteCircle) scaleNoteCircle.setAttribute('opacity','0');
+    if (rootHlCircle)    rootHlCircle.setAttribute('opacity','0');
+    if (bluesHlCircle)   bluesHlCircle.setAttribute('opacity','0');
+    if (extraHlCircle)   extraHlCircle.setAttribute('opacity','0');
+    if (seventhHlCircle) seventhHlCircle.setAttribute('opacity','0');
+    if (rootHlText)      rootHlText.setAttribute('opacity','0');
+    if (bluesHlText)     bluesHlText.setAttribute('opacity','0');
+    if (extraHlText)     extraHlText.setAttribute('opacity','0');
+    if (seventhHlText)   seventhHlText.setAttribute('opacity','0');
+  });
 }
 
 function clearScaleHighlights() {
@@ -3257,6 +3256,7 @@ function highlightNotes(note) {
     const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
     cell.circle.setAttribute('opacity', '0');
     cell.circle.setAttribute('stroke', 'none');
+    if (bassMode && stringNum <= 2) { cell.text.setAttribute('opacity', '0'); return; }
     if (lockedStrings.has(stringNum)) {
       // A cell's text element may still be showing a stale chord-degree label (e.g.
       // "1", "b3") left over from a previous chord round (Beginners/Lesson 2) --
@@ -3269,7 +3269,6 @@ function highlightNotes(note) {
       cell.text.setAttribute('opacity', key.startsWith('btn1-') ? '1' : '0');
       return;
     }
-    if (bassMode && stringNum <= 2) return;
     cell.text.setAttribute('opacity', '0');
     if (staffOnlyKeys !== null) {
       if (staffOnlyKeys.has(key)) targetKeys.add(key);
@@ -3706,6 +3705,7 @@ function nextRound() {
   } else if (gameMode === 'school') {
     note = randomNote();
     renderSingleNoteDisplay(note);
+    resetRoundTimer();
     highlightNotes(note);
   } else {
     headLineEl.textContent = 'SINGLE NOTE';
@@ -4084,8 +4084,8 @@ function renderInstructionsSection(body) {
     title.textContent = '👉 How to use this app:';
     box.appendChild(title);
     const steps = isBass
-      ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard', '5. School — beginner lessons that teach the basics, from note-finding to arpeggios and scales', '6. Tuner — check that your bass is in tune']
-      : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. School — beginner lessons that teach the basics, from note-finding to chords and scales', '7. Tuner — check that your guitar is in tune'];
+      ? ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Scales — practice scale shapes on the fretboard', '5. School — beginner lessons that teach the basics, using your bass and device microphone', '6. Tuner — check that your bass is in tune']
+      : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. School — beginner lessons that teach the basics, using your guitar and device microphone', '7. Tuner — check that your guitar is in tune'];
     steps.forEach(step => {
       const p = document.createElement('p');
       p.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);font-family:system-ui;margin:0 0 4px 0;line-height:1.5;';
@@ -4094,14 +4094,11 @@ function renderInstructionsSection(body) {
     });
     body.appendChild(box); }
 
-  s('FretChamp helps you practice notes, chord tones, inversions, arpeggios and scales — improving your fretboard visualization and real-time navigation.<br>Ideal for practicing when away from your guitar.', false);
-  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:12px 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
+  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
   if (isBass) {
-    s('This app includes a School section that teaches the basics step by step, from notes to arpeggios and scales.', false);
-    s('School lessons use your device\'s microphone so you can practice with a real bass.', false);
+    s('FretChamp helps you practice notes, chord tones, inversions, arpeggios, and scales on the fretboard — ideal for when your bass isn\'t in hand. It\'s built to help you get familiar with the fretboard, not to teach fixed shapes. That said, <strong style="color:white;">beginners</strong> can start with the <strong style="color:white;">School section</strong>, where you\'ll learn the basics using your bass and the device\'s microphone.', false);
   } else {
-    s('Please note: this app is not intended for teaching chord shapes — but it does include a School section that teaches the basics step by step, from notes to chords and scales.', false);
-    s('School lessons use your device\'s microphone so you can practice with a real guitar.', false);
+    s('FretChamp helps you practice notes, chord tones, inversions, arpeggios, and scales on the fretboard — ideal for when your guitar isn\'t in hand. It\'s built to help you get familiar with the fretboard, not to teach fixed shapes. That said, <strong style="color:white;">beginners</strong> can start with the <strong style="color:white;">School section</strong>, where you\'ll learn the basics using your guitar and the device\'s microphone.', false);
     { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-right of the screen.'; body.appendChild(p); }
   }
   s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
@@ -4466,5 +4463,14 @@ clModal.querySelectorAll('.cl-tab').forEach(tab => {
     renderChordListSection(tab.dataset.tab);
   });
 });
+
+// Remember the player's last guitar/bass choice so they don't have to tap "Go Bass"
+// again every time they open the app. Kept at the very end of the file (not right
+// after the bass-btn handler) since that handler touches many consts/lets declared
+// later in this same scope (gameMode, BASS_CLASS_TOPICS, etc.) -- triggering it any
+// earlier hits their temporal dead zone and throws.
+if (localStorage.getItem('bassMode') === '1') {
+  document.getElementById('bass-btn').click();
+}
 }); // DOMContentLoaded
 
