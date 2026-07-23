@@ -79,6 +79,7 @@ let listenOn = false;
 let listenStream = null;
 let listenAnalyser = null;
 let listenChordAnalyser = null;
+let micGateNode = null;
 let listenRafId = null;
 let pitchMatchStreak = 0;
 let lastPitchMatchKey = null;
@@ -86,6 +87,17 @@ let chordMatchStreak = 0;
 let noteIsActive = false;
 let listenCooldownUntil = 0;
 let releaseStreak = 0;
+// While a "chord found" celebration is playing (playChordTogether + playBigSuccess),
+// the speaker plays the chord's own notes back through the room -- with Listen still
+// running, the mic can pick that up and mistake it for the player performing the next
+// round. Suspend live detection (not the sound itself) until it's done ringing.
+let listenSuspendedUntil = 0;
+const CHORD_CELEBRATION_MS = 2800;
+// Shorter suspension for the brief per-note "found" chime (playSuccess) fired mid-round
+// in School's basicchord lessons -- same speaker-into-mic risk as the round-complete
+// celebration, but the chime is much shorter so a long suspension would make finding
+// the rest of a chord via Listen feel unresponsive between notes.
+const NOTE_FOUND_CHIME_MS = 700;
 const PITCH_MATCH_FRAMES_NEEDED = 3;
 const PITCH_MATCH_CENTS = 50;
 const CHORD_MATCH_FRAMES_NEEDED = 4;
@@ -94,6 +106,12 @@ const ONSET_RMS_THRESHOLD = 0.02;
 const ONSET_RELEASE_THRESHOLD = 0.012;
 const ONSET_COOLDOWN_MS = 400;
 const RELEASE_FRAMES_NEEDED = 5;
+
+// Browsers apply echo cancellation / noise suppression / auto gain control by default,
+// tuned for voice calls -- they suppress the fast decay and rich harmonics of a plucked
+// string and constantly ride the input level, which breaks RMS-threshold onset detection
+// and pitch tracking. Music input needs the raw, unprocessed signal.
+const MUSIC_AUDIO_CONSTRAINTS = { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
 
 // Big note-name circles shown on a successful Listen match, replacing the scattered
 // small-dot flash across real fret positions (which for a chord spans several
@@ -210,7 +228,10 @@ function computeChroma(analyser, sampleRate) {
     const db = freqData[i];
     if (db < -70) continue;
     const freq = i * binHz;
-    if (freq < 70 || freq > 1200) continue;
+    // Floor was 70Hz, which sits above bass's open E1 (~41Hz) and A1 (~55Hz) --
+    // those fundamentals were silently discarded from every chord/arpeggio chroma
+    // match. 30Hz keeps them in while still excluding sub-audio rumble.
+    if (freq < 30 || freq > 1200) continue;
     const amplitude = Math.pow(10, db / 20);
     const noteNum = 12 * Math.log2(freq / 440) + 69;
     const pitchClass = ((Math.round(noteNum) % 12) + 12) % 12;
@@ -229,6 +250,27 @@ function chordChromaSimilarity(liveChroma, pitchClassSet) {
   return dot;
 }
 
+// TEMPORARY on-screen diagnostic (2026-07): shows the live chord-match similarity
+// score so real-device testing can tell whether chord detection misses are a
+// threshold-tuning problem (score consistently just under CHORD_MATCH_THRESHOLD)
+// or a structural one (score is very low). Remove once chord detection is solid.
+const PITCH_CLASS_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+let chordDebugEl = null;
+function updateChordDebugOverlay(sim, targetPitchClasses) {
+  if (!chordDebugEl) {
+    chordDebugEl = document.createElement('div');
+    chordDebugEl.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:15px;font-weight:bold;padding:10px 16px;border-radius:10px;border:2px solid #fff;pointer-events:none;white-space:pre;line-height:1.5;text-align:center;';
+    document.body.appendChild(chordDebugEl);
+  }
+  chordDebugEl.style.display = 'block';
+  const need = [...targetPitchClasses].map(pc => PITCH_CLASS_NAMES[pc]).join(',');
+  chordDebugEl.style.color = sim >= CHORD_MATCH_THRESHOLD ? '#4f4' : '#f55';
+  chordDebugEl.textContent = `DEBUG\nsim: ${sim.toFixed(3)} / ${CHORD_MATCH_THRESHOLD}\nneed: ${need}`;
+}
+function hideChordDebugOverlay() {
+  if (chordDebugEl) chordDebugEl.style.display = 'none';
+}
+
 function completeChordViaListen() {
   // targetKeys is cleared exactly once per round, by whichever completion path (this
   // one, or a tap-mode completion in handleFretClick) gets there first. Without this
@@ -241,6 +283,8 @@ function completeChordViaListen() {
   score++;
   scoreNumberEl.textContent = score;
   showWellDone();
+  listenSuspendedUntil = performance.now() + CHORD_CELEBRATION_MS;
+  muteMicFor(CHORD_CELEBRATION_MS / 1000);
   playChordTogether(chordNotes);
   setTimeout(playBigSuccess, 1300);
   nextRoundTimeout = setTimeout(nextRound, 2200);
@@ -248,10 +292,15 @@ function completeChordViaListen() {
 
 function processListenFrame() {
   if (!listenOn) return;
+  if (performance.now() < listenSuspendedUntil) {
+    listenRafId = requestAnimationFrame(processListenFrame);
+    return;
+  }
   if (gameMode === 'chord') {
     const chroma = computeChroma(listenChordAnalyser, audioCtx.sampleRate);
     const targetPitchClasses = new Set(chordNotes.map(n => chromaticIdx[normalize(n)]));
     const sim = chordChromaSimilarity(chroma, targetPitchClasses);
+    updateChordDebugOverlay(sim, targetPitchClasses);
     if (sim >= CHORD_MATCH_THRESHOLD) {
       chordMatchStreak++;
       if (chordMatchStreak >= CHORD_MATCH_FRAMES_NEEDED) {
@@ -259,7 +308,10 @@ function processListenFrame() {
         completeChordViaListen();
       }
     } else {
-      chordMatchStreak = 0;
+      // A single frame dipping just under the threshold (natural jitter in real
+      // audio) used to reset this to 0 outright, forcing 4 *perfect* consecutive
+      // frames -- decay by 1 instead so brief dips don't restart the whole streak.
+      chordMatchStreak = Math.max(0, chordMatchStreak - 1);
     }
   } else if (gameMode === 'single') {
     // Audio alone can never tell WHICH physical position produced a note (only which
@@ -303,6 +355,44 @@ function processListenFrame() {
       } else {
         pitchMatchStreak = 0;
         lastPitchMatchKey = null;
+      }
+    }
+  } else if (gameMode === 'basicchord') {
+    // School's chord lessons (Classes 3-7) expect a real strummed chord -- several
+    // strings sounding together. An earlier version checked each remaining target
+    // key's pitch class independently against a modest per-class threshold, but that
+    // is a weak test: ordinary background noise randomly has *some* dominant pitch
+    // class, and as fewer distinct classes remain to "accidentally" match, false
+    // positives got MORE likely, not less -- notes kept completing themselves with
+    // nobody playing. The aggregate cosine-similarity check below (same approach the
+    // standalone chord modes already use successfully) requires several distinct
+    // pitch classes to all be prominent *together* in the right proportions -- far
+    // harder for random noise to satisfy by chance -- so it now gates completion of
+    // the whole remaining chord at once, same as a real strum actually sounds.
+    if (targetKeys.size > 0 && !document.body.classList.contains('basic-study-phase')) {
+      const timeData = new Float32Array(listenAnalyser.fftSize);
+      listenAnalyser.getFloatTimeDomainData(timeData);
+      const rms = computeRMS(timeData);
+      if (rms < ONSET_RMS_THRESHOLD) {
+        chordMatchStreak = 0;
+      } else {
+        const chroma = computeChroma(listenChordAnalyser, audioCtx.sampleRate);
+        const targetPitchClasses = new Set([...targetKeys].map(k => chromaticIdx[normalize(neckNotes[k])]));
+        const sim = chordChromaSimilarity(chroma, targetPitchClasses);
+        updateChordDebugOverlay(sim, targetPitchClasses);
+        if (sim >= CHORD_MATCH_THRESHOLD) {
+          chordMatchStreak++;
+          if (chordMatchStreak >= CHORD_MATCH_FRAMES_NEEDED) {
+            chordMatchStreak = 0;
+            [...targetKeys].forEach(key => {
+              const stringNum = parseInt(key.match(/string-(\d+)/)[1]);
+              if (lockedStrings.has(stringNum)) return;
+              handleFretClick({ currentTarget: { dataset: { key } } });
+            });
+          }
+        } else {
+          chordMatchStreak = Math.max(0, chordMatchStreak - 1);
+        }
       }
     }
   } else {
@@ -379,12 +469,26 @@ async function startListening() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
     }
-    listenStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    listenStream = await navigator.mediaDevices.getUserMedia(MUSIC_AUDIO_CONSTRAINTS);
     if (audioCtx.state === 'suspended') await audioCtx.resume();
     const source = audioCtx.createMediaStreamSource(listenStream);
+    // Gate the mic signal itself (not just the JS-side interpretation of it) so that
+    // when the app plays its own success/chord sounds through the speaker, the
+    // analysers read silence instead of the speaker bleeding back into the mic.
+    // Scheduled on audioCtx.currentTime -- the same clock our own oscillators use --
+    // instead of a JS setTimeout, so there's no drift between "our sound is still
+    // playing" and "the mic is muted".
+    micGateNode = audioCtx.createGain();
+    micGateNode.gain.value = 1;
+    source.connect(micGateNode);
     listenAnalyser = audioCtx.createAnalyser();
-    listenAnalyser.fftSize = 2048;
-    source.connect(listenAnalyser);
+    // 2048 samples (~43ms @ 48kHz) holds under 2 full cycles of bass's lowest open
+    // string (E, ~41Hz, ~24ms period) -- too little for autoCorrelate to reliably
+    // find its true period. Bass gets a bigger window (~85ms, ~3.5 cycles), matching
+    // the same "extended buffer for low frequencies" approach used elsewhere in this
+    // file (listenChordAnalyser) and by tuner apps generally.
+    listenAnalyser.fftSize = bassMode ? 4096 : 2048;
+    micGateNode.connect(listenAnalyser);
     // Separate, much higher-resolution analyser just for chord chroma detection:
     // at 2048 the FFT bin width (~21Hz) is wider than the gap between adjacent low
     // guitar notes (~5Hz around E2/F2), smearing energy across the wrong pitch
@@ -393,7 +497,7 @@ async function startListening() {
     // buffer it doesn't need.
     listenChordAnalyser = audioCtx.createAnalyser();
     listenChordAnalyser.fftSize = 16384;
-    source.connect(listenChordAnalyser);
+    micGateNode.connect(listenChordAnalyser);
     listenOn = true;
     pitchMatchStreak = 0;
     lastPitchMatchKey = null;
@@ -418,6 +522,18 @@ async function startListening() {
   }
 }
 
+// Mutes the mic signal feeding the analysers for `seconds` of real audio-clock time,
+// scheduled against audioCtx.currentTime so it can't drift relative to our own
+// oscillator playback the way a setTimeout/performance.now() based mute could.
+function muteMicFor(seconds) {
+  if (!micGateNode) return;
+  const ctx = audioCtx;
+  const now = ctx.currentTime;
+  micGateNode.gain.cancelScheduledValues(now);
+  micGateNode.gain.setValueAtTime(0, now);
+  micGateNode.gain.setValueAtTime(1, now + seconds);
+}
+
 function stopListening() {
   listenOn = false;
   if (listenRafId) cancelAnimationFrame(listenRafId);
@@ -426,7 +542,9 @@ function stopListening() {
   listenStream = null;
   listenAnalyser = null;
   listenChordAnalyser = null;
+  micGateNode = null;
   hideListenBigCircles();
+  hideChordDebugOverlay();
   if (listenWrapper) listenWrapper.classList.remove('listen-active');
   if (listenStatusEl) listenStatusEl.textContent = 'On';
 
@@ -507,11 +625,13 @@ async function startTuner() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('getUserMedia not available (navigator.mediaDevices missing)');
     }
-    tunerStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    tunerStream = await navigator.mediaDevices.getUserMedia(MUSIC_AUDIO_CONSTRAINTS);
     if (audioCtx.state === 'suspended') await audioCtx.resume();
     const source = audioCtx.createMediaStreamSource(tunerStream);
     tunerAnalyser = audioCtx.createAnalyser();
-    tunerAnalyser.fftSize = 2048;
+    // See the matching comment in startListening() -- bass's lowest open string needs
+    // a bigger window than guitar's for autoCorrelate to find its period reliably.
+    tunerAnalyser.fftSize = bassMode ? 4096 : 2048;
     source.connect(tunerAnalyser);
     tunerStarting = false;
     tunerLoop();
@@ -947,7 +1067,7 @@ function handleFretClick(e) {
         const activeSvgScale = document.querySelector('.scale-btn.active');
         const scaleName = activeSvgScale ? activeSvgScale.dataset.scale : null;
         const d = scaleName ? scaleData[scaleName] : null;
-        showScaleNoteFound(key, d);
+        showScaleNoteFound(key, d, true);
         playSuccess();
         feedbackEl.textContent = 'Good job!';
         feedbackEl.className = 'feedback correct';
@@ -973,7 +1093,7 @@ function handleFretClick(e) {
     if (scaleGameActive && scaleGameNotes.size > 0) {
       if (scaleGameNotes.has(key) && !scaleGameFound.has(key)) {
         scaleGameFound.add(key);
-        showScaleNoteFound(key, scaleData[movableScaleKey]);
+        showScaleNoteFound(key, scaleData[movableScaleKey], true);
         playSuccess();
         feedbackEl.textContent = 'Good job!';
         feedbackEl.className = 'feedback correct';
@@ -1010,10 +1130,18 @@ function handleFretClick(e) {
         score++;
         scoreNumberEl.textContent = score;
         showWellDone();
+        if (listenOn) {
+          listenSuspendedUntil = performance.now() + CHORD_CELEBRATION_MS;
+          muteMicFor(CHORD_CELEBRATION_MS / 1000);
+        }
         playChordTogether(basicStudyKeys.map(k => neckNotes[k]).filter(Boolean));
         setTimeout(playBigSuccess, 1300);
         nextRoundTimeout = setTimeout(() => { startBasicChordRound(); refreshSchoolLessonUI(); }, 2200);
       } else {
+        if (listenOn) {
+          listenSuspendedUntil = performance.now() + NOTE_FOUND_CHIME_MS;
+          muteMicFor(NOTE_FOUND_CHIME_MS / 1000);
+        }
         playSuccess();
       }
     } else {
@@ -1585,6 +1713,7 @@ mainButtons.forEach((btn, index) => {
     resetTimerToggle();
     schoolNotesShown = false;
     updatePeekLabel();
+    hideChordDebugOverlay();
     lockedStrings.clear();
     document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
     feedbackEl.className = 'feedback';
@@ -1867,6 +1996,7 @@ document.querySelectorAll('.class-check').forEach(el => {
 const classModal = document.getElementById('class-modal');
 const classModalTitle = document.getElementById('class-modal-title');
 const classModalDesc = document.getElementById('class-modal-desc');
+const classModalShowNotesHint = document.getElementById('class-modal-shownotes-hint');
 
 let activeClassNumber = null;
 
@@ -1875,6 +2005,11 @@ document.querySelectorAll('.class-btn').forEach(btn => {
     activeClassNumber = btn.dataset.class;
     classModalTitle.textContent = 'Class ' + activeClassNumber;
     classModalDesc.textContent = (bassMode ? BASS_CLASS_DESCRIPTIONS : CLASS_DESCRIPTIONS)[activeClassNumber] || '';
+    // Guitar's chord lessons (Classes 3-7) start with notes already shown (the button
+    // reads "Hide Notes" there, not "Show Notes") -- same condition schoolNotesShown
+    // itself uses at lesson start, so this hint only makes sense everywhere else.
+    const startsShown = !bassMode && ['3', '4', '5', '6', '7'].includes(activeClassNumber);
+    if (classModalShowNotesHint) classModalShowNotesHint.style.display = startsShown ? 'none' : 'block';
     classModal.style.display = 'flex';
   });
 });
@@ -2064,7 +2199,7 @@ function applyDegreeOverrides(shape, degreeOverrides) {
   });
 }
 
-function makeMovableRound(resultKey, minRoot, maxRoot, getSourceData, degreeOverrides) {
+function makeMovableRound(resultKey, minRoot, maxRoot, getSourceData, degreeOverrides, nameSuffix = '') {
   let lastRoot = null;
   return {
     key: resultKey,
@@ -2081,7 +2216,7 @@ function makeMovableRound(resultKey, minRoot, maxRoot, getSourceData, degreeOver
       localStorage.setItem('noteDisplayMode', 'letter');
       updateNoteDisplayToggleButton();
       notesDisplay.classList.remove('noteD--staff');
-      notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`]);
+      notesDisplay.innerHTML = formatNoteName(neckNotes[`btn${rootBtn}-string-6`] + nameSuffix);
       applyScaleHighlights(resultKey);
       applyDegreeOverrides(shape, degreeOverrides);
     },
@@ -2123,7 +2258,7 @@ const BASS_MOVABLE_LESSONS = {
   '3': makeMovableRound('School Bass Major Triad', 1, 9, () => scaleData['Major Triad Bass'],
     { blues: { label: '3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] } }),
   '4': makeMovableRound('School Bass Minor Triad', 1, 10, () => scaleData['Minor Triad Bass'],
-    { blues: { label: 'b3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] } }),
+    { blues: { label: 'b3', color: CHORD_DEGREE_COLORS[1] }, extra: { label: '5', color: CHORD_DEGREE_COLORS[2] } }, 'm'),
   '5': bassSeventhLesson,
   '6': makeMovableRound('School Bass Minor Blues', 1, 10, () => filterBassStrings(scaleData['Minor Blues 1'])),
   '7': makeMovableRound('School Bass Major Blues', 2, 10, () => filterBassStrings(scaleData['Minor Blues 2'])),
@@ -2433,22 +2568,35 @@ function startScaleGame(scaleName, d) {
   }, 300);
 }
 
-function showScaleNoteFound(key, d) {
+// markFound: true only when the note was actually found (tap/Listen), not when merely
+// revealed via Show Notes -- gives movable/freeplay lessons the same white "found" ring
+// that single-string Classes 1-2 already show, without it leaking onto peeked notes.
+function showScaleNoteFound(key, d, markFound = false) {
   if (!d) return;
+  let circle;
   if ((d.roots||[]).includes(key)) {
-    svgCells[key].rootHlCircle.setAttribute('opacity','1');
+    circle = svgCells[key].rootHlCircle;
+    circle.setAttribute('opacity','1');
     svgCells[key].rootHlText.setAttribute('opacity','1');
   } else if ((d.blues||[]).includes(key)) {
-    svgCells[key].bluesHlCircle.setAttribute('opacity','1');
+    circle = svgCells[key].bluesHlCircle;
+    circle.setAttribute('opacity','1');
     svgCells[key].bluesHlText.setAttribute('opacity','1');
   } else if ((d.extra||[]).includes(key)) {
-    svgCells[key].extraHlCircle.setAttribute('opacity','1');
+    circle = svgCells[key].extraHlCircle;
+    circle.setAttribute('opacity','1');
     svgCells[key].extraHlText.setAttribute('opacity','1');
   } else if ((d.seventh||[]).includes(key)) {
-    svgCells[key].seventhHlCircle.setAttribute('opacity','1');
+    circle = svgCells[key].seventhHlCircle;
+    circle.setAttribute('opacity','1');
     svgCells[key].seventhHlText.setAttribute('opacity','1');
   } else {
-    svgCells[key].scaleNoteCircle.setAttribute('opacity','1');
+    circle = svgCells[key].scaleNoteCircle;
+    circle.setAttribute('opacity','1');
+  }
+  if (markFound) {
+    circle.setAttribute('stroke', 'white');
+    circle.setAttribute('stroke-width', '3');
   }
 }
 
@@ -2513,11 +2661,11 @@ function hideFreeplayScalePeek() {
 // for the rest of that round instead of being wiped back to the generic "B" look.
 function hideAllScaleOpacities() {
   Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, seventhHlCircle, rootHlText, bluesHlText, extraHlText, seventhHlText }) => {
-    if (scaleNoteCircle) scaleNoteCircle.setAttribute('opacity','0');
-    if (rootHlCircle)    rootHlCircle.setAttribute('opacity','0');
-    if (bluesHlCircle)   bluesHlCircle.setAttribute('opacity','0');
-    if (extraHlCircle)   extraHlCircle.setAttribute('opacity','0');
-    if (seventhHlCircle) seventhHlCircle.setAttribute('opacity','0');
+    if (scaleNoteCircle) { scaleNoteCircle.setAttribute('opacity','0'); scaleNoteCircle.setAttribute('stroke','none'); }
+    if (rootHlCircle)    { rootHlCircle.setAttribute('opacity','0'); rootHlCircle.setAttribute('stroke','none'); }
+    if (bluesHlCircle)   { bluesHlCircle.setAttribute('opacity','0'); bluesHlCircle.setAttribute('stroke','none'); }
+    if (extraHlCircle)   { extraHlCircle.setAttribute('opacity','0'); extraHlCircle.setAttribute('stroke','none'); }
+    if (seventhHlCircle) { seventhHlCircle.setAttribute('opacity','0'); seventhHlCircle.setAttribute('stroke','none'); }
     if (rootHlText)      rootHlText.setAttribute('opacity','0');
     if (bluesHlText)     bluesHlText.setAttribute('opacity','0');
     if (extraHlText)     extraHlText.setAttribute('opacity','0');
@@ -2527,11 +2675,11 @@ function hideAllScaleOpacities() {
 
 function clearScaleHighlights() {
   Object.values(svgCells).forEach(({ scaleNoteCircle, rootHlCircle, bluesHlCircle, extraHlCircle, seventhHlCircle, rootHlText, bluesHlText, extraHlText, seventhHlText }) => {
-    if (scaleNoteCircle) scaleNoteCircle.setAttribute('opacity','0');
-    if (rootHlCircle)    rootHlCircle.setAttribute('opacity','0');
-    if (bluesHlCircle)   bluesHlCircle.setAttribute('opacity','0');
-    if (extraHlCircle)   extraHlCircle.setAttribute('opacity','0');
-    if (seventhHlCircle) seventhHlCircle.setAttribute('opacity','0');
+    if (scaleNoteCircle) { scaleNoteCircle.setAttribute('opacity','0'); scaleNoteCircle.setAttribute('stroke','none'); }
+    if (rootHlCircle)    { rootHlCircle.setAttribute('opacity','0'); rootHlCircle.setAttribute('stroke','none'); }
+    if (bluesHlCircle)   { bluesHlCircle.setAttribute('opacity','0'); bluesHlCircle.setAttribute('stroke','none'); }
+    if (extraHlCircle)   { extraHlCircle.setAttribute('opacity','0'); extraHlCircle.setAttribute('stroke','none'); }
+    if (seventhHlCircle) { seventhHlCircle.setAttribute('opacity','0'); seventhHlCircle.setAttribute('stroke','none'); }
     if (rootHlText)      rootHlText.setAttribute('opacity','0');
     if (bluesHlText)     bluesHlText.setAttribute('opacity','0');
     if (extraHlText)     extraHlText.setAttribute('opacity','0');
@@ -3190,6 +3338,7 @@ function startBasicChordPlay(chord) {
     if (svgCells[key]) svgCells[key].circle.setAttribute('opacity', '0');
   });
   targetKeys = new Set(chord.keys);
+  chordMatchStreak = 0;
   if (basicChordCategory === 'power6' || basicChordCategory === 'power5') {
     // Power chords aren't in allTriads/allSeventhChords (they're just root+5th, no
     // third) -- build chordNotes straight from the shape's own root/5th keys so

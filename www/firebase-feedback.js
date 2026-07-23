@@ -74,7 +74,7 @@ function renderHighScores() {
     slash: 'Slash Chords',
     sevenths: '7th Chords',
     freeplay: 'Scales',
-    basicchord: 'Beginners Trainer'
+    basicchord: 'School'
   };
   const rows = Object.entries(modes).map(([key, name]) => {
     const hs = localStorage.getItem(`hs_${key}`);
