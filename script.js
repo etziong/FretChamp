@@ -84,6 +84,7 @@ let listenRafId = null;
 let pitchMatchStreak = 0;
 let lastPitchMatchKey = null;
 let chordMatchStreak = 0;
+let chordWrongStreak = 0;
 let noteIsActive = false;
 let listenCooldownUntil = 0;
 let releaseStreak = 0;
@@ -102,9 +103,11 @@ const PITCH_MATCH_FRAMES_NEEDED = 3;
 const PITCH_MATCH_CENTS = 50;
 const CHORD_MATCH_FRAMES_NEEDED = 4;
 const CHORD_MATCH_THRESHOLD = 0.85;
+const CHORD_WRONG_FRAMES_NEEDED = 6;
+const CHORD_WRONG_SIM_THRESHOLD = 0.5;
 const ONSET_RMS_THRESHOLD = 0.02;
 const ONSET_RELEASE_THRESHOLD = 0.012;
-const ONSET_COOLDOWN_MS = 400;
+const ONSET_COOLDOWN_MS = 180;
 const RELEASE_FRAMES_NEEDED = 5;
 
 // Browsers apply echo cancellation / noise suppression / auto gain control by default,
@@ -353,12 +356,14 @@ function processListenFrame() {
       const rms = computeRMS(timeData);
       if (rms < ONSET_RMS_THRESHOLD) {
         chordMatchStreak = 0;
+        chordWrongStreak = 0;
       } else {
         const chroma = computeChroma(listenChordAnalyser, audioCtx.sampleRate);
         const targetPitchClasses = new Set([...targetKeys].map(k => chromaticIdx[normalize(neckNotes[k])]));
         const sim = chordChromaSimilarity(chroma, targetPitchClasses);
         if (sim >= CHORD_MATCH_THRESHOLD) {
           chordMatchStreak++;
+          chordWrongStreak = 0;
           if (chordMatchStreak >= CHORD_MATCH_FRAMES_NEEDED) {
             chordMatchStreak = 0;
             [...targetKeys].forEach(key => {
@@ -369,6 +374,17 @@ function processListenFrame() {
           }
         } else {
           chordMatchStreak = Math.max(0, chordMatchStreak - 1);
+          if (sim < CHORD_WRONG_SIM_THRESHOLD) {
+            chordWrongStreak++;
+            if (chordWrongStreak >= CHORD_WRONG_FRAMES_NEEDED) {
+              chordWrongStreak = 0;
+              feedbackEl.textContent = 'Try again';
+              feedbackEl.className = 'feedback incorrect';
+              setTimeout(() => { if (feedbackEl.textContent === 'Try again') feedbackEl.className = 'feedback'; }, 1500);
+            }
+          } else {
+            chordWrongStreak = 0;
+          }
         }
       }
     }
@@ -479,6 +495,7 @@ async function startListening() {
     pitchMatchStreak = 0;
     lastPitchMatchKey = null;
     chordMatchStreak = 0;
+    chordWrongStreak = 0;
     noteIsActive = false;
     listenCooldownUntil = 0;
     releaseStreak = 0;
@@ -1432,19 +1449,10 @@ function updatePeekLabel() {
   if (peekWrapper) peekWrapper.classList.toggle('notes-shown', schoolNotesShown);
 }
 
-const scoreLabelSmEl = document.querySelector('.score-label-sm');
+const classNumberEl = document.querySelector('.class-number');
 
-// Repurposes the existing Score line's two spans in place (rather than replacing
-// them) -- scoreNumberEl is cached once at load, so overwriting its parent's
-// innerHTML would detach it and silently break every future score update.
 function setSchoolClassLabel() {
-  if (scoreLabelSmEl) { scoreLabelSmEl.textContent = 'Class'; scoreLabelSmEl.style.opacity = '1'; }
-  if (scoreNumberEl) scoreNumberEl.textContent = activeClassNumber;
-}
-
-function restoreScoreLabel() {
-  if (scoreLabelSmEl) { scoreLabelSmEl.textContent = 'Score'; scoreLabelSmEl.style.opacity = ''; }
-  if (scoreNumberEl) scoreNumberEl.textContent = score;
+  if (classNumberEl) classNumberEl.textContent = activeClassNumber;
 }
 
 // Re-applies the School lesson's headline and (if the user toggled it on) the
@@ -1561,8 +1569,8 @@ const BASS_LESSON_HOWTO = {
   9: '• Watch the scale note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
 };
 
-const SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• In this training, you can practice with your guitar, using your device microphone.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
-const BASS_SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• In this training, you can practice with your bass guitar, using your device microphone.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
+const SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing guitar.\n\n• In this training, you can practice with your guitar, using your device microphone. Make sure your guitar is in tune and you\'re in a quiet room for accurate microphone detection.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
+const BASS_SCHOOL_LIST_HOWTO = '• Beginners: progress through the lessons in order and learn the fundamentals of playing bass guitar.\n\n• In this training, you can practice with your bass guitar, using your device microphone. Make sure your bass guitar is in tune and you\'re in a quiet room for accurate microphone detection.\n\n• Follow the instructions in "How To" in each lesson.\n\n• Mark each lesson Done once you\'ve completed it, using the checkbox next to it.';
 
 const instructionsWrapper = document.getElementById('instructions-wrapper');
 
@@ -2263,7 +2271,6 @@ function exitSchoolLesson() {
   resetTimerToggle();
   gameMode = 'school';
   document.body.classList.remove('school-lesson-active');
-  restoreScoreLabel();
   document.getElementById('home-label').textContent = 'Home';
   lockedStrings.clear();
   document.querySelectorAll('.str-btn').forEach(b => b.classList.remove('locked'));
@@ -3327,6 +3334,7 @@ function startBasicChordPlay(chord) {
   });
   targetKeys = new Set(chord.keys);
   chordMatchStreak = 0;
+  chordWrongStreak = 0;
   if (basicChordCategory === 'power6' || basicChordCategory === 'power5') {
     // Power chords aren't in allTriads/allSeventhChords (they're just root+5th, no
     // third) -- build chordNotes straight from the shape's own root/5th keys so
