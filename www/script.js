@@ -182,7 +182,14 @@ function completeSingleNoteViaListen() {
   nextRoundTimeout = setTimeout(nextRound, 2200);
 }
 
-// Classic autocorrelation pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch)
+// YIN pitch detector (time-domain buffer -> frequency in Hz, or -1 if no clear pitch).
+// Plain autocorrelation (the previous implementation) just picks the lag with the
+// highest self-similarity, which is prone to locking onto a harmonic instead of the
+// true fundamental -- the "octave error" seen on notes with a weak fundamental, e.g.
+// G# fretted high on string 4. YIN's cumulative mean normalized difference function
+// actively suppresses harmonic lags instead of just picking the tallest peak, which is
+// why it's the standard choice for real-time guitar/vocal pitch trackers over raw
+// autocorrelation.
 function autoCorrelate(buf, sampleRate) {
   const SIZE = buf.length;
   let rms = 0;
@@ -190,34 +197,45 @@ function autoCorrelate(buf, sampleRate) {
   rms = Math.sqrt(rms / SIZE);
   if (rms < 0.01) return -1;
 
-  let r1 = 0, r2 = SIZE - 1;
-  const threshold = 0.2;
-  for (let i = 0; i < SIZE / 2; i++) { if (Math.abs(buf[i]) < threshold) { r1 = i; break; } }
-  for (let i = 1; i < SIZE / 2; i++) { if (Math.abs(buf[SIZE - i]) < threshold) { r2 = SIZE - i; break; } }
-  const trimmed = buf.slice(r1, r2);
-  const newSize = trimmed.length;
-  if (newSize < 2) return -1;
-
-  const c = new Array(newSize).fill(0);
-  for (let i = 0; i < newSize; i++) {
-    for (let j = 0; j < newSize - i; j++) c[i] += trimmed[j] * trimmed[j + i];
+  const maxTau = Math.floor(SIZE / 2);
+  const d = new Float64Array(maxTau);
+  for (let tau = 1; tau < maxTau; tau++) {
+    let sum = 0;
+    for (let i = 0; i < maxTau; i++) {
+      const diff = buf[i] - buf[i + tau];
+      sum += diff * diff;
+    }
+    d[tau] = sum;
   }
 
-  let d = 0;
-  while (d < newSize - 1 && c[d] > c[d + 1]) d++;
-  let maxval = -1, maxpos = -1;
-  for (let i = d; i < newSize; i++) {
-    if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+  const cmnd = new Float64Array(maxTau);
+  cmnd[0] = 1;
+  let runningSum = 0;
+  for (let tau = 1; tau < maxTau; tau++) {
+    runningSum += d[tau];
+    cmnd[tau] = runningSum > 0 ? d[tau] * tau / runningSum : 1;
   }
-  let T0 = maxpos;
-  if (T0 <= 0 || T0 >= newSize - 1) return -1;
 
-  const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
-  const a = (x1 + x3 - 2 * x2) / 2;
-  const b = (x3 - x1) / 2;
-  if (a) T0 = T0 - b / (2 * a);
+  const YIN_THRESHOLD = 0.15;
+  let tau = -1;
+  for (let t = 2; t < maxTau; t++) {
+    if (cmnd[t] < YIN_THRESHOLD) {
+      while (t + 1 < maxTau && cmnd[t + 1] < cmnd[t]) t++;
+      tau = t;
+      break;
+    }
+  }
+  if (tau === -1) return -1;
 
-  return T0 > 0 ? sampleRate / T0 : -1;
+  let betterTau = tau;
+  if (tau > 0 && tau < maxTau - 1) {
+    const x1 = cmnd[tau - 1], x2 = cmnd[tau], x3 = cmnd[tau + 1];
+    const a = (x1 + x3 - 2 * x2) / 2;
+    const b = (x3 - x1) / 2;
+    if (a) betterTau = tau - b / (2 * a);
+  }
+
+  return betterTau > 0 ? sampleRate / betterTau : -1;
 }
 
 // Frequency-domain chroma vector (12 pitch classes), normalized to unit length
