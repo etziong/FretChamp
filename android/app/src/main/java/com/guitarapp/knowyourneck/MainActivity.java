@@ -10,6 +10,7 @@ import android.content.pm.ShortcutManager;
 import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.WebSettings;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
@@ -20,8 +21,17 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lockTextZoom();
         requestHomeShortcut();
         requestMicrophonePermission();
+    }
+
+    // The WebView scales all CSS font sizes by the system font-size setting
+    // (textZoom), which breaks the fixed game layout on devices with enlarged
+    // fonts (labels blow up and overlap the fretboard). Lock it to 100%.
+    private void lockTextZoom() {
+        WebSettings webSettings = this.getBridge().getWebView().getSettings();
+        webSettings.setTextZoom(100);
     }
 
     private void requestMicrophonePermission() {

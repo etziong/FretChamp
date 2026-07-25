@@ -1576,8 +1576,8 @@ const LESSON_HOWTO = {
 };
 
 const BASS_LESSON_HOWTO = {
-  1: '• Find notes on string 6.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
-  2: '• Find notes on string 5.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  1: '• Find notes on string 4.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
+  2: '• Find notes on string 3.\n\n• If you\'re struggling, tap Show Notes.\n\n• Use the Timer button to challenge yourself on time.\n\n• To practice without a bass, turn off Listen.',
   3: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
   4: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
   5: '• Watch the arpeggio note positions, then they will disappear.\n\n• Find them again by tapping or playing them on your bass.\n\n• If you\'re struggling, tap Show Notes.\n\n• The root note changes every round -- its name is shown on screen.\n\n• Use the Timer button for an extra challenge.\n\n• Turn off Listen to practice without a bass.',
@@ -1872,15 +1872,15 @@ const CLASS_DESCRIPTIONS = {
 };
 
 const BASS_CLASS_DESCRIPTIONS = {
-  1: 'Learn the notes on string 6\n-- essential for navigating the bass fretboard.',
-  2: 'Learn the notes on string 5\n-- essential for navigating the bass fretboard.',
+  1: 'Learn the notes on string 4\n-- essential for navigating the bass fretboard.',
+  2: 'Learn the notes on string 3\n-- essential for navigating the bass fretboard.',
   3: 'Learn the major triad arpeggio.',
   4: 'Learn the minor triad arpeggio.',
   5: 'Learn 7th chord arpeggios.',
-  6: 'Learn the Minor Blues scale on string 6.',
-  7: 'Learn the Major Blues scale on string 6.',
-  8: 'Learn the Major scale on string 6.',
-  9: 'Learn the Minor scale on string 6.',
+  6: 'Learn the Minor Blues scale on string 4.',
+  7: 'Learn the Major Blues scale on string 4.',
+  8: 'Learn the Major scale on string 4.',
+  9: 'Learn the Minor scale on string 4.',
 };
 
 const LESSON_SUBTITLES = {
@@ -1922,8 +1922,8 @@ const LESSON_TITLES = {
 };
 
 const BASS_LESSON_TITLES = {
-  1: '6TH STRING',
-  2: '5TH STRING',
+  1: '4TH STRING',
+  2: '3RD STRING',
   3: 'MAJOR TRIAD',
   4: 'MINOR TRIAD',
   5: '7TH ARPEGGIO',
@@ -1942,7 +1942,7 @@ const CLASS_TOPICS = {
 };
 
 const BASS_CLASS_TOPICS = {
-  1: '6th Str', 2: '5th Str',
+  1: '4th Str', 2: '3rd Str',
   3: 'Major Triad', 4: 'Minor Triad', 5: '7th Arpeggio',
   6: 'Minor Blues', 7: 'Major Blues',
   8: 'Major Scale', 9: 'Minor Scale',

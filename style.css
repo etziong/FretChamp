@@ -309,6 +309,15 @@ header nav img {
   gap: 8px;
   z-index: 100;
 }
+/* Dark pill behind the side buttons: invisible on the black background, but
+   keeps labels readable when a wide neck (tall screens / large system font)
+   ends up underneath them. Scoped to greed-mode so the empty container never
+   shows a floating pill on the home screen. */
+.greed-mode .side-btns-container {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 8px 6px;
+}
 .instructions-wrapper {
   display: none;
   flex-direction: column;
@@ -893,6 +902,11 @@ header nav img {
   gap: 8px;
   z-index: 10;
   direction: ltr;
+  /* Same readability pill as .side-btns-container -- the neck can reach under
+     "Next" on tall/narrow screens. Invisible over the black background. */
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 6px 10px;
 }
 
 .greed-mode .bottom-bar {
