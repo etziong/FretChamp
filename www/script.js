@@ -1377,7 +1377,13 @@ function applyDegreeToKey(key) {
     } else {
       const di = chordNotes.length === 4 ? idx - 1 : idx;
       fill = degreeColors[di] || 'darkorange';
-      label = intervalToDegreeLabel(semitones);
+      // Degrees must be relative to the chord BEFORE the slash. In the 4-note
+      // slash voicings chordNotes[0] is the bass note (not the chord root), so
+      // the shared `semitones` above would yield labels like 2/b5/6 instead of
+      // the triad's 1/3/5.
+      const rootMatch = currentChordName.match(/^[A-G][b#]?/);
+      const chordRootSemitone = rootMatch ? (chromaticIdx[normalize(rootMatch[0])] ?? rootSemitone) : rootSemitone;
+      label = intervalToDegreeLabel((chromaticIdx[n] - chordRootSemitone + 12) % 12);
     }
   } else {
     const idx = chordNotes.findIndex(cn => normalize(cn) === n);
