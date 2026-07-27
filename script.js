@@ -4243,13 +4243,13 @@ function renderScalesSection(body) {
 }
 
 function renderInstructionsSection(body) {
-  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:13px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;text-wrap:balance;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
+  const s = (text, bold) => { const p = document.createElement('p'); p.style.cssText = `font-size:16px;color:${bold?'white':'rgba(255,255,255,0.6)'};font-family:system-ui;margin:${bold?'12px':'0'} 0 8px 0;line-height:1.6;text-wrap:balance;${bold?'font-weight:bold;':''}`; if (bold) p.textContent = text; else p.innerHTML = text; body.appendChild(p); };
   const isBass = document.body.classList.contains('bass-mode');
 
   { const box = document.createElement('div');
     box.style.cssText = 'background:rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:16px;';
     const title = document.createElement('p');
-    title.style.cssText = 'font-size:13px;font-weight:bold;color:white;font-family:system-ui;margin:0 0 8px 0;';
+    title.style.cssText = 'font-size:16px;font-weight:bold;color:white;font-family:system-ui;margin:0 0 8px 0;';
     title.textContent = '👉 How to use this app:';
     box.appendChild(title);
     const steps = isBass
@@ -4257,18 +4257,18 @@ function renderInstructionsSection(body) {
       : ['1. Single Note — learn note positions on the fretboard', '2. Triads — find 3-note chord inversions', '3. 7th Chord — expand to 4-note inversions', '4. Tensions — add advanced chord colors', '5. Scales — practice scale shapes on the fretboard', '6. School — beginner lessons that teach the basics, using your guitar and device microphone', '7. Tuner — check that your guitar is in tune'];
     steps.forEach(step => {
       const p = document.createElement('p');
-      p.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);font-family:system-ui;margin:0 0 4px 0;line-height:1.5;';
+      p.style.cssText = 'font-size:15px;color:rgba(255,255,255,0.7);font-family:system-ui;margin:0 0 4px 0;line-height:1.5;';
       p.textContent = step;
       box.appendChild(p);
     });
     body.appendChild(box); }
 
-  { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:darkorange;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
+  { const p = document.createElement('p'); p.style.cssText = 'font-size:16px;color:darkorange;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;font-weight:bold;white-space:pre-line;'; p.textContent = 'Each page has a "How to" button,\ntap it to learn what to do.'; body.appendChild(p); }
   if (isBass) {
     s('FretChamp helps you practice notes, chord tones, inversions, arpeggios, and scales on the fretboard — ideal for when your bass isn\'t in hand. It\'s built to help you get familiar with the fretboard, not to teach fixed shapes. That said, <strong style="color:white;">beginners</strong> can start with the <strong style="color:white;">School section</strong>, where you\'ll learn the basics using your bass and the device\'s microphone.', false);
   } else {
     s('FretChamp helps you practice notes, chord tones, inversions, arpeggios, and scales on the fretboard — ideal for when your guitar isn\'t in hand. It\'s built to help you get familiar with the fretboard, not to teach fixed shapes. That said, <strong style="color:white;">beginners</strong> can start with the <strong style="color:white;">School section</strong>, where you\'ll learn the basics using your guitar and the device\'s microphone.', false);
-    { const p = document.createElement('p'); p.style.cssText = 'font-size:13px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-right of the screen.'; body.appendChild(p); }
+    { const p = document.createElement('p'); p.style.cssText = 'font-size:16px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;text-wrap:balance;'; p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom-right of the screen.'; body.appendChild(p); }
   }
   s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
   s('Have fun and good luck!', true);
