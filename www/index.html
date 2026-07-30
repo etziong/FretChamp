@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -38,7 +38,7 @@
         <button class="main-btn scales-btn">SCALES</button>
         <div class="bottom-btn-row">
           <button class="main-btn school-btn">SCHOOL</button>
-          <button class="main-btn free-playing-btn">FREE PLAYING</button>
+          <button class="main-btn free-playing-btn">FREE<br>PLAYING</button>
           <button class="main-btn tuner-btn">TUNER</button>
         </div>
       </section>
@@ -135,6 +135,17 @@
             <button class="scale-btn" data-scale="Minor Blues 3">Minor Blues 3</button>
             <button class="scale-btn" data-scale="Minor Blues 4">Minor Blues 4</button>
             <button class="scale-btn" data-scale="Minor Blues 5">Minor Blues 5</button>
+          </div>
+        </div>
+
+        <div class="scale-group">
+          <button class="scale-category-btn">Pentatonic <span class="scale-arrow">▾</span></button>
+          <div class="scale-group-list">
+            <button class="scale-btn" data-scale="Pentatonic 1">Pentatonic 1</button>
+            <button class="scale-btn" data-scale="Pentatonic 2">Pentatonic 2</button>
+            <button class="scale-btn" data-scale="Pentatonic 3">Pentatonic 3</button>
+            <button class="scale-btn" data-scale="Pentatonic 4">Pentatonic 4</button>
+            <button class="scale-btn" data-scale="Pentatonic 5">Pentatonic 5</button>
           </div>
         </div>
 
@@ -305,7 +316,7 @@
         <button id="class-modal-start" style="flex:1;padding:10px;background:darkorange;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Start</button>
         <button id="class-modal-exit" style="flex:1;padding:10px;background:#333;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Exit</button>
       </div>
-      <p id="class-modal-shownotes-hint" class="hint-blink-orange" style="font-size:13px;color:darkorange;text-align:center;margin:14px 0 0;font-weight:bold;">Use the Show Notes button if you're struggling</p>
+      <p id="class-modal-shownotes-hint" class="hint-blink-orange" style="font-size:13px;color:darkorange;text-align:center;margin:14px 0 0;font-weight:bold;">Use the Show Notes button if you're struggling.</p>
     </div>
   </div>
 
@@ -327,8 +338,8 @@
 
   <div id="feedback-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:14px;padding:24px;width:85%;max-width:360px;color:white;font-family:system-ui,sans-serif;">
-      <h3 style="margin:0 0 8px;text-align:center;font-size:18px;letter-spacing:1px;">Help us improve our Beta!</h3>
-      <p style="margin:0 0 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;">This app is still in beta. Found a bug or have a suggestion for the developers? Let us know how we can improve your experience.</p>
+      <h3 style="margin:0 0 8px;text-align:center;font-size:18px;letter-spacing:1px;">Help us improve!</h3>
+      <p style="margin:0 0 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;">Found a bug or have a suggestion for the developers? Let us know how we can improve your experience.</p>
       <input id="feedback-name" type="text" placeholder="Your name (optional)" style="width:100%;background:#2a2a4a;color:white;border:1px solid #555;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;outline:none;margin-bottom:10px;" />
       <textarea id="feedback-text" placeholder="What would you like to share?" style="width:100%;height:110px;background:#2a2a4a;color:white;border:1px solid #555;border-radius:8px;padding:10px;font-size:14px;resize:none;box-sizing:border-box;outline:none;"></textarea>
       <div style="display:flex;gap:10px;margin-top:12px;">

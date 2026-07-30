@@ -4273,7 +4273,7 @@ function renderInstructionsSection(body) {
     p.textContent = 'To switch to Bass mode, tap the "Go Bass" button - right of the screen.';
     body.appendChild(p);
   }
-  s('This is a beta version — your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
+  s('Your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);
   s('Have fun and good luck!', true);
 }
 
