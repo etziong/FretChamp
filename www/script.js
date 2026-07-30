@@ -4270,7 +4270,7 @@ function renderInstructionsSection(body) {
   if (!isBass) {
     const p = document.createElement('p');
     p.style.cssText = 'font-size:16px;color:white;font-family:system-ui;margin:0 0 8px 0;line-height:1.6;font-weight:bold;';
-    p.textContent = 'To switch to Bass mode, tap the "Go Bass" button - right of the screen.';
+    p.textContent = 'To switch to Bass mode, tap the "Go Bass" button at the bottom of the home screen.';
     body.appendChild(p);
   }
   s('Your feedback helps us improve! Use the Feedback button on the home page to share your thoughts.', false);

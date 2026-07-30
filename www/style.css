@@ -213,6 +213,7 @@ header nav img {
   grid-column: 1 / -1;
   display: flex;
   gap: 8px;
+  direction: ltr;
 }
 
 .bottom-btn-row .main-btn {
@@ -603,6 +604,9 @@ header nav img {
   grid-template-columns: repeat(4, 1fr);
   gap: 0px 12px;
   margin-top: 28px;
+  /* Pin the column order so each button stays above its own label no matter
+     what the document or device locale sets for direction. */
+  direction: ltr;
 }
 .btn-label {
   font-size: 12px;
@@ -887,17 +891,12 @@ header nav img {
   display: none;
   position: fixed;
   bottom: 12px;
-  left: 24px;
+  left: 20px;
   flex-direction: row;
   align-items: flex-end;
   gap: 8px;
   z-index: 10;
   direction: ltr;
-  /* Same readability pill as .side-btns-container -- the neck can reach under
-     "Next" on tall/narrow screens. Invisible over the black background. */
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  padding: 6px 10px;
 }
 
 .greed-mode .bottom-bar {
