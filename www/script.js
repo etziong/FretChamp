@@ -1269,7 +1269,10 @@ homeBtn.addEventListener('click', () => {
     const storageKey = `hs_${modeKey}`;
     const prev = parseInt(localStorage.getItem(storageKey) || '0');
     const isNew = score > prev;
-    if (isNew) localStorage.setItem(storageKey, score);
+    if (isNew) {
+      localStorage.setItem(storageKey, score);
+      maybeRequestReview();
+    }
     const avgSeconds = timerRoundCount > 0 ? Math.round(timerRoundTotal / timerRoundCount) : null;
     showScoreToast(score, isNew, avgSeconds);
   }
@@ -1788,7 +1791,7 @@ mainButtons.forEach((btn, index) => {
       gameMode = 'school';
       document.body.classList.add('school-mode');
       headLineEl.textContent = 'SCHOOL';
-      instracEl.innerHTML = 'Choose a lesson from the list<br><span style="color:darkorange">Use your guitar</span>';
+      instracEl.innerHTML = 'Choose a lesson<br>from the list<br><span style="color:darkorange">Use your guitar</span>';
       notesDisplay.innerHTML = '';
       targetKeys.clear();
       Object.values(svgCells).forEach(cell => {
@@ -2318,7 +2321,7 @@ function exitSchoolLesson() {
   const barreEl = document.getElementById('barre-peek-line');
   if (barreEl) barreEl.setAttribute('opacity', '0');
   headLineEl.textContent = 'SCHOOL';
-  instracEl.innerHTML = 'Choose a lesson from the list<br><span style="color:darkorange">Use your guitar</span>';
+  instracEl.innerHTML = 'Choose a lesson<br>from the list<br><span style="color:darkorange">Use your guitar</span>';
   notesDisplay.innerHTML = '';
   schoolNotesShown = false;
   adjustSchoolListHeight();
@@ -3855,6 +3858,16 @@ window.addEventListener('load', () => {
     });
   }
 });
+
+const IN_APP_REVIEW_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+
+function maybeRequestReview() {
+  if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.InAppReview) return;
+  const lastRequested = parseInt(localStorage.getItem('lastReviewRequestTime') || '0');
+  if (Date.now() - lastRequested < IN_APP_REVIEW_COOLDOWN_MS) return;
+  localStorage.setItem('lastReviewRequestTime', String(Date.now()));
+  window.Capacitor.Plugins.InAppReview.requestReview().catch(() => {});
+}
 
 function nextRound() {
   clearTimeout(nextRoundTimeout);
