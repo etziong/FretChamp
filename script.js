@@ -1078,7 +1078,7 @@ function handleFretClick(e) {
         const activeSvgScale = document.querySelector('.scale-btn.active');
         const scaleName = activeSvgScale ? activeSvgScale.dataset.scale : null;
         const d = scaleName ? scaleData[scaleName] : null;
-        showScaleNoteFound(key, d, true);
+        showScaleNoteFound(key, d);
         playSuccess();
         feedbackEl.textContent = 'Good job!';
         feedbackEl.className = 'feedback correct';
