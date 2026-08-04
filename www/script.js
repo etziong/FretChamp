@@ -1739,6 +1739,9 @@ mainButtons.forEach((btn, index) => {
     feedbackEl.textContent = '';
     no5thNote.style.display = 'none';
     document.querySelectorAll('.basic-chord-cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.three-chord-set-btn, .four-inverts-set-btn, .scale-btn').forEach(b => b.classList.remove('active'));
+    scaleSelector.classList.remove('has-open');
+    document.querySelectorAll('.scale-group').forEach(g => g.classList.remove('open'));
     if (index === 0) {
       const modal = document.getElementById('chord-list-modal');
       modal.classList.add('open');
