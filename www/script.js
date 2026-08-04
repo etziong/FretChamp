@@ -3127,9 +3127,6 @@ const tensionChords = {
 
   "C9":["C","E","Bb","D"],   "D9":["D","F#","C","E"],   "E9":["E","G#","D","F#"],
   "F9":["F","A","Eb","G"],   "G9":["G","B","F","A"],    "A9":["A","C#","G","B"],   "B9":["B","D#","A","C#"],
-
-  "C9sus4":["C","F","Bb","D"],   "D9sus4":["D","G","C","E"],   "E9sus4":["E","A","D","F#"],
-  "F9sus4":["F","Bb","Eb","G"],  "G9sus4":["G","C","F","A"],   "A9sus4":["A","D","G","B"],  "B9sus4":["B","E","A","C#"],
 };
 
 const slashChords = {
